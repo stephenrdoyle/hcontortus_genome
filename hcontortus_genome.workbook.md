@@ -12,4 +12,4 @@
 ![](04_analysis/SheepDrawings_transparent.pdf)
 
 
-![](../../../Desktop/k2.png)
+![](04_analysis/k2.png)
