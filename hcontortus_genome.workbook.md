@@ -1,4 +1,4 @@
 
 ```
-[[/04_analysis/SheepDrawings_transparent.pdf]]
+![sheep](/04_analysis/SheepDrawings_transparent.pdf)
 ```
