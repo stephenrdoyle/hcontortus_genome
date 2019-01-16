@@ -100,10 +100,17 @@ Figure 1 - circos plot
 
 
 
+## Haplotypes - dotplots of chromosomes vs haplotypes
+```R
+#
+R
+# R-3.5.0
+load(file = "hcontortus_genome.workbook.Rdata")
+setwd("02_data/")
 
-```
-# Haplotypes - dotplots of chromosomes vs haplotypes
-setwd("/Users/sd21/Documents/Work/aaa_projects/haemonchus_contortus/project_hc_genome/data/Section_1/")
+library(ggplot2)
+
+
 
 chr1_dotter<-read.table("hcontortus_chr1_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
 chr2_dotter<-read.table("hcontortus_chr2_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
@@ -127,4 +134,13 @@ ggsave("chr_v_haplo_dotter_chr5_5k.pdf",height=3,width=3,useDingbats = FALSE)
 
 ### save image
 save.image(file="hcontortus_genome.workbook.Rdata")
+```
+
+
+
+
+```{R}
+x <- rnorm(100)
+y <- 2*x + rnorm(100)
+plot(x, y)
 ```
