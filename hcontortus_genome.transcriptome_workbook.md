@@ -28,6 +28,8 @@
 
 ## 03 - Transcriptome QC <a name="transcriptome_qc"></a>
 
+Date 190116
+
 Want to compare the final annotation to steps along the way. These include
 - V1 genome vs manually curated V1 genes
 _ V4 final vs AUGUSTUS
@@ -35,7 +37,7 @@ _ V4 final vs AUGUSTUS
 - V4 final vs PASA w Isoseq R1
 - V4 final vs EVM w Isoseq R2
 
-Need to do this with the 11 manually curated genes, and the whole V4 final.
+Need to do this with the 110 manually curated genes, and the whole V4 final.
 
 ### Working environment
 ```shell
