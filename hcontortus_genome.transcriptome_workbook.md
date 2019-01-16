@@ -73,12 +73,12 @@ cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/PASA_CHR/sd21_pa
 
 # V4 EMV
 cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/PASA_CHR_R2/HCON_V4.renamed.gff3 HCON_V4_EVM.gff3
+```
 
 
 
-
-
-
+### Transcriptome comparisons
+```shell
 # V1 vs curated V1 genes
 gffcompare -R -r ABC_LGic.2.gff -o V1cutated_vs_V1annotation Hc_rztk_1+2+8+9.augustus.gff3
 
@@ -129,9 +129,10 @@ Intron chain level:    84.2     |    84.3    |
   Transcript level:    86.8     |    86.8    |
 
        Locus level:    87.6     |    86.5    |
+
 ```
 
-Dont think it is worth including the V1 comparison, as these curated genes would have been incorporated into the final annotation. Not really a good comparison.
+Don't think it is worth including the V1 comparison, as these curated genes would have been incorporated into the final annotation. Not really a good comparison. V1 precision is low due to only a subset of genes being used.
 
 Results suggest:
 - no increase in sensitivity, but big increase in precision from BRAKER to PASA
@@ -140,8 +141,7 @@ Results suggest:
 
 
 
-
-##### HACK
+##### HACK - didn't use this in the end, but keeping for reference
 - There are some additionaly lines contaminating the final gff, and so while that is being fixed, need a workaround to extract sd21_modified genes from final gff3
 - plan: grep relevant mRNA lines, and extract mRNA name (HCON etc) and ID (apollo unique ID), and use this as a list to grep out relevant lines back out from the original GFF
 
@@ -151,6 +151,14 @@ grep "^hcon" HCON_V4_FINAL.gff3 | awk '$3=="mRNA" {print $0}' OFS="\t"  | cut -f
 while read NAME; do grep "=$NAME;" HCON_V4_FINAL.gff3; done  < sd21_genes.list >  sd21_genes.gff
 sort sd21_genes.gff | uniq > sd21_genes.uniq.gff
 ```
+
+
+
+
+
+
+
+
 
 ---
 ## 04 - Kallisto <a name="kallisto"></a>
