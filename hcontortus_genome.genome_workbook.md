@@ -135,12 +135,3 @@ ggsave("chr_v_haplo_dotter_chr5_5k.pdf",height=3,width=3,useDingbats = FALSE)
 ### save image
 save.image(file="hcontortus_genome.workbook.Rdata")
 ```
-
-
-
-
-```{R}
-x <- rnorm(100)
-y <- 2*x + rnorm(100)
-plot(x, y)
-```
