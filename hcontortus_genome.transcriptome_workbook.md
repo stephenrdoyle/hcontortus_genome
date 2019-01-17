@@ -287,8 +287,8 @@ heatmap_L3   <-    plot_sample_heatmap(hc_so_L3)
 
 # patchwork
 kallistoQC_L3_plots <- (pcaplot_L3 | pc_varianceplot_L3) / heatmap_L3 + plot_layout(ncol = 1)
-ggsave(kallistoQC_L3_plots,"kallistoQC_L3_plots.pdf",width = 28, height = 10, units = "cm")
-ggsave(kallistoQC_L3_plots,"kallistoQC_L3_plots.png",width = 28, height = 10, units = "cm")
+ggsave("kallistoQC_L3_plots.pdf",width = 28, height = 28, units = "cm")
+ggsave("kallistoQC_L3_plots.png",width = 28, height = 28, units = "cm")
 
 ```
 - Copy to local dir - run this from local machine
