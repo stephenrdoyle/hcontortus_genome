@@ -350,7 +350,7 @@ Want to generate tables of most significantly DE genes per pair, comparing sensi
 
 ```R
 # EGG vs L1 only
-hc_so_EGGvL1	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata$name=="L1"),]
+hc_so_EGGvL1	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata_L3fixed$name=="L1"),]
 hc_so_EGGvL1 <- sleuth_prep(hc_so_EGGvL1, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_EGGvL1 <- sleuth_fit(hc_so_EGGvL1, ~name, 'full')
 hc_so_EGGvL1 <- sleuth_fit(hc_so_EGGvL1, ~1, 'reduced')
@@ -376,7 +376,7 @@ sleuth_table_EGGvL1_wt <- sleuth_results(hc_so_EGGvL1_wt,test="nameL1",which_mod
 
 # L1 vs SHL3
 hc_so_L1vSHL3_meta	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L1" | hc_metadata_L3fixed$name=="SHL3"),]
-hc_so_L1vSHL3 <- sleuth_prep(hc_so_L1vSHL3_meta, extra_bootstrap_summary = TRUE,num_cores=2)
+hc_so_L1vSHL3 <- sleuth_prep(hc_so_L1vSHL3_meta, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_L1vSHL3 <- sleuth_fit(hc_so_L1vSHL3, ~name, 'full')
 hc_so_L1vSHL3 <- sleuth_fit(hc_so_L1vSHL3, ~1, 'reduced')
 hc_so_L1vSHL3 <- sleuth_lrt(hc_so_L1vSHL3, 'reduced', 'full')
@@ -397,14 +397,14 @@ sleuth_significant_L1vSHL3_wt <- dplyr::filter(sleuth_table_L1vSHL3_wt, qval <= 
 
 # SHL3 vs EXL3
 hc_so_SHL3vEXL3	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="SHL3" | hc_metadata_L3fixed$name=="EXL3"),]
-hc_so_SHL3vEXL3 <- sleuth_prep(hc_so_SHL3vEXL3, extra_bootstrap_summary = TRUE)
+hc_so_SHL3vEXL3 <- sleuth_prep(hc_so_SHL3vEXL3, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_SHL3vEXL3 <- sleuth_fit(hc_so_SHL3vEXL3, ~name, 'full')
 hc_so_SHL3vEXL3 <- sleuth_fit(hc_so_SHL3vEXL3, ~1, 'reduced')
 hc_so_SHL3vEXL3 <- sleuth_lrt(hc_so_SHL3vEXL3, 'reduced', 'full')
 
 sleuth_table_SHL3vEXL3 <- sleuth_results(hc_so_SHL3vEXL3, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_SHL3vEXL3 <- dplyr::filter(sleuth_table_SHL3vEXL3, qval <= 0.05)
-head(sleuth_significant_SHL3vEXL3, 20)
+#sleuth_significant_SHL3vEXL3 <- dplyr::filter(sleuth_table_SHL3vEXL3, qval <= 0.05)
+#head(sleuth_significant_SHL3vEXL3, 20)
 
 write.table(sleuth_table_SHL3vEXL3,file="sleuth_table_SHL3vEXL3.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -417,14 +417,14 @@ head(sleuth_significant_SHL3vEXL3_wt, 100)
 
 # EXL3 vs L4
 hc_so_EXL3vL4	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EXL3" | hc_metadata_L3fixed$name=="L4"),]
-hc_so_EXL3vL4 <- sleuth_prep(hc_so_EXL3vL4, extra_bootstrap_summary = TRUE)
+hc_so_EXL3vL4 <- sleuth_prep(hc_so_EXL3vL4, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_EXL3vL4 <- sleuth_fit(hc_so_EXL3vL4, ~name, 'full')
 hc_so_EXL3vL4 <- sleuth_fit(hc_so_EXL3vL4, ~1, 'reduced')
 hc_so_EXL3vL4 <- sleuth_lrt(hc_so_EXL3vL4, 'reduced', 'full')
 
 sleuth_table_EXL3vL4 <- sleuth_results(hc_so_EXL3vL4, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_EXL3vL4 <- dplyr::filter(sleuth_table_EXL3vL4, qval <= 0.05)
-head(sleuth_significant_EXL3vL4, 20)
+#sleuth_significant_EXL3vL4 <- dplyr::filter(sleuth_table_EXL3vL4, qval <= 0.05)
+#head(sleuth_significant_EXL3vL4, 20)
 
 write.table(sleuth_table_EXL3vL4,file="sleuth_table_EXL3vL4.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -440,14 +440,14 @@ head(sleuth_significant_EXL3vL4_wt, 100)
 
 # L4 vs Adult Male
 hc_so_L4vADULTM	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L4" | hc_metadata_L3fixed$name=="ADULT_M"),]
-hc_so_L4vADULTM <- sleuth_prep(hc_so_L4vADULTM, extra_bootstrap_summary = TRUE)
+hc_so_L4vADULTM <- sleuth_prep(hc_so_L4vADULTM, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_L4vADULTM <- sleuth_fit(hc_so_L4vADULTM, ~name, 'full')
 hc_so_L4vADULTM <- sleuth_fit(hc_so_L4vADULTM, ~1, 'reduced')
 hc_so_L4vADULTM <- sleuth_lrt(hc_so_L4vADULTM, 'reduced', 'full')
 
 sleuth_table_L4vADULTM <- sleuth_results(hc_so_L4vADULTM, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_L4vADULTM <- dplyr::filter(sleuth_table_L4vADULTM, qval <= 0.05)
-head(sleuth_significant_L4vADULTM, 20)
+#sleuth_significant_L4vADULTM <- dplyr::filter(sleuth_table_L4vADULTM, qval <= 0.05)
+#head(sleuth_significant_L4vADULTM, 20)
 
 write.table(sleuth_table_L4vADULTM,file="sleuth_table_L4vADULTM.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -463,14 +463,14 @@ head(sleuth_significant_L4vADULTM_wt, 100)
 
 # L4 vs Adult Female
 hc_so_L4vADULTF	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L4" | hc_metadata_L3fixed$name=="ADULT_F"),]
-hc_so_L4vADULTF <- sleuth_prep(hc_so_L4vADULTF, extra_bootstrap_summary = TRUE)
+hc_so_L4vADULTF <- sleuth_prep(hc_so_L4vADULTF, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_L4vADULTF <- sleuth_fit(hc_so_L4vADULTF, ~name, 'full')
 hc_so_L4vADULTF <- sleuth_fit(hc_so_L4vADULTF, ~1, 'reduced')
 hc_so_L4vADULTF <- sleuth_lrt(hc_so_L4vADULTF, 'reduced', 'full')
 
 sleuth_table_L4vADULTF <- sleuth_results(hc_so_L4vADULTF, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_L4vADULTF <- dplyr::filter(sleuth_table_L4vADULTF, qval <= 0.05)
-head(sleuth_significant_L4vADULTF, 20)
+#sleuth_significant_L4vADULTF <- dplyr::filter(sleuth_table_L4vADULTF, qval <= 0.05)
+#head(sleuth_significant_L4vADULTF, 20)
 
 write.table(sleuth_table_L4vADULTF,file="sleuth_table_L4vADULTF.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -485,14 +485,14 @@ head(sleuth_significant_L4vADULTF_wt, 100)
 
 # Adult Male vs Adult Female
 hc_so_ADULTMvADULTF	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="ADULT_M" | hc_metadata_L3fixed$name=="ADULT_F"),]
-hc_so_ADULTMvADULTF <- sleuth_prep(hc_so_ADULTMvADULTF, extra_bootstrap_summary = TRUE)
+hc_so_ADULTMvADULTF <- sleuth_prep(hc_so_ADULTMvADULTF, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_ADULTMvADULTF <- sleuth_fit(hc_so_ADULTMvADULTF, ~name, 'full')
 hc_so_ADULTMvADULTF <- sleuth_fit(hc_so_ADULTMvADULTF, ~1, 'reduced')
 hc_so_ADULTMvADULTF <- sleuth_lrt(hc_so_ADULTMvADULTF, 'reduced', 'full')
 
 sleuth_table_ADULTMvADULTF <- sleuth_results(hc_so_ADULTMvADULTF, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_ADULTMvADULTF <- dplyr::filter(sleuth_table_ADULTMvADULTF, qval <= 0.05)
-head(sleuth_significant_ADULTMvADULTF, 20)
+#sleuth_significant_ADULTMvADULTF <- dplyr::filter(sleuth_table_ADULTMvADULTF, qval <= 0.05)
+#head(sleuth_significant_ADULTMvADULTF, 20)
 
 write.table(sleuth_table_ADULTMvADULTF,file="sleuth_table_ADULTMvADULTF.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -506,14 +506,14 @@ head(sleuth_significant_ADULTMvADULTF_wt, 100)
 
 # Adult Female vs Gut
 hc_so_ADULTFvGUT	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="ADULT_F" | hc_metadata_L3fixed$name=="GUT"),]
-hc_so_ADULTFvGUT <- sleuth_prep(hc_so_ADULTFvGUT, extra_bootstrap_summary = TRUE)
+hc_so_ADULTFvGUT <- sleuth_prep(hc_so_ADULTFvGUT, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_ADULTFvGUT <- sleuth_fit(hc_so_ADULTFvGUT, ~name, 'full')
 hc_so_ADULTFvGUT <- sleuth_fit(hc_so_ADULTFvGUT, ~1, 'reduced')
 hc_so_ADULTFvGUT <- sleuth_lrt(hc_so_ADULTFvGUT, 'reduced', 'full')
 
 sleuth_table_ADULTFvGUT <- sleuth_results(hc_so_ADULTFvGUT, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_ADULTFvGUT <- dplyr::filter(sleuth_table_ADULTFvGUT, qval <= 0.05)
-head(sleuth_significant_ADULTFvGUT, 20)
+#sleuth_significant_ADULTFvGUT <- dplyr::filter(sleuth_table_ADULTFvGUT, qval <= 0.05)
+#head(sleuth_significant_ADULTFvGUT, 20)
 
 write.table(sleuth_table_ADULTFvGUT,file="sleuth_table_ADULTFvGUT.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -529,14 +529,14 @@ head(sleuth_significant_ADULTFvGUT_wt, 100)
 
 # Adult Female vs Egg
 hc_so_ADULTFvEGG	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata_L3fixed$name=="L1"),]
-hc_so_ADULTFvEGG <- sleuth_prep(hc_so_ADULTFvEGG, extra_bootstrap_summary = TRUE)
+hc_so_ADULTFvEGG <- sleuth_prep(hc_so_ADULTFvEGG, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~name, 'full')
 hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~1, 'reduced')
 hc_so_ADULTFvEGG <- sleuth_lrt(hc_so_ADULTFvEGG, 'reduced', 'full')
 
 sleuth_table_ADULTFvEGG <- sleuth_results(hc_so_ADULTFvEGG, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_ADULTFvEGG <- dplyr::filter(sleuth_table_ADULTFvEGG, qval <= 0.05)
-head(sleuth_significant_ADULTFvEGG, 20)
+#sleuth_significant_ADULTFvEGG <- dplyr::filter(sleuth_table_ADULTFvEGG, qval <= 0.05)
+#head(sleuth_significant_ADULTFvEGG, 20)
 
 write.table(sleuth_table_ADULTFvEGG,file="sleuth_table_ADULTFvEGG.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -550,6 +550,112 @@ head(sleuth_significant_ADULTFvEGG_wt, 100)
 save.image(file = "hc_genome_kallisto.RData")
 ```
 
+
+
+
+
+# make a heatmap of top 1000 variable genes across all life stages
+
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES
+```
+
+### generate the tpm data
+```shell
+# extract TPMs per sample
+for i in ` ls -1d *out `; do echo $i > ${i}.tpm ; cat ${i}/abundance.tsv | cut -f5 | sed '1d' >> ${i}.tpm; done
+
+# generate a "transcripts" list, taken from the TRANSCRIPTS.fa file
+echo "ID" > transcripts.list; grep ">" ../TRANSCRIPTS.fa | cut -f1 -d  " " | sed 's/>//g' >> transcripts.list
+# due to Apollo giving long unique codes, the transcript IDs are obscure. Here is the fix
+awk '$3=="mRNA" {print $9}' ../ANNOTATION.gff3 | cut -f3,5 -d";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDtoNAME_conversion.txt
+
+while read ID NAME; do sed -e "s/${ID}/${NAME}/g" transcripts.list; done < mRNA_IDtoNAME_conversion.txt
+
+# make a data frame containing all TMP values from all samples
+paste transcripts.list \
+kallisto_7059_6_1_out.tmp \
+kallisto_7059_6_2_out.tmp \
+kallisto_7059_6_3_out.tmp \
+kallisto_7059_6_4_out.tmp \
+kallisto_7059_6_5_out.tmp \
+kallisto_7059_6_6_out.tmp \
+kallisto_7062_6_8_out.tmp \
+kallisto_7062_6_10_out.tmp \
+kallisto_7062_6_11_out.tmp \
+kallisto_7062_6_7_out.tmp \
+kallisto_7062_6_9_out.tmp \
+kallisto_7062_6_12_out.tmp \
+kallisto_7059_6_7_out.tmp \
+kallisto_7059_6_8_out.tmp \
+kallisto_7059_6_9_out.tmp \
+kallisto_7062_6_1_out.tmp \
+kallisto_7062_6_2_out.tmp \
+kallisto_7062_6_3_out.tmp \
+kallisto_7059_6_10_out.tmp \
+kallisto_7059_6_11_out.tmp \
+kallisto_7059_6_12_out.tmp \
+kallisto_7062_6_13_out.tmp \
+kallisto_7062_6_14_out.tmp \
+kallisto_7062_6_15_out.tmp \
+> kallisto_allsamples.tpm.table
+
+
+`
+
+Curate the data, inlcuding
+  - setting minimum TMP at 1
+  - transforming to log10 scale
+  - calculating variance per row, of which the top 1000 most variable rows are selected
+  - plot heatmap, of most variable transcripts
+
+
+
+```R
+R-3.5.0
+library(gplots)
+library(tibble)
+library(RColorBrewer)
+
+data<-read.table("kallisto_allsamples.tpm.table",header=T,row.names=1)
+
+# set a TPM cutoff,
+data<-(data > 1) * (data - 1) + 1
+data<-log10(data)
+
+data<-as.matrix(data)
+
+is.na(data) <- sapply(data, is.infinite)
+
+RowVar <- function(x, ...) {
+  rowSums(na.rm=TRUE,(x - rowMeans(x, ...))^2, ...)/(dim(x)[2] - 1)
+}
+
+var<-as.matrix(RowVar(data))
+var<-as.data.frame(var)
+var <- var[order(var), ,drop = FALSE]
+var_filter <- tail(var,1000)   # set number of genes here
+var_filter <- rownames_to_column(var_filter)
+
+data<-as.data.frame(data)
+data<-rownames_to_column(data)
+
+data_filtered <- dplyr::semi_join(data, var_filter, by = "rowname")
+data_filtered <- column_to_rownames(data_filtered,'rowname')
+data_filtered<-as.matrix(data_filtered)
+var<-as.matrix(RowVar(data))
+data<-cbind(data, variance = var )
+heatmap.2(data_filtered,trace="none",na.color="grey",labRow=F,dendrogram='row',Colv=FALSE,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
+#data <- transform(data,  var = RowVar(data))
+
+
+
+
+pdf("top1000variablegenes_allstages_minTPM1.pdf")
+heatmap.2(data_filtered,trace="none",na.color="grey",labRow=F,dendrogram='row',Colv=FALSE,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
+dev.off()
+
+```
 
 
 
