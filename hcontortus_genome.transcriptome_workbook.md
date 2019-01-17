@@ -286,11 +286,19 @@ pc_varianceplot_L3    <-    plot_pc_variance(hc_so_L3)
 heatmap_L3   <-    plot_sample_heatmap(hc_so_L3)
 
 # patchwork
-(pcaplot_L3 | pc_varianceplot_L3) / heatmap_L3 + plot_layout(ncol = 1)
-ggsave("kallistoQC_L3_plots.pdf",width = 28, height = 10, units = "cm")
-
+kallistoQC_L3_plots <- (pcaplot_L3 | pc_varianceplot_L3) / heatmap_L3 + plot_layout(ncol = 1)
+ggsave(kallistoQC_L3_plots,"kallistoQC_L3_plots.pdf",width = 28, height = 10, units = "cm")
+ggsave(kallistoQC_L3_plots,"kallistoQC_L3_plots.png",width = 28, height = 10, units = "cm")
 
 ```
+- Copy to local dir - run this from local machine
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_L3_plots.png ~/Documents/workbook/hcontortus_genome/04_analysis
+```
+
+![Kallisto QC - L3 plots](04_analysis/kallistoQC_L3_plots.png)
+Fig - Kalliso QC - L3 QC plots (i) PCA (ii) Loading plot of each PC, (iii) Heatmap
+
 
 Because the the L3 samples have been mixed, need to regenerate the metadata file to reflect the switch of L3 IDs. The new IDs are as follows:
 - SHL3
@@ -326,8 +334,10 @@ kallistoQC_allsamples2_plots <- pcaplot_allsamples2 + heatmap_allsamples2 + plot
 ggsave(kallistoQC_allsamples2_plots, "kallistoQC_allsamples2_plots.pdf",width = 28, height = 10, units = "cm")
 ggsave(kallistoQC_allsamples2_plots,"kallistoQC_allsamples2_plots.png",width = 28, height = 10, units = "cm")
 ```
-Copy to local dir
+- Copy to local dir - run this from local machine
+```shell
 scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_allsamples2_plots.png ~/Documents/workbook/hcontortus_genome/04_analysis
+```
 
 ![Kallisto QC - All samples with L3 fixed](04_analysis/kallistoQC_allsamples2_plots.png)
 Fig - Kalliso QC - All samples with L3 IDs fixed
