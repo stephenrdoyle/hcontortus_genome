@@ -310,6 +310,8 @@ Because the the L3 samples have been mixed, need to regenerate the metadata file
     - 7062_6_12
     - 7062_6_9
 
+Made a new file called "sample_name_path_L3fixed.list" with correct IDs, paths
+
 
 ```R
 R-3.5.0
@@ -342,17 +344,21 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 ![Kallisto QC - All samples with L3 fixed](04_analysis/kallistoQC_allsamples2_plots.png)
 Fig - Kalliso QC - All samples with L3 IDs fixed
 
+
+### Run pairwise comparisons
+Want to generate tables of most significantly DE genes per pair, comparing sensible transitions throughout the life cycle
+
 ```R
 # EGG vs L1 only
-hc_so_EGGvL1	<-	hc_metadata[(hc_metadata$name=="EGG" | hc_metadata$name=="L1"),]
-hc_so_EGGvL1 <- sleuth_prep(hc_so_EGGvL1, extra_bootstrap_summary = TRUE)
+hc_so_EGGvL1	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata$name=="L1"),]
+hc_so_EGGvL1 <- sleuth_prep(hc_so_EGGvL1, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_EGGvL1 <- sleuth_fit(hc_so_EGGvL1, ~name, 'full')
 hc_so_EGGvL1 <- sleuth_fit(hc_so_EGGvL1, ~1, 'reduced')
 hc_so_EGGvL1 <- sleuth_lrt(hc_so_EGGvL1, 'reduced', 'full')
 
 sleuth_table_EGGvL1 <- sleuth_results(hc_so_EGGvL1, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_EGGvL1 <- dplyr::filter(sleuth_table_EGGvL1, qval <= 0.05)
-head(sleuth_significant_EGGvL1, 20)
+#sleuth_significant_EGGvL1 <- dplyr::filter(sleuth_table_EGGvL1, qval <= 0.05)
+#head(sleuth_significant_EGGvL1, 20)
 
 write.table(sleuth_table_EGGvL1,file="sleuth_table_EGGvL1.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -360,8 +366,8 @@ write.table(sleuth_table_EGGvL1,file="sleuth_table_EGGvL1.txt",sep="\t",quote=FA
 
 hc_so_EGGvL1_wt<-sleuth_wt(hc_so_EGGvL1,'nameL1',which_model = "full")
 sleuth_table_EGGvL1_wt <- sleuth_results(hc_so_EGGvL1_wt,test="nameL1",which_model = "full",test_type = 'wt')
-sleuth_significant_EGGvL1_wt <- dplyr::filter(sleuth_table_EGGvL1_wt, qval <= 0.05)
-head(sleuth_significant_EGGvL1_wt, 100)
+#sleuth_significant_EGGvL1_wt <- dplyr::filter(sleuth_table_EGGvL1_wt, qval <= 0.05)
+#head(sleuth_significant_EGGvL1_wt, 100)
 
 
 
@@ -369,15 +375,15 @@ head(sleuth_significant_EGGvL1_wt, 100)
 
 
 # L1 vs SHL3
-hc_so_L1vSHL3	<-	hc_metadata[(hc_metadata$name=="L1" | hc_metadata$name=="SHL3"),]
-hc_so_L1vSHL3 <- sleuth_prep(hc_so_L1vSHL3, extra_bootstrap_summary = TRUE)
+hc_so_L1vSHL3_meta	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L1" | hc_metadata_L3fixed$name=="SHL3"),]
+hc_so_L1vSHL3 <- sleuth_prep(hc_so_L1vSHL3_meta, extra_bootstrap_summary = TRUE,num_cores=2)
 hc_so_L1vSHL3 <- sleuth_fit(hc_so_L1vSHL3, ~name, 'full')
 hc_so_L1vSHL3 <- sleuth_fit(hc_so_L1vSHL3, ~1, 'reduced')
 hc_so_L1vSHL3 <- sleuth_lrt(hc_so_L1vSHL3, 'reduced', 'full')
 
 sleuth_table_L1vSHL3 <- sleuth_results(hc_so_L1vSHL3, 'reduced:full', 'lrt', show_all = FALSE)
-sleuth_significant_L1vSHL3 <- dplyr::filter(sleuth_table_L1vSHL3, qval <= 0.05)
-head(sleuth_significant_L1vSHL3, 20)
+#sleuth_significant_L1vSHL3 <- dplyr::filter(sleuth_table_L1vSHL3, qval <= 0.05)
+#head(sleuth_significant_L1vSHL3, 20)
 
 write.table(sleuth_table_L1vSHL3,file="sleuth_table_L1vSHL3.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
@@ -385,12 +391,12 @@ write.table(sleuth_table_L1vSHL3,file="sleuth_table_L1vSHL3.txt",sep="\t",quote=
 hc_so_L1vSHL3_wt<-sleuth_wt(hc_so_L1vSHL3,'nameSHL3',which_model = "full")
 sleuth_table_L1vSHL3_wt <- sleuth_results(hc_so_L1vSHL3_wt,test="nameSHL3",which_model = "full",test_type = 'wt')
 sleuth_significant_L1vSHL3_wt <- dplyr::filter(sleuth_table_L1vSHL3_wt, qval <= 0.05)
-head(sleuth_significant_L1vSHL3_wt, 100)
+#head(sleuth_significant_L1vSHL3_wt, 100)
 
 
 
 # SHL3 vs EXL3
-hc_so_SHL3vEXL3	<-	hc_metadata[(hc_metadata$name=="SHL3" | hc_metadata$name=="EXL3"),]
+hc_so_SHL3vEXL3	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="SHL3" | hc_metadata_L3fixed$name=="EXL3"),]
 hc_so_SHL3vEXL3 <- sleuth_prep(hc_so_SHL3vEXL3, extra_bootstrap_summary = TRUE)
 hc_so_SHL3vEXL3 <- sleuth_fit(hc_so_SHL3vEXL3, ~name, 'full')
 hc_so_SHL3vEXL3 <- sleuth_fit(hc_so_SHL3vEXL3, ~1, 'reduced')
@@ -410,7 +416,7 @@ head(sleuth_significant_SHL3vEXL3_wt, 100)
 
 
 # EXL3 vs L4
-hc_so_EXL3vL4	<-	hc_metadata[(hc_metadata$name=="EXL3" | hc_metadata$name=="L4"),]
+hc_so_EXL3vL4	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EXL3" | hc_metadata_L3fixed$name=="L4"),]
 hc_so_EXL3vL4 <- sleuth_prep(hc_so_EXL3vL4, extra_bootstrap_summary = TRUE)
 hc_so_EXL3vL4 <- sleuth_fit(hc_so_EXL3vL4, ~name, 'full')
 hc_so_EXL3vL4 <- sleuth_fit(hc_so_EXL3vL4, ~1, 'reduced')
@@ -433,7 +439,7 @@ head(sleuth_significant_EXL3vL4_wt, 100)
 
 
 # L4 vs Adult Male
-hc_so_L4vADULTM	<-	hc_metadata[(hc_metadata$name=="L4" | hc_metadata$name=="ADULT_M"),]
+hc_so_L4vADULTM	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L4" | hc_metadata_L3fixed$name=="ADULT_M"),]
 hc_so_L4vADULTM <- sleuth_prep(hc_so_L4vADULTM, extra_bootstrap_summary = TRUE)
 hc_so_L4vADULTM <- sleuth_fit(hc_so_L4vADULTM, ~name, 'full')
 hc_so_L4vADULTM <- sleuth_fit(hc_so_L4vADULTM, ~1, 'reduced')
@@ -456,7 +462,7 @@ head(sleuth_significant_L4vADULTM_wt, 100)
 
 
 # L4 vs Adult Female
-hc_so_L4vADULTF	<-	hc_metadata[(hc_metadata$name=="L4" | hc_metadata$name=="ADULT_F"),]
+hc_so_L4vADULTF	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L4" | hc_metadata_L3fixed$name=="ADULT_F"),]
 hc_so_L4vADULTF <- sleuth_prep(hc_so_L4vADULTF, extra_bootstrap_summary = TRUE)
 hc_so_L4vADULTF <- sleuth_fit(hc_so_L4vADULTF, ~name, 'full')
 hc_so_L4vADULTF <- sleuth_fit(hc_so_L4vADULTF, ~1, 'reduced')
@@ -478,7 +484,7 @@ head(sleuth_significant_L4vADULTF_wt, 100)
 
 
 # Adult Male vs Adult Female
-hc_so_ADULTMvADULTF	<-	hc_metadata[(hc_metadata$name=="ADULT_M" | hc_metadata$name=="ADULT_F"),]
+hc_so_ADULTMvADULTF	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="ADULT_M" | hc_metadata_L3fixed$name=="ADULT_F"),]
 hc_so_ADULTMvADULTF <- sleuth_prep(hc_so_ADULTMvADULTF, extra_bootstrap_summary = TRUE)
 hc_so_ADULTMvADULTF <- sleuth_fit(hc_so_ADULTMvADULTF, ~name, 'full')
 hc_so_ADULTMvADULTF <- sleuth_fit(hc_so_ADULTMvADULTF, ~1, 'reduced')
@@ -499,7 +505,7 @@ head(sleuth_significant_ADULTMvADULTF_wt, 100)
 
 
 # Adult Female vs Gut
-hc_so_ADULTFvGUT	<-	hc_metadata[(hc_metadata$name=="ADULT_F" | hc_metadata$name=="GUT"),]
+hc_so_ADULTFvGUT	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="ADULT_F" | hc_metadata_L3fixed$name=="GUT"),]
 hc_so_ADULTFvGUT <- sleuth_prep(hc_so_ADULTFvGUT, extra_bootstrap_summary = TRUE)
 hc_so_ADULTFvGUT <- sleuth_fit(hc_so_ADULTFvGUT, ~name, 'full')
 hc_so_ADULTFvGUT <- sleuth_fit(hc_so_ADULTFvGUT, ~1, 'reduced')
@@ -522,7 +528,7 @@ head(sleuth_significant_ADULTFvGUT_wt, 100)
 
 
 # Adult Female vs Egg
-hc_so_ADULTFvEGG	<-	hc_metadata[(hc_metadata$name=="EGG" | hc_metadata$name=="L1"),]
+hc_so_ADULTFvEGG	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata_L3fixed$name=="L1"),]
 hc_so_ADULTFvEGG <- sleuth_prep(hc_so_ADULTFvEGG, extra_bootstrap_summary = TRUE)
 hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~name, 'full')
 hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~1, 'reduced')
