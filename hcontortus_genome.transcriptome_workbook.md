@@ -4,7 +4,7 @@
 
 1.
 2.
-3. [Transcriptome QC](#transcriptome_qc)
+3. [Annotation QC](#annoation_qc)
 4. [Kallisto](#kallisto)
 5. [Differential splicing w Leafcutter](#ds_leafcutter)
 
@@ -26,7 +26,7 @@
 
 ---
 
-## 03 - Transcriptome QC <a name="transcriptome_qc"></a>
+## 03 - Annotation QC <a name="annotation_qc"></a>
 
 Date 190116
 
@@ -228,21 +228,26 @@ mv kallisto_* KALLISTO_MAPPED_SAMPLES/
 
 ```
 
-### Run Sleuth
+To run sleuth, a metadata file is needed with all samples IDs, conditions, and paths.
+
+
+
+
+
+### Load R and environment
 
 ```R
 
 R-3.5.0
+#load(file = "hcontortus_genome.workbook.Rdata")
 library("sleuth")
 library(ggplot2)
 library(patchwork)
+```
 
-
+### Run Sleuth
+```R
 hc_metadata <- read.table("sample_name_path.list", header = TRUE, stringsAsFactors=FALSE)
-hc_so <- sleuth_prep(hc_metadata, extra_bootstrap_summary = TRUE)
-
-
-
 hc_so <- sleuth_prep(hc_metadata, extra_bootstrap_summary = TRUE)
 hc_so <- sleuth_fit(hc_so, ~name, 'full')
 hc_so <- sleuth_fit(hc_so, ~1, 'reduced')
@@ -251,34 +256,83 @@ hc_so <- sleuth_lrt(hc_so, 'reduced', 'full')
 sleuth_table <- sleuth_results(hc_so, 'reduced:full', 'lrt', show_all = FALSE)
 sleuth_significant <- dplyr::filter(sleuth_table, qval <= 0.05)
 head(sleuth_significant, 20)
+```
 
+Generate some plots for QC
+```R
 pcaplot_allsamples	<-	plot_pca(hc_so, color_by = 'name')
-
-
-
-
-
-
+heatmap_allsamples   <-    plot_sample_heatmap(hc_so)
 
 
 # PCA of all samples shows gut a both variable and outlier - will remove just to have a look
-hc_so_noGUT	<-	hc_metadata[(hc_metadata$name!="GUT"),]
-hc_so_noGUT <- sleuth_prep(hc_so_noGUT, extra_bootstrap_summary = TRUE)
-hc_so_noGUT <- sleuth_fit(hc_so_noGUT, ~name, 'full')
-hc_so_noGUT <- sleuth_fit(hc_so_noGUT, ~1, 'reduced')
-hc_so_noGUT	<-	sleuth_lrt(hc_so_noGUT, 'reduced', 'full')
+hc_so_noGUT_meta   <-    hc_metadata[(hc_metadata$name!="GUT"),]
+hc_so_noGUT   <-    sleuth_prep(hc_so_noGUT_meta, extra_bootstrap_summary = TRUE)
+hc_so_noGUT   <-    sleuth_fit(hc_so_noGUT, ~name, 'full')
+hc_so_noGUT   <-    sleuth_fit(hc_so_noGUT, ~1, 'reduced')
+hc_so_noGUT   <-    sleuth_lrt(hc_so_noGUT, 'reduced', 'full')
+
+pcaplot_allsamples_minusgut	<-	plot_pca(hc_so_noGUT, color_by = 'name')
+
+# PCA of L3 samples - SHL3 and EXL3
+hc_so_L3_meta    <-    hc_metadata[(hc_metadata$name=="EXL3" | hc_metadata$name=="SHL3"),]
+hc_so_L3    <-    sleuth_prep(hc_so_L3_meta, extra_bootstrap_summary = TRUE)
+hc_so_L3    <-    sleuth_fit(hc_so_L3, ~name, 'full')
+hc_so_L3    <-    sleuth_fit(hc_so_L3, ~1, 'reduced')
+hc_so_L3    <-    sleuth_lrt(hc_so_L3, 'reduced', 'full')
 
 
+pcaplot_L3	<-	plot_pca(hc_so_L3, color_by = 'name')
+pc_varianceplot_L3    <-    plot_pc_variance(hc_so_L3)
+heatmap_L3   <-    plot_sample_heatmap(hc_so_L3)
 
-#pcaplot_allsamples_minusgut	<-	plot_pca(hc_so_noGUT, color_by = 'name')
-
-#pcaplot_allsamples + pcaplot_allsamples_minusgut + plot_layout(ncol = 2)
-#ggsave("pca_all_vs_noGut.pdf",width = 28, height = 10, units = "cm")
-
+# patchwork
+(pcaplot_L3 | pc_varianceplot_L3) / heatmap_L3 + plot_layout(ncol = 1)
+ggsave("kallistoQC_L3_plots.pdf",width = 28, height = 10, units = "cm")
 
 
+```
+
+Because the the L3 samples have been mixed, need to regenerate the metadata file to reflect the switch of L3 IDs. The new IDs are as follows:
+- SHL3
+    - 7062_6_10
+    - 7062_6_8
+    - 7062_6_11
+    - 7062_6_7 (probable - may drop)
+- EXL3
+    - 7062_6_12
+    - 7062_6_9
 
 
+```R
+R-3.5.0
+#load(file = "hcontortus_genome.workbook.Rdata")
+library("sleuth")
+library(ggplot2)
+library(patchwork)
+
+hc_metadata_L3fixed   <-    read.table("sample_name_path_L3fixed.list", header = TRUE, stringsAsFactors=FALSE)
+hc_so   <-    sleuth_prep(hc_metadata_L3fixed, extra_bootstrap_summary = TRUE)
+hc_so   <-    sleuth_fit(hc_so, ~name, 'full')
+hc_so   <-    sleuth_fit(hc_so, ~1, 'reduced')
+hc_so   <-    sleuth_lrt(hc_so, 'reduced', 'full')
+
+sleuth_table    <-    sleuth_results(hc_so, 'reduced:full', 'lrt', show_all = FALSE)
+sleuth_significant    <-    dplyr::filter(sleuth_table, qval <= 0.05)
+head(sleuth_significant, 20)
+
+pcaplot_allsamples2	<-	plot_pca(hc_so, color_by = 'name')
+heatmap_allsamples2   <-    plot_sample_heatmap(hc_so)
+kallistoQC_allsamples2_plots <- pcaplot_allsamples2 + heatmap_allsamples2 + plot_layout(ncol = 2)
+ggsave(kallistoQC_allsamples2_plots, "kallistoQC_allsamples2_plots.pdf",width = 28, height = 10, units = "cm")
+ggsave(kallistoQC_allsamples2_plots,"kallistoQC_allsamples2_plots.png",width = 28, height = 10, units = "cm")
+```
+Copy to local dir
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_allsamples2_plots.png ~/Documents/workbook/hcontortus_genome/04_analysis
+
+![Kallisto QC - All samples with L3 fixed](04_analysis/kallistoQC_allsamples2_plots.png)
+Fig - Kalliso QC - All samples with L3 IDs fixed
+
+```R
 # EGG vs L1 only
 hc_so_EGGvL1	<-	hc_metadata[(hc_metadata$name=="EGG" | hc_metadata$name=="L1"),]
 hc_so_EGGvL1 <- sleuth_prep(hc_so_EGGvL1, extra_bootstrap_summary = TRUE)
