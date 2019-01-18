@@ -1,12 +1,13 @@
-# Haemonchus genome - transcriptome analyses
+annotation# Haemonchus genome - transcriptome analyses
 
 ## Table of contents
 
 1.
 2.
-3. [Annotation QC](#annoation_qc)
-4. [Kallisto](#kallisto)
-5. [Differential splicing w Leafcutter](#ds_leafcutter)
+3. [Manual Curation in Apollo](#manual_curation_apollo)
+4. [Annotation QC](#annoation_qc)
+5. [Kallisto](#kallisto)
+6. [Differential splicing w Leafcutter](#ds_leafcutter)
 
 
 
@@ -19,8 +20,59 @@
 
 
 
+## 03 - Manual Curation in Apollo <a name="manual_curation_apollo"></a>
+
+The genome annotaiton has been maually curated in apollo.
+
+Tracks used
+- Genome annotaiton
+- RNAseq per lifestage
+- splice leaders (SL1 & SL2)
+- Pacbio IsoSeq (CCS subreads and HQ isoforms)
 
 
+
+Once out of Apollo, some curation needs to be done to clean things up a little. The main problem is that Apollo uses a unique code ID per feature to keep track of informaiton and to make sure there are no clashes in IDs. While this is important in Apollo, it makes it confusing in downstream analyses that use the annotaiton. Decided to replace these so they are consistent throughout the whole annotaiton.
+
+*NOTE* this approach below will have to be modified for subsequent apollo updates to ensure consistent naming of features. Eg, if a new isoform is added.
+
+### Working environment
+```shell
+/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION
+
+```
+
+
+```shell
+# make a copy to work on
+cp HCON_V4_WBP11plus_190114.gff3 tmp.gff
+
+# get mRNAs IDs and NAMES
+awk '$3=="mRNA" {print $0}' OFS="\t"  tmp.gff | sed -e 's/Note=Manually dissociate transcript from gene;//g' | cut -f3,5 -d ";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDs_NAMEs.txt
+
+# remove transcript extensions
+cat mRNA_IDs_NAMEs.txt | awk  '{ $2 = substr($2, 1,13); print }' | head
+
+
+cat mRNA_IDs_NAMEs.txt | awk  '{ $2 = substr($2, 1,13); print }' OFS="\t" | sort -k2 > mRNA_IDs_NAMEs_trimmed-sorted.txt
+
+# make a unique list
+cut -f2  mRNA_IDs_NAMEs_trimmed-sorted.txt | uniq > mRNA_IDs_NAMEs_unique.txt
+
+# add unique ID to each transcript
+>mRNA_IDs_NAMEs_transcriptIDs.txt
+while read NAME; do grep -w ${NAME} mRNA_IDs_NAMEs_trimmed-sorted.txt | cat -n | awk '{print $2,$3,$3"-0000"$1}' OFS="\t" >> mRNA_IDs_NAMEs_transcriptIDs.txt; done < mRNA_IDs_NAMEs_unique.txt &
+
+# run the real substitution
+while read OLD GENE NEW; do sed -i "/$OLD/ s//$NEW/g" tmp.gff; done < mRNA_IDs_NAMEs_transcriptIDs.txt &
+
+```
+
+Check the IDs are correct before committing the chance
+
+```shell
+mv tmp.gff HCON_V4_WBP11plus_190114.gff3
+```
 
 
 
@@ -570,40 +622,45 @@ echo "ID" > transcripts.list; grep ">" ../TRANSCRIPTS.fa | cut -f1 -d  " " | sed
 # due to Apollo giving long unique codes, the transcript IDs are obscure. Here is the fix
 awk '$3=="mRNA" {print $9}' ../ANNOTATION.gff3 | cut -f3,5 -d";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDtoNAME_conversion.txt
 
-while read ID NAME; do sed -e "s/${ID}/${NAME}/g" transcripts.list; done < mRNA_IDtoNAME_conversion.txt
+while read ID NAME; do sed -i "s/${ID}/${NAME}/g" transcripts.list; done < mRNA_IDtoNAME_conversion.txt &
+
+# ALTERNATE WAY, direct from the annotaiton
+echo "ID" > transcripts.list; awk '$3=="mRNA" {print $9}' ../ANNOTATION.gff3 | cut -f5 -d";" | sed -e 's/Name=//g' >> transcripts.list
+
+
 
 # make a data frame containing all TMP values from all samples
 paste transcripts.list \
-kallisto_7059_6_1_out.tmp \
-kallisto_7059_6_2_out.tmp \
-kallisto_7059_6_3_out.tmp \
-kallisto_7059_6_4_out.tmp \
-kallisto_7059_6_5_out.tmp \
-kallisto_7059_6_6_out.tmp \
-kallisto_7062_6_8_out.tmp \
-kallisto_7062_6_10_out.tmp \
-kallisto_7062_6_11_out.tmp \
-kallisto_7062_6_7_out.tmp \
-kallisto_7062_6_9_out.tmp \
-kallisto_7062_6_12_out.tmp \
-kallisto_7059_6_7_out.tmp \
-kallisto_7059_6_8_out.tmp \
-kallisto_7059_6_9_out.tmp \
-kallisto_7062_6_1_out.tmp \
-kallisto_7062_6_2_out.tmp \
-kallisto_7062_6_3_out.tmp \
-kallisto_7059_6_10_out.tmp \
-kallisto_7059_6_11_out.tmp \
-kallisto_7059_6_12_out.tmp \
-kallisto_7062_6_13_out.tmp \
-kallisto_7062_6_14_out.tmp \
-kallisto_7062_6_15_out.tmp \
+kallisto_7059_6_1_out.tpm \
+kallisto_7059_6_2_out.tpm \
+kallisto_7059_6_3_out.tpm \
+kallisto_7059_6_4_out.tpm \
+kallisto_7059_6_5_out.tpm \
+kallisto_7059_6_6_out.tpm \
+kallisto_7062_6_8_out.tpm \
+kallisto_7062_6_10_out.tpm \
+kallisto_7062_6_11_out.tpm \
+kallisto_7062_6_7_out.tpm \
+kallisto_7062_6_9_out.tpm \
+kallisto_7062_6_12_out.tpm \
+kallisto_7059_6_7_out.tpm \
+kallisto_7059_6_8_out.tpm \
+kallisto_7059_6_9_out.tpm \
+kallisto_7062_6_1_out.tpm \
+kallisto_7062_6_2_out.tpm \
+kallisto_7062_6_3_out.tpm \
+kallisto_7059_6_10_out.tpm \
+kallisto_7059_6_11_out.tpm \
+kallisto_7059_6_12_out.tpm \
+kallisto_7062_6_13_out.tpm \
+kallisto_7062_6_14_out.tpm \
+kallisto_7062_6_15_out.tpm \
 > kallisto_allsamples.tpm.table
 
 
-`
+```
 
-Curate the data, inlcuding
+Curate the data, including:
   - setting minimum TMP at 1
   - transforming to log10 scale
   - calculating variance per row, of which the top 1000 most variable rows are selected
@@ -622,21 +679,22 @@ data<-read.table("kallisto_allsamples.tpm.table",header=T,row.names=1)
 # set a TPM cutoff,
 data<-(data > 1) * (data - 1) + 1
 data<-log10(data)
-
 data<-as.matrix(data)
 
+# fix infinite values to NA
 is.na(data) <- sapply(data, is.infinite)
 
+# calculate variance per row
 RowVar <- function(x, ...) {
   rowSums(na.rm=TRUE,(x - rowMeans(x, ...))^2, ...)/(dim(x)[2] - 1)
 }
-
 var<-as.matrix(RowVar(data))
 var<-as.data.frame(var)
 var <- var[order(var), ,drop = FALSE]
 var_filter <- tail(var,1000)   # set number of genes here
 var_filter <- rownames_to_column(var_filter)
 
+# bring all data together
 data<-as.data.frame(data)
 data<-rownames_to_column(data)
 
@@ -645,6 +703,8 @@ data_filtered <- column_to_rownames(data_filtered,'rowname')
 data_filtered<-as.matrix(data_filtered)
 var<-as.matrix(RowVar(data))
 data<-cbind(data, variance = var )
+
+# make heatmap
 heatmap.2(data_filtered,trace="none",na.color="grey",labRow=F,dendrogram='row',Colv=FALSE,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
 #data <- transform(data,  var = RowVar(data))
 
@@ -658,7 +718,30 @@ dev.off()
 ```
 
 
+### Run clustering analysis of gene expression across the life stages
 
+
+
+Need to generate a replicates file that tells CLUST what samples to group.
+
+### collate data for clust
+```shell
+
+paste transcripts.list all.tpm > all.tpm.tmp; mv all.tpm.tmp all.tpm
+mkdir clust_data
+
+mv all.tpm clust_data/
+
+
+
+Run clust
+```shell
+
+
+
+
+clust $PWD/clust_data -r replicates.txt
+```
 
 ---
 ## 05 - Differential splicing w Leafcutter <a name="ds_leafcutter"></a>
