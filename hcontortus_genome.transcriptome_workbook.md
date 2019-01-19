@@ -45,15 +45,13 @@ Once out of Apollo, some curation needs to be done to clean things up a little. 
 
 ```shell
 # make a copy to work on
-cp HCON_V4_WBP11plus_190114.gff3 tmp.gff
+mv hc_v4.gff3 HC_V4_WBP11plus_190118.gff3
+ln -s HC_V4_WBP11plus_190118.gff3 tmp.gff
 
 # get mRNAs IDs and NAMES
 awk '$3=="mRNA" {print $0}' OFS="\t"  tmp.gff | sed -e 's/Note=Manually dissociate transcript from gene;//g' | cut -f3,5 -d ";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDs_NAMEs.txt
 
 # remove transcript extensions
-cat mRNA_IDs_NAMEs.txt | awk  '{ $2 = substr($2, 1,13); print }' | head
-
-
 cat mRNA_IDs_NAMEs.txt | awk  '{ $2 = substr($2, 1,13); print }' OFS="\t" | sort -k2 > mRNA_IDs_NAMEs_trimmed-sorted.txt
 
 # make a unique list
@@ -61,20 +59,48 @@ cut -f2  mRNA_IDs_NAMEs_trimmed-sorted.txt | uniq > mRNA_IDs_NAMEs_unique.txt
 
 # add unique ID to each transcript
 >mRNA_IDs_NAMEs_transcriptIDs.txt
-while read NAME; do grep -w ${NAME} mRNA_IDs_NAMEs_trimmed-sorted.txt | cat -n | awk '{print $2,$3,$3"-0000"$1}' OFS="\t" >> mRNA_IDs_NAMEs_transcriptIDs.txt; done < mRNA_IDs_NAMEs_unique.txt &
+while read NAME; do grep -w ${NAME} mRNA_IDs_NAMEs_trimmed-sorted.txt | cat -n | awk '{print $2,$3,$3"-0000"$1}' OFS="\t" >> mRNA_IDs_NAMEs_transcriptIDs.txt; done < mRNA_IDs_NAMEs_unique.txt
 
 # run the real substitution
-while read OLD GENE NEW; do sed -i "/$OLD/ s//$NEW/g" tmp.gff; done < mRNA_IDs_NAMEs_transcriptIDs.txt &
+export PATH="/nfs/users/nfs_s/sd21/lustre118_link/software/anaconda2/bin:$PATH"
+# fsed - https://github.com/wroberts/fsed
+awk '{print $1,$3}' OFS="\t" mRNA_IDs_NAMEs_transcriptIDs.txt > mRNA_IDs_NAMEs_transcriptIDs.2.txt
+
+fsed --pattern-format=tsv --output HCON_V4_WBP11plus_190118.renamed.gff3  mRNA_IDs_NAMEs_transcriptIDs.2.txt HCON_V4_WBP11plus_190118.gff3 &
 
 ```
 
-Check the IDs are correct before committing the chance
+
+Fixing GFF to prepare for interproscan. Stripping out info from existing interproscan, as is is incorrectly formatted.
 
 ```shell
-mv tmp.gff HCON_V4_WBP11plus_190114.gff3
+sed -e 's/;info.*$//g' -e 's/method.*//g' -e '/^$/d' HCON_V4_WBP11plus_190118.renamed.gff3 > tmp.gff
+
+echo '##FASTA' >> tmp.gff
+ln -s ../../REF/HAEM_V4_final.chr.fa
+cat tmp.gff HAEM_V4_final.chr.fa > tmp.gff2; mv tmp.gff2 tmp.gff
+```
+
+interproscan
+```shell
+# generate a protein fasta from annotation and reference genome
+gffread -y PROTEINS.fa -g HAEM_V4_final.chr.fa HCON_V4_WBP11plus_190118.renamed.gff3
+sed -e 's/\.//g' PROTEINS.fa > tmp; mv tmp PROTEINS.fa
+
+# run interproscan
+farm_interproscan -a PROTEINS.fa -o IPS.output.gff
+
+# lift over GO terms from interproscan to GFF
+extract_interproscan_go_terms -i IPS.output.gff -e tmp.gff
+
+# rename
+mv tmp.gff.go.gff HCON_V4_WBP11plus_190118.ips.gff3
 ```
 
 
+
+
+---
 
 ---
 
