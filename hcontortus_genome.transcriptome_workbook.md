@@ -139,7 +139,7 @@ cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/V3/TRANSCRIPTOME/V1_MANUAL_CUR
 cp ~sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/V1/haemonchus_contortus.PRJEB506.WBPS8.annotations.gff3 HCON_V1.annotation.gff3
 
 # V4 final annotaiton
-cp ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190114.gff3 HCON_V4_FINAL.gff3
+cp ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190118.ips.gff3 HCON_V4_FINAL.gff3
 
 # V4 AUGUSTUS
 
@@ -198,7 +198,7 @@ Intron chain level:    33.3     |    32.9    |
 
 
 # V4 Final vs EVM
-
+gffcompare -R -r HCON_V4_FINAL.gff3 -o V4_FINAL_vs_EVM HCON_V4_EVM.gff3
 #-----------------| Sensitivity | Precision  |
         Base level:    92.9     |    98.7    |
         Exon level:    94.8     |    96.2    |
@@ -257,7 +257,7 @@ cd KALLISTO
 ### Get the GFF to work on
 ```shell
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa REF.fa
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190114.gff3 ANNOTATION.gff3
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190118.ips.gff3 ANNOTATION.gff3
 ```
 
 ### get some raw data
@@ -351,6 +351,8 @@ hc_so_noGUT   <-    sleuth_lrt(hc_so_noGUT, 'reduced', 'full')
 
 pcaplot_allsamples_minusgut	<-	plot_pca(hc_so_noGUT, color_by = 'name')
 
+
+
 # PCA of L3 samples - SHL3 and EXL3
 hc_so_L3_meta    <-    hc_metadata[(hc_metadata$name=="EXL3" | hc_metadata$name=="SHL3"),]
 hc_so_L3    <-    sleuth_prep(hc_so_L3_meta, extra_bootstrap_summary = TRUE)
@@ -411,8 +413,8 @@ head(sleuth_significant, 20)
 pcaplot_allsamples2	<-	plot_pca(hc_so, color_by = 'name')
 heatmap_allsamples2   <-    plot_sample_heatmap(hc_so)
 kallistoQC_allsamples2_plots <- pcaplot_allsamples2 + heatmap_allsamples2 + plot_layout(ncol = 2)
-ggsave(kallistoQC_allsamples2_plots, "kallistoQC_allsamples2_plots.pdf",width = 28, height = 10, units = "cm")
-ggsave(kallistoQC_allsamples2_plots,"kallistoQC_allsamples2_plots.png",width = 28, height = 10, units = "cm")
+ggsave("kallistoQC_allsamples2_plots.pdf",width = 28, height = 10, units = "cm")
+ggsave("kallistoQC_allsamples2_plots.png",width = 28, height = 10, units = "cm")
 ```
 - Copy to local dir - run this from local machine
 ```shell
@@ -644,11 +646,11 @@ cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLIST
 for i in ` ls -1d *out `; do echo $i > ${i}.tpm ; cat ${i}/abundance.tsv | cut -f5 | sed '1d' >> ${i}.tpm; done
 
 # generate a "transcripts" list, taken from the TRANSCRIPTS.fa file
-echo "ID" > transcripts.list; grep ">" ../TRANSCRIPTS.fa | cut -f1 -d  " " | sed 's/>//g' >> transcripts.list
+#echo "ID" > transcripts.list; grep ">" ../TRANSCRIPTS.fa | cut -f1 -d  " " | sed 's/>//g' >> transcripts.list
 # due to Apollo giving long unique codes, the transcript IDs are obscure. Here is the fix
-awk '$3=="mRNA" {print $9}' ../ANNOTATION.gff3 | cut -f3,5 -d";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDtoNAME_conversion.txt
+#awk '$3=="mRNA" {print $9}' ../ANNOTATION.gff3 | cut -f3,5 -d";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDtoNAME_conversion.txt
 
-while read ID NAME; do sed -i "s/${ID}/${NAME}/g" transcripts.list; done < mRNA_IDtoNAME_conversion.txt &
+#while read ID NAME; do sed -i "s/${ID}/${NAME}/g" transcripts.list; done < mRNA_IDtoNAME_conversion.txt &
 
 # ALTERNATE WAY, direct from the annotaiton
 echo "ID" > transcripts.list; awk '$3=="mRNA" {print $9}' ../ANNOTATION.gff3 | cut -f5 -d";" | sed -e 's/Name=//g' >> transcripts.list
@@ -666,7 +668,6 @@ kallisto_7059_6_6_out.tpm \
 kallisto_7062_6_8_out.tpm \
 kallisto_7062_6_10_out.tpm \
 kallisto_7062_6_11_out.tpm \
-kallisto_7062_6_7_out.tpm \
 kallisto_7062_6_9_out.tpm \
 kallisto_7062_6_12_out.tpm \
 kallisto_7059_6_7_out.tpm \
@@ -683,7 +684,7 @@ kallisto_7062_6_14_out.tpm \
 kallisto_7062_6_15_out.tpm \
 > kallisto_allsamples.tpm.table
 
-
+#kallisto_7062_6_7_out.tpm  has been removed
 ```
 
 Curate the data, including:
@@ -711,6 +712,7 @@ data<-as.matrix(data)
 is.na(data) <- sapply(data, is.infinite)
 
 # calculate variance per row
+#https://stackoverflow.com/questions/25099825/row-wise-variance-of-a-matrix-in-r
 RowVar <- function(x, ...) {
   rowSums(na.rm=TRUE,(x - rowMeans(x, ...))^2, ...)/(dim(x)[2] - 1)
 }
@@ -727,21 +729,29 @@ data<-rownames_to_column(data)
 data_filtered <- dplyr::semi_join(data, var_filter, by = "rowname")
 data_filtered <- column_to_rownames(data_filtered,'rowname')
 data_filtered<-as.matrix(data_filtered)
-var<-as.matrix(RowVar(data))
-data<-cbind(data, variance = var )
+#var<-as.matrix(RowVar(data))
+#data<-cbind(data, variance = var )
 
 # make heatmap
-heatmap.2(data_filtered,trace="none",na.color="grey",labRow=F,dendrogram='row',Colv=FALSE,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
-#data <- transform(data,  var = RowVar(data))
-
-
-
-
 pdf("top1000variablegenes_allstages_minTPM1.pdf")
 heatmap.2(data_filtered,trace="none",na.color="grey",labRow=F,dendrogram='row',Colv=FALSE,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
 dev.off()
 
+png("top1000variablegenes_allstages_minTPM1.png")
+heatmap.2(data_filtered,trace="none",na.color="grey",labRow=F,dendrogram='row',Colv=FALSE,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
+dev.off()
+
 ```
+
+- Copy to local dir - run this from local machine
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/top1000variablegenes_allstages_minTPM1.png ~/Documents/workbook/hcontortus_genome/04_analysis
+```
+
+![Kallisto - top 1000 most variable genes across lifestages](04_analysis/top1000variablegenes_allstages_minTPM1.png)
+Fig - Kalliso  top 1000 most variable genes across lifestages
+
+
 
 
 ### Run clustering analysis of gene expression across the life stages
