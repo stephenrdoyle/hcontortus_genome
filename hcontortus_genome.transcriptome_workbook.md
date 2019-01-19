@@ -762,22 +762,74 @@ Need to generate a replicates file that tells CLUST what samples to group.
 
 ### collate data for clust
 ```shell
-
-paste transcripts.list all.tpm > all.tpm.tmp; mv all.tpm.tmp all.tpm
 mkdir clust_data
-
-mv all.tpm clust_data/
-
-
+cp kallisto_allsamples.tpm.table clust_data/
+```
 
 Run clust
+- requires a replicates dataset - see "replicates.txt"
+
 ```shell
-
-
-
-
+# run clust
 clust $PWD/clust_data -r replicates.txt
 ```
+Clust produces a cluster profile PDF containing all Clusters. However, it is not that nice, and so will make better onces using ggplot. Need to convert PDF to PNG to post however.
+
+```shell
+# pdf to png conversion
+convert Clusters_profiles.pdf -quality 200  Clusters_profiles.png
+```
+
+- Copy to local dir - run this from local machine
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19/Clusters_profiles*.png ~/Documents/workbook/hcontortus_genome/04_analysis/
+```
+
+![Clust - cluster profiles ](04_analysis/Clusters_profiles*.png)
+Fig - Clust - correlated gene expression across lifestages
+
+
+
+Make nice clust plots using ggplot2
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19
+
+# make gene lists for each cluster set
+for i in {1..20}; do cut -f "${i}" Clusters_Objects.tsv | sed '2d' | cut -f1 -d " " | sed '/^$/d' > cluster_${i}.list; done
+```
+```R
+R-3.5.0
+library(dplyr)
+library(reshape2)
+library(ggplot2)
+library(gtools)
+
+myFiles <- list.files(pattern="*.list")
+myFiles <- mixedsort(sort(myFiles))   # get files in order
+data<-read.table("Processed_Data/kallisto_allsamples.tpm.table_processed.tsv",header=T)
+
+
+c0<-read.table("c1.list",header=T)
+
+for(i in 1:length(myFiles)){
+		cluster_data <- read.table(myFiles[i],header=TRUE)
+		data<-read.table("Processed_Data/kallisto_allsamples.tpm.table_processed.tsv",header=T)
+		data_cluster<-dplyr::semi_join(data, cluster_data, by = c("Genes" = colnames(cluster_data[1])))
+		df_melted <- melt(data_cluster, id.vars = 'Genes')
+  		ggplot()+geom_line(aes(df_melted$variable,df_melted$value,group = df_melted$Genes),alpha=0.1)+theme_bw()+ylab("Normalised TMP")+ylim(-2.5,2.5)
+		ggsave(paste("cluster",i,".pdf",sep=""),width = 6, height = 6, units = c("cm"))
+}
+
+# example plot - c0
+data_c0<-dplyr::semi_join(data, c0, by = c("Genes" = "C0"))
+df_melted <- melt(data_c0, id.vars = 'Genes')
+ggplot()+geom_line(aes(df_melted$variable,df_melted$value,group = df_melted$Genes),alpha=0.1)+theme_bw()
+
+```
+
+
+
+
 
 ---
 ## 05 - Differential splicing w Leafcutter <a name="ds_leafcutter"></a>
