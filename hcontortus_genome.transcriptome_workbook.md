@@ -785,8 +785,16 @@ convert Clusters_profiles.pdf -quality 200  Clusters_profiles.png
 scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19/Clusters_profiles*.png ~/Documents/workbook/hcontortus_genome/04_analysis/
 ```
 
-![Clust - cluster profiles ](04_analysis/Clusters_profiles*.png)
+![Clust - cluster profiles ](04_analysis/Clusters_profiles-0.png)
+![Clust - cluster profiles ](04_analysis/Clusters_profiles-1.png)
 Fig - Clust - correlated gene expression across lifestages
+
+Results
+- The largest cluster expression profiles split Egg/L1/L3 and L4/Adults
+-
+
+
+
 
 
 
@@ -827,8 +835,312 @@ ggplot()+geom_line(aes(df_melted$variable,df_melted$value,group = df_melted$Gene
 
 ```
 
+Import into Illustrator to make a nice figure.
+
+- Copy to local dir - run this from local machine
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19/cluster*.pdf ~/Documents/workbook/hcontortus_genome/04_analysis
+```
+
+### Distribution of clustered gene expression profiles across the genome
+
+Want to explore whether genome locate has any impact on the coexpression of genes.
+
+# get genome coordinates of genes in clusters
+```shell
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190118.ips.gff3 ANNOTATION.gff
+
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_1.list > cluster_1.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_2.list > cluster_2.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_3.list > cluster_3.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_4.list > cluster_4.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_5.list > cluster_5.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_6.list > cluster_6.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_7.list > cluster_7.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_8.list > cluster_8.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_9.list > cluster_9.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_10.list > cluster_10.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_11.list > cluster_11.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_12.list > cluster_12.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_13.list > cluster_13.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_14.list > cluster_14.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_15.list > cluster_15.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_16.list > cluster_16.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_17.list > cluster_17.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_18.list > cluster_18.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_19.list > cluster_19.coords
+while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_20.list > cluster_20.coords
+```
 
 
+# stat testing the clusters
+```shell
+ln -s ../../../../REF/HAEM_V4_final.chr.fa
+samtools faidx HAEM_V4_final.chr.fa
+cut -f1,2 HAEM_V4_final.chr.fa.fai > HAEM_V4_final.chr.genome
+
+# make bed files - note per cluster bed files are already made, ie. cluster_20.coords
+bedtools-2 makewindows -g  HAEM_V4_final.chr.genome -w 500000 > HAEM_V4_final.chr.500k.bed
+awk '$3=="mRNA" {print $1,$4,$5,$9}' OFS="\t" ANNOTATION.gff >HCON_V4.mRNA.bed
+
+
+bedtools-2 coverage -a HAEM_V4_final.chr.500k.bed -b HCON_V4.mRNA.bed -counts > HCON_V4.mRNA.counts
+
+for i in *.coords; do bedtools-2 coverage -a HAEM_V4_final.chr.500k.bed -b <( sort -k1,1 -k2,2n ${i}) -counts > ${i%.coords}.counts; done
+```
+
+
+
+
+Make the plots
+```R
+R-3.5.0
+library(ggplot2)
+library(patchwork)
+library(viridis)
+
+cluster_1 <- read.table("cluster_1.coords",header=F)
+cluster_2 <- read.table("cluster_2.coords",header=F)
+cluster_3 <- read.table("cluster_3.coords",header=F)
+cluster_4 <- read.table("cluster_4.coords",header=F)
+cluster_5 <- read.table("cluster_5.coords",header=F)
+cluster_6 <- read.table("cluster_6.coords",header=F)
+cluster_7 <- read.table("cluster_7.coords",header=F)
+cluster_8 <- read.table("cluster_8.coords",header=F)
+cluster_9 <- read.table("cluster_9.coords",header=F)
+cluster_10 <- read.table("cluster_10.coords",header=F)
+cluster_11 <- read.table("cluster_11.coords",header=F)
+cluster_12 <- read.table("cluster_12.coords",header=F)
+cluster_13 <- read.table("cluster_13.coords",header=F)
+cluster_14 <- read.table("cluster_14.coords",header=F)
+cluster_15 <- read.table("cluster_15.coords",header=F)
+cluster_16 <- read.table("cluster_16.coords",header=F)
+cluster_17 <- read.table("cluster_17.coords",header=F)
+cluster_18 <- read.table("cluster_18.coords",header=F)
+cluster_19 <- read.table("cluster_19.coords",header=F)
+cluster_20 <- read.table("cluster_20.coords",header=F)
+
+cluster_1$cluster <- 1
+cluster_2$cluster <- 2
+cluster_3$cluster <- 3
+cluster_4$cluster <- 4
+cluster_5$cluster <- 5
+cluster_6$cluster <- 6
+cluster_7$cluster <- 7
+cluster_8$cluster <- 8
+cluster_9$cluster <- 9
+cluster_10$cluster <- 10
+cluster_11$cluster <- 11
+cluster_12$cluster <- 12
+cluster_13$cluster <- 13
+cluster_14$cluster <- 14
+cluster_15$cluster <- 15
+cluster_16$cluster <- 16
+cluster_17$cluster <- 17
+cluster_18$cluster <- 18
+cluster_19$cluster <- 19
+cluster_20$cluster <- 20
+
+
+clusters <- rbind(cluster_1,cluster_2,cluster_3,cluster_4,cluster_5,cluster_6,cluster_7,cluster_8,cluster_9,cluster_10,cluster_11,cluster_12,cluster_13,cluster_14,cluster_15,cluster_16,cluster_17,cluster_18,cluster_19,cluster_20)
+
+#ggplot(clusters,aes(clusters$V2,clusters$cluster))+ geom_jitter(alpha=0.1,size=0.5)+facet_grid(.~clusters$V1)+theme_bw()+ scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
+
+
+all<-read.table("HCON_V4.mRNA.counts",header=F)
+c1<-read.table("cluster_1.counts",header=F)
+c2<-read.table("cluster_2.counts",header=F)
+c3<-read.table("cluster_3.counts",header=F)
+c4<-read.table("cluster_4.counts",header=F)
+c5<-read.table("cluster_5.counts",header=F)
+c6<-read.table("cluster_6.counts",header=F)
+c7<-read.table("cluster_7.counts",header=F)
+c8<-read.table("cluster_8.counts",header=F)
+c9<-read.table("cluster_9.counts",header=F)
+c10<-read.table("cluster_10.counts",header=F)
+c11<-read.table("cluster_11.counts",header=F)
+c12<-read.table("cluster_12.counts",header=F)
+c13<-read.table("cluster_13.counts",header=F)
+c14<-read.table("cluster_14.counts",header=F)
+c15<-read.table("cluster_15.counts",header=F)
+c16<-read.table("cluster_16.counts",header=F)
+c17<-read.table("cluster_17.counts",header=F)
+c18<-read.table("cluster_18.counts",header=F)
+c19<-read.table("cluster_19.counts",header=F)
+c20<-read.table("cluster_20.counts",header=F)
+
+c1_stat<-all
+c1_stat$observed<-c1$V4
+c1_stat$expected<-all$V4*(sum(c1$V4)/20708)
+c1_stat$chqsq<-(c1$V4 - all$V4*(sum(c1$V4)/20708))^2/(all$V4*sum(c1$V4)/20708)
+c1_stat$pvalue <- pchisq(c1_stat$chqsq,df=1,lower.tail=FALSE)
+c1_stat$cluster <- 1
+
+c2_stat<-all
+c2_stat$observed<-c2$V4
+c2_stat$expected<-all$V4*(sum(c2$V4)/20708)
+c2_stat$chqsq<-(c2$V4 - all$V4*(sum(c2$V4)/20708))^2/(all$V4*sum(c2$V4)/20708)
+c2_stat$pvalue <- pchisq(c2_stat$chqsq,df=1,lower.tail=FALSE)
+c2_stat$cluster <- 2
+
+c3_stat<-all
+c3_stat$observed<-c3$V4
+c3_stat$expected<-all$V4*(sum(c3$V4)/20708)
+c3_stat$chqsq<-(c3$V4 - all$V4*(sum(c3$V4)/20708))^2/(all$V4*sum(c3$V4)/20708)
+c3_stat$pvalue <- pchisq(c3_stat$chqsq,df=1,lower.tail=FALSE)
+c3_stat$cluster <- 3
+
+c4_stat<-all
+c4_stat$observed<-c4$V4
+c4_stat$expected<-all$V4*(sum(c4$V4)/20708)
+c4_stat$chqsq<-(c4$V4 - all$V4*(sum(c4$V4)/20708))^2/(all$V4*sum(c4$V4)/20708)
+c4_stat$pvalue <- pchisq(c4_stat$chqsq,df=1,lower.tail=FALSE)
+c4_stat$cluster <- 4
+
+c5_stat<-all
+c5_stat$observed<-c5$V4
+c5_stat$expected<-all$V4*(sum(c5$V4)/20708)
+c5_stat$chqsq<-(c5$V4 - all$V4*(sum(c5$V4)/20708))^2/(all$V4*sum(c5$V4)/20708)
+c5_stat$pvalue <- pchisq(c5_stat$chqsq,df=1,lower.tail=FALSE)
+c5_stat$cluster <- 5
+
+c6_stat<-all
+c6_stat$observed<-c6$V4
+c6_stat$expected<-all$V4*(sum(c6$V4)/20708)
+c6_stat$chqsq<-(c6$V4 - all$V4*(sum(c6$V4)/20708))^2/(all$V4*sum(c6$V4)/20708)
+c6_stat$pvalue <- pchisq(c6_stat$chqsq,df=1,lower.tail=FALSE)
+c6_stat$cluster <- 6
+
+c7_stat<-all
+c7_stat$observed<-c7$V4
+c7_stat$expected<-all$V4*(sum(c7$V4)/20708)
+c7_stat$chqsq<-(c7$V4 - all$V4*(sum(c7$V4)/20708))^2/(all$V4*sum(c7$V4)/20708)
+c7_stat$pvalue <- pchisq(c7_stat$chqsq,df=1,lower.tail=FALSE)
+c7_stat$cluster <- 7
+
+c8_stat<-all
+c8_stat$observed<-c8$V4
+c8_stat$expected<-all$V4*(sum(c8$V4)/20708)
+c8_stat$chqsq<-(c8$V4 - all$V4*(sum(c8$V4)/20708))^2/(all$V4*sum(c8$V4)/20708)
+c8_stat$pvalue <- pchisq(c8_stat$chqsq,df=1,lower.tail=FALSE)
+c8_stat$cluster <- 8
+
+c9_stat<-all
+c9_stat$observed<-c9$V4
+c9_stat$expected<-all$V4*(sum(c9$V4)/20708)
+c9_stat$chqsq<-(c9$V4 - all$V4*(sum(c9$V4)/20708))^2/(all$V4*sum(c9$V4)/20708)
+c9_stat$pvalue <- pchisq(c9_stat$chqsq,df=1,lower.tail=FALSE)
+c9_stat$cluster <- 9
+
+c10_stat<-all
+c10_stat$observed<-c10$V4
+c10_stat$expected<-all$V4*(sum(c10$V4)/20708)
+c10_stat$chqsq<-(c10$V4 - all$V4*(sum(c10$V4)/20708))^2/(all$V4*sum(c10$V4)/20708)
+c10_stat$pvalue <- pchisq(c10_stat$chqsq,df=1,lower.tail=FALSE)
+c10_stat$cluster <- 10
+
+c11_stat<-all
+c11_stat$observed<-c11$V4
+c11_stat$expected<-all$V4*(sum(c11$V4)/20708)
+c11_stat$chqsq<-(c11$V4 - all$V4*(sum(c11$V4)/20708))^2/(all$V4*sum(c11$V4)/20708)
+c11_stat$pvalue <- pchisq(c11_stat$chqsq,df=1,lower.tail=FALSE)
+c11_stat$cluster <- 11
+
+c12_stat<-all
+c12_stat$observed<-c12$V4
+c12_stat$expected<-all$V4*(sum(c12$V4)/20708)
+c12_stat$chqsq<-(c12$V4 - all$V4*(sum(c12$V4)/20708))^2/(all$V4*sum(c12$V4)/20708)
+c12_stat$pvalue <- pchisq(c12_stat$chqsq,df=1,lower.tail=FALSE)
+c12_stat$cluster <- 12
+
+c13_stat<-all
+c13_stat$observed<-c13$V4
+c13_stat$expected<-all$V4*(sum(c13$V4)/20708)
+c13_stat$chqsq<-(c13$V4 - all$V4*(sum(c13$V4)/20708))^2/(all$V4*sum(c13$V4)/20708)
+c13_stat$pvalue <- pchisq(c13_stat$chqsq,df=1,lower.tail=FALSE)
+c13_stat$cluster <- 13
+
+c14_stat<-all
+c14_stat$observed<-c14$V4
+c14_stat$expected<-all$V4*(sum(c14$V4)/20708)
+c14_stat$chqsq<-(c14$V4 - all$V4*(sum(c14$V4)/20708))^2/(all$V4*sum(c14$V4)/20708)
+c14_stat$pvalue <- pchisq(c14_stat$chqsq,df=1,lower.tail=FALSE)
+c14_stat$cluster <- 14
+
+c15_stat<-all
+c15_stat$observed<-c15$V4
+c15_stat$expected<-all$V4*(sum(c15$V4)/20708)
+c15_stat$chqsq<-(c15$V4 - all$V4*(sum(c15$V4)/20708))^2/(all$V4*sum(c15$V4)/20708)
+c15_stat$pvalue <- pchisq(c15_stat$chqsq,df=1,lower.tail=FALSE)
+c15_stat$cluster <- 15
+
+c16_stat<-all
+c16_stat$observed<-c16$V4
+c16_stat$expected<-all$V4*(sum(c16$V4)/20708)
+c16_stat$chqsq<-(c16$V4 - all$V4*(sum(c16$V4)/20708))^2/(all$V4*sum(c16$V4)/20708)
+c16_stat$pvalue <- pchisq(c16_stat$chqsq,df=1,lower.tail=FALSE)
+c16_stat$cluster <- 16
+
+
+c17_stat<-all
+c17_stat$observed<-c17$V4
+c17_stat$expected<-all$V4*(sum(c17$V4)/20708)
+c17_stat$chqsq<-(c17$V4 - all$V4*(sum(c17$V4)/20708))^2/(all$V4*sum(c17$V4)/20708)
+c17_stat$pvalue <- pchisq(c17_stat$chqsq,df=1,lower.tail=FALSE)
+c17_stat$cluster <- 17
+
+c18_stat<-all
+c18_stat$observed<-c18$V4
+c18_stat$expected<-all$V4*(sum(c18$V4)/20708)
+c18_stat$chqsq<-(c18$V4 - all$V4*(sum(c18$V4)/20708))^2/(all$V4*sum(c18$V4)/20708)
+c18_stat$pvalue <- pchisq(c18_stat$chqsq,df=1,lower.tail=FALSE)
+c18_stat$cluster <- 18
+
+c19_stat<-all
+c19_stat$observed<-c19$V4
+c19_stat$expected<-all$V4*(sum(c19$V4)/20708)
+c19_stat$chqsq<-(c19$V4 - all$V4*(sum(c19$V4)/20708))^2/(all$V4*sum(c19$V4)/20708)
+c19_stat$pvalue <- pchisq(c19_stat$chqsq,df=1,lower.tail=FALSE)
+c19_stat$cluster <- 19
+
+c20_stat<-all
+c20_stat$observed<-c20$V4
+c20_stat$expected<-all$V4*(sum(c20$V4)/20708)
+c20_stat$chqsq<-(c20$V4 - all$V4*(sum(c20$V4)/20708))^2/(all$V4*sum(c20$V4)/20708)
+c20_stat$pvalue <- pchisq(c20_stat$chqsq,df=1,lower.tail=FALSE)
+c20_stat$cluster <- 20
+
+cluster_stats <- rbind(c1_stat,c2_stat,c3_stat,c4_stat,c5_stat,c6_stat,c7_stat,c8_stat,c9_stat,c10_stat,c11_stat,c12_stat,c13_stat,c14_stat,c15_stat,c16_stat,c17_stat,c18_stat,c19_stat,c20_stat)
+cluster_stats <- cluster_stats[cluster_stats$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+cluster_stats[is.na(cluster_stats)] <- 1
+cluster_stats$neglogP <- -log10(cluster_stats$pvalue)
+
+
+# make the final plots
+plot_clusts<-ggplot(clusters,aes(clusters$V2,clusters$cluster))+
+		geom_jitter(alpha=0.1,size=0.5)+facet_grid(.~clusters$V1)+
+		theme_bw()+
+		scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
+
+plot_stats<-ggplot(cluster_stats)+
+		geom_rect(aes(xmin=cluster_stats$V2,ymin=cluster_stats$cluster-0.5,xmax=cluster_stats$V3,ymax=cluster_stats$cluster+0.5,fill=-log10(cluster_stats$pvalue)))+
+		facet_grid(.~cluster_stats$V1)+
+		theme_bw()+
+		scale_fill_viridis(direction=-1)+
+		scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
+
+plot_clusts + plot_stats + plot_layout(ncol=2)
+
+ggsave("clust_profiles_across_genome.pdf",width = 28, height = 10, units = "cm")
+ggsave("clust_profiles_across_genome.png",width = 28, height = 10, units = "cm")
+```
+- Copy to local dir - run this from local machine
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19/clust_profiles_across_genome.* ~/Documents/workbook/hcontortus_genome/04_analysis
+```
+
+![CLust - expression profiles across genome](04_analysis/clust_profiles_across_genome.png)
+Fig - CLust - expression profiles across genome
 
 
 ---
