@@ -969,144 +969,146 @@ c18<-read.table("cluster_18.counts",header=F)
 c19<-read.table("cluster_19.counts",header=F)
 c20<-read.table("cluster_20.counts",header=F)
 
+
+# calculate the expected number of clustered transcripts per window with the null hypothesis that they are equally distributed throughout the genome.
 c1_stat<-all
 c1_stat$observed<-c1$V4
-c1_stat$expected<-all$V4*(sum(c1$V4)/20708)
-c1_stat$chqsq<-(c1$V4 - all$V4*(sum(c1$V4)/20708))^2/(all$V4*sum(c1$V4)/20708)
+c1_stat$expected<-all$V4*(sum(c1$V4)/21007)
+c1_stat$chqsq<-(c1$V4 - all$V4*(sum(c1$V4)/21007))^2/(all$V4*sum(c1$V4)/21007)
 c1_stat$pvalue <- pchisq(c1_stat$chqsq,df=1,lower.tail=FALSE)
 c1_stat$cluster <- 1
 
 c2_stat<-all
 c2_stat$observed<-c2$V4
-c2_stat$expected<-all$V4*(sum(c2$V4)/20708)
-c2_stat$chqsq<-(c2$V4 - all$V4*(sum(c2$V4)/20708))^2/(all$V4*sum(c2$V4)/20708)
+c2_stat$expected<-all$V4*(sum(c2$V4)/21007)
+c2_stat$chqsq<-(c2$V4 - all$V4*(sum(c2$V4)/21007))^2/(all$V4*sum(c2$V4)/21007)
 c2_stat$pvalue <- pchisq(c2_stat$chqsq,df=1,lower.tail=FALSE)
 c2_stat$cluster <- 2
 
 c3_stat<-all
 c3_stat$observed<-c3$V4
-c3_stat$expected<-all$V4*(sum(c3$V4)/20708)
-c3_stat$chqsq<-(c3$V4 - all$V4*(sum(c3$V4)/20708))^2/(all$V4*sum(c3$V4)/20708)
+c3_stat$expected<-all$V4*(sum(c3$V4)/21007)
+c3_stat$chqsq<-(c3$V4 - all$V4*(sum(c3$V4)/21007))^2/(all$V4*sum(c3$V4)/21007)
 c3_stat$pvalue <- pchisq(c3_stat$chqsq,df=1,lower.tail=FALSE)
 c3_stat$cluster <- 3
 
 c4_stat<-all
 c4_stat$observed<-c4$V4
-c4_stat$expected<-all$V4*(sum(c4$V4)/20708)
-c4_stat$chqsq<-(c4$V4 - all$V4*(sum(c4$V4)/20708))^2/(all$V4*sum(c4$V4)/20708)
+c4_stat$expected<-all$V4*(sum(c4$V4)/21007)
+c4_stat$chqsq<-(c4$V4 - all$V4*(sum(c4$V4)/21007))^2/(all$V4*sum(c4$V4)/21007)
 c4_stat$pvalue <- pchisq(c4_stat$chqsq,df=1,lower.tail=FALSE)
 c4_stat$cluster <- 4
 
 c5_stat<-all
 c5_stat$observed<-c5$V4
-c5_stat$expected<-all$V4*(sum(c5$V4)/20708)
-c5_stat$chqsq<-(c5$V4 - all$V4*(sum(c5$V4)/20708))^2/(all$V4*sum(c5$V4)/20708)
+c5_stat$expected<-all$V4*(sum(c5$V4)/21007)
+c5_stat$chqsq<-(c5$V4 - all$V4*(sum(c5$V4)/21007))^2/(all$V4*sum(c5$V4)/21007)
 c5_stat$pvalue <- pchisq(c5_stat$chqsq,df=1,lower.tail=FALSE)
 c5_stat$cluster <- 5
 
 c6_stat<-all
 c6_stat$observed<-c6$V4
-c6_stat$expected<-all$V4*(sum(c6$V4)/20708)
-c6_stat$chqsq<-(c6$V4 - all$V4*(sum(c6$V4)/20708))^2/(all$V4*sum(c6$V4)/20708)
+c6_stat$expected<-all$V4*(sum(c6$V4)/21007)
+c6_stat$chqsq<-(c6$V4 - all$V4*(sum(c6$V4)/21007))^2/(all$V4*sum(c6$V4)/21007)
 c6_stat$pvalue <- pchisq(c6_stat$chqsq,df=1,lower.tail=FALSE)
 c6_stat$cluster <- 6
 
 c7_stat<-all
 c7_stat$observed<-c7$V4
-c7_stat$expected<-all$V4*(sum(c7$V4)/20708)
-c7_stat$chqsq<-(c7$V4 - all$V4*(sum(c7$V4)/20708))^2/(all$V4*sum(c7$V4)/20708)
+c7_stat$expected<-all$V4*(sum(c7$V4)/21007)
+c7_stat$chqsq<-(c7$V4 - all$V4*(sum(c7$V4)/21007))^2/(all$V4*sum(c7$V4)/21007)
 c7_stat$pvalue <- pchisq(c7_stat$chqsq,df=1,lower.tail=FALSE)
 c7_stat$cluster <- 7
 
 c8_stat<-all
 c8_stat$observed<-c8$V4
-c8_stat$expected<-all$V4*(sum(c8$V4)/20708)
-c8_stat$chqsq<-(c8$V4 - all$V4*(sum(c8$V4)/20708))^2/(all$V4*sum(c8$V4)/20708)
+c8_stat$expected<-all$V4*(sum(c8$V4)/21007)
+c8_stat$chqsq<-(c8$V4 - all$V4*(sum(c8$V4)/21007))^2/(all$V4*sum(c8$V4)/21007)
 c8_stat$pvalue <- pchisq(c8_stat$chqsq,df=1,lower.tail=FALSE)
 c8_stat$cluster <- 8
 
 c9_stat<-all
 c9_stat$observed<-c9$V4
-c9_stat$expected<-all$V4*(sum(c9$V4)/20708)
-c9_stat$chqsq<-(c9$V4 - all$V4*(sum(c9$V4)/20708))^2/(all$V4*sum(c9$V4)/20708)
+c9_stat$expected<-all$V4*(sum(c9$V4)/21007)
+c9_stat$chqsq<-(c9$V4 - all$V4*(sum(c9$V4)/21007))^2/(all$V4*sum(c9$V4)/21007)
 c9_stat$pvalue <- pchisq(c9_stat$chqsq,df=1,lower.tail=FALSE)
 c9_stat$cluster <- 9
 
 c10_stat<-all
 c10_stat$observed<-c10$V4
-c10_stat$expected<-all$V4*(sum(c10$V4)/20708)
-c10_stat$chqsq<-(c10$V4 - all$V4*(sum(c10$V4)/20708))^2/(all$V4*sum(c10$V4)/20708)
+c10_stat$expected<-all$V4*(sum(c10$V4)/21007)
+c10_stat$chqsq<-(c10$V4 - all$V4*(sum(c10$V4)/21007))^2/(all$V4*sum(c10$V4)/21007)
 c10_stat$pvalue <- pchisq(c10_stat$chqsq,df=1,lower.tail=FALSE)
 c10_stat$cluster <- 10
 
 c11_stat<-all
 c11_stat$observed<-c11$V4
-c11_stat$expected<-all$V4*(sum(c11$V4)/20708)
-c11_stat$chqsq<-(c11$V4 - all$V4*(sum(c11$V4)/20708))^2/(all$V4*sum(c11$V4)/20708)
+c11_stat$expected<-all$V4*(sum(c11$V4)/21007)
+c11_stat$chqsq<-(c11$V4 - all$V4*(sum(c11$V4)/21007))^2/(all$V4*sum(c11$V4)/21007)
 c11_stat$pvalue <- pchisq(c11_stat$chqsq,df=1,lower.tail=FALSE)
 c11_stat$cluster <- 11
 
 c12_stat<-all
 c12_stat$observed<-c12$V4
-c12_stat$expected<-all$V4*(sum(c12$V4)/20708)
-c12_stat$chqsq<-(c12$V4 - all$V4*(sum(c12$V4)/20708))^2/(all$V4*sum(c12$V4)/20708)
+c12_stat$expected<-all$V4*(sum(c12$V4)/21007)
+c12_stat$chqsq<-(c12$V4 - all$V4*(sum(c12$V4)/21007))^2/(all$V4*sum(c12$V4)/21007)
 c12_stat$pvalue <- pchisq(c12_stat$chqsq,df=1,lower.tail=FALSE)
 c12_stat$cluster <- 12
 
 c13_stat<-all
 c13_stat$observed<-c13$V4
-c13_stat$expected<-all$V4*(sum(c13$V4)/20708)
-c13_stat$chqsq<-(c13$V4 - all$V4*(sum(c13$V4)/20708))^2/(all$V4*sum(c13$V4)/20708)
+c13_stat$expected<-all$V4*(sum(c13$V4)/21007)
+c13_stat$chqsq<-(c13$V4 - all$V4*(sum(c13$V4)/21007))^2/(all$V4*sum(c13$V4)/21007)
 c13_stat$pvalue <- pchisq(c13_stat$chqsq,df=1,lower.tail=FALSE)
 c13_stat$cluster <- 13
 
 c14_stat<-all
 c14_stat$observed<-c14$V4
-c14_stat$expected<-all$V4*(sum(c14$V4)/20708)
-c14_stat$chqsq<-(c14$V4 - all$V4*(sum(c14$V4)/20708))^2/(all$V4*sum(c14$V4)/20708)
+c14_stat$expected<-all$V4*(sum(c14$V4)/21007)
+c14_stat$chqsq<-(c14$V4 - all$V4*(sum(c14$V4)/21007))^2/(all$V4*sum(c14$V4)/21007)
 c14_stat$pvalue <- pchisq(c14_stat$chqsq,df=1,lower.tail=FALSE)
 c14_stat$cluster <- 14
 
 c15_stat<-all
 c15_stat$observed<-c15$V4
-c15_stat$expected<-all$V4*(sum(c15$V4)/20708)
-c15_stat$chqsq<-(c15$V4 - all$V4*(sum(c15$V4)/20708))^2/(all$V4*sum(c15$V4)/20708)
+c15_stat$expected<-all$V4*(sum(c15$V4)/21007)
+c15_stat$chqsq<-(c15$V4 - all$V4*(sum(c15$V4)/21007))^2/(all$V4*sum(c15$V4)/21007)
 c15_stat$pvalue <- pchisq(c15_stat$chqsq,df=1,lower.tail=FALSE)
 c15_stat$cluster <- 15
 
 c16_stat<-all
 c16_stat$observed<-c16$V4
-c16_stat$expected<-all$V4*(sum(c16$V4)/20708)
-c16_stat$chqsq<-(c16$V4 - all$V4*(sum(c16$V4)/20708))^2/(all$V4*sum(c16$V4)/20708)
+c16_stat$expected<-all$V4*(sum(c16$V4)/21007)
+c16_stat$chqsq<-(c16$V4 - all$V4*(sum(c16$V4)/21007))^2/(all$V4*sum(c16$V4)/21007)
 c16_stat$pvalue <- pchisq(c16_stat$chqsq,df=1,lower.tail=FALSE)
 c16_stat$cluster <- 16
 
 
 c17_stat<-all
 c17_stat$observed<-c17$V4
-c17_stat$expected<-all$V4*(sum(c17$V4)/20708)
-c17_stat$chqsq<-(c17$V4 - all$V4*(sum(c17$V4)/20708))^2/(all$V4*sum(c17$V4)/20708)
+c17_stat$expected<-all$V4*(sum(c17$V4)/21007)
+c17_stat$chqsq<-(c17$V4 - all$V4*(sum(c17$V4)/21007))^2/(all$V4*sum(c17$V4)/21007)
 c17_stat$pvalue <- pchisq(c17_stat$chqsq,df=1,lower.tail=FALSE)
 c17_stat$cluster <- 17
 
 c18_stat<-all
 c18_stat$observed<-c18$V4
-c18_stat$expected<-all$V4*(sum(c18$V4)/20708)
-c18_stat$chqsq<-(c18$V4 - all$V4*(sum(c18$V4)/20708))^2/(all$V4*sum(c18$V4)/20708)
+c18_stat$expected<-all$V4*(sum(c18$V4)/21007)
+c18_stat$chqsq<-(c18$V4 - all$V4*(sum(c18$V4)/21007))^2/(all$V4*sum(c18$V4)/21007)
 c18_stat$pvalue <- pchisq(c18_stat$chqsq,df=1,lower.tail=FALSE)
 c18_stat$cluster <- 18
 
 c19_stat<-all
 c19_stat$observed<-c19$V4
-c19_stat$expected<-all$V4*(sum(c19$V4)/20708)
-c19_stat$chqsq<-(c19$V4 - all$V4*(sum(c19$V4)/20708))^2/(all$V4*sum(c19$V4)/20708)
+c19_stat$expected<-all$V4*(sum(c19$V4)/21007)
+c19_stat$chqsq<-(c19$V4 - all$V4*(sum(c19$V4)/21007))^2/(all$V4*sum(c19$V4)/21007)
 c19_stat$pvalue <- pchisq(c19_stat$chqsq,df=1,lower.tail=FALSE)
 c19_stat$cluster <- 19
 
 c20_stat<-all
 c20_stat$observed<-c20$V4
-c20_stat$expected<-all$V4*(sum(c20$V4)/20708)
-c20_stat$chqsq<-(c20$V4 - all$V4*(sum(c20$V4)/20708))^2/(all$V4*sum(c20$V4)/20708)
+c20_stat$expected<-all$V4*(sum(c20$V4)/21007)
+c20_stat$chqsq<-(c20$V4 - all$V4*(sum(c20$V4)/21007))^2/(all$V4*sum(c20$V4)/21007)
 c20_stat$pvalue <- pchisq(c20_stat$chqsq,df=1,lower.tail=FALSE)
 c20_stat$cluster <- 20
 
