@@ -1,0 +1,49 @@
+country	country_code	region	region_code	lat	lon	dataset
+Australia	AUS	Wallangarra	WAL	-28.902421	151.8764433	Salle et al (2018)
+Benin	BEN	Benin	BEN	9.3077	2.3158	Salle et al (2018)
+Brazil	BRA	Brazil	BRA	-14.235	-51.9253	Salle et al (2018)
+Cape_Verde	CAP	Cape_Verde	CAP	15.1200988	-23.7452586	Salle et al (2018)
+Switzerland	CH	HC1CH	SWI	46.8076885	7.1005249	WSI
+France	FRA	Bertholet	BER	45.5301611	5.6385819	Salle et al (2018)
+France	FRA	Boisgontier	BOL	48.5084961	-0.6011852	Salle et al (2018)
+France	FRA	Ceretta	CER	46.6378542	2.101371	Salle et al (2018)
+France	FRA	Delgue	DEL	49.2948441	2.1028492	Salle et al (2018)
+France	FRA	Garat	GAR	45.622062	0.2253843	Salle et al (2018)
+France	FRA	Garachon	GCH	46.6378542	2.101371	Salle et al (2018)
+France	FRA	Groc	GRO	46.6378542	2.101371	Salle et al (2018)
+France	FRA	Haitzak	HAI	46.6378542	2.101371	Salle et al (2018)
+France	FRA	Herrian	HER	46.6378542	2.101371	Salle et al (2018)
+France	FRA	Hochard	HOC	46.6378542	2.101371	Salle et al (2018)
+France	FRA	Humeau	HUM	47.2653078	-1.5565374	Salle et al (2018)
+France	FRA	Indaburu	INB	43.1866	-0.9449	Salle et al (2018)
+France	FRA	Larranda	LAR     	43.2020791	-0.7766698	Salle et al (2018)
+France	FRA	Lartigue	LAT	43.5370866	0.6659119	Salle et al (2018)
+France	FRA	Orcivalbio	ORB	46.6378542	2.101371	Salle et al (2018)
+France	FRA	Poujet	POU	43.5918856	3.4834199	Salle et al (2018)
+France	FRA	Serres	SER	44.4224252	5.6792018	Salle et al (2018)
+Guadeloupe	FRG	Averne	AVE	16.2015433	-61.6185267	Salle et al (2018)
+Guadeloupe	FRG	Cesarion	CES	16.2015433	-61.6185267	Salle et al (2018)
+Guadeloupe	FRG	Daville	DAV	16.2015433	-61.6185267	Salle et al (2018)
+Guadeloupe	FRG	Dejahan	DEJ	16.2015433	-61.6185267	Salle et al (2018)
+Guadeloupe	FRG	Meynard	MEY	16.2015433	-61.6185267	Salle et al (2018)
+Guadeloupe	FRG	Robert	ROB	16.2015433	-61.6185267	Salle et al (2018)
+United Kingdom	GB	Bristol	BRI	51.468468	-2.6609202	WSI
+United Kingdom	GB	IRE	IRE	55.8590489	-3.1977274	WSI
+United Kingdom	GB	MHco3.ISEN1	ISEN1	55.8590489	-3.1977274	WSI
+United Kingdom	GB	MHco3.ISE	ISE	55.8590489	-3.1977274	WSI
+United Kingdom	GB	Lancashire	LAN	53.8608337	-2.8456675	WSI
+United Kingdom	GB	Midlands	MID	52.4925974	-1.9216733	WSI
+United Kingdom	GB	Sussex	SUS	50.9179688	0.1923164	WSI
+United Kingdom	GB	Yorkshire	YOR	53.9585914	-1.1156967	WSI
+Indonesia	IND	Indonesia	IND	-0.7893	113.9213	Salle et al (2018)
+Italy	ITA	Napoli	NAP	40.853586	14.1729663	Salle et al (2018)
+Morocco	MOR	Maroc	MAR	31.7250187	-8.4737604	Salle et al (2018)
+Namibia	NAM	Namibia	NAM	-22.9576	18.4904	Salle et al (2018)
+Pakistan	PK	Pakistan	PAK	31.4828637	74.2110414	WSI
+Portugal	POR	Acores	ACO	37.7412	-25.6756	Salle et al (2018)
+South_Africa	STA	Kokstadt	KOK	-30.5157963	29.3396732	Salle et al (2018)
+South_Africa	STA	Onderstepoort	OND	-25.6343058	28.1491004	Salle et al (2018)
+South_Africa	STA	White_River	WHR	-25.3489255	30.9660497	Salle et al (2018)
+São_Tomé	STO	São_Tomé	STO	0.1996927	6.3303544	Salle et al (2018)
+USA	US	MHco18.UGA	UGA	33.9480053	-83.3795161	WSI
+DRC	ZAI	Zaire	ZAI	-4.0383	21.7587	Salle et al (2018)
