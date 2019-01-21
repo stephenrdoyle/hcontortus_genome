@@ -230,8 +230,20 @@ sort sd21_genes.gff | uniq > sd21_genes.uniq.gff
 
 
 
+### Annotation quantitative plot_stats
 
+Working environment
+```shell
+cd ~/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
+mkdir HCON_V4_WBP11plus_190118_ANALYSIS
+cd HCON_V4_WBP11plus_190118_ANALYSIS
+```
 
+```shell
+
+gag.py -f .
+./HAEM_V4_final.chr.fa -g HCON_V4_WBP11plus_190118.ips.gff3
+```
 
 
 
@@ -632,8 +644,6 @@ save.image(file = "hc_genome_kallisto.RData")
 
 
 
-
-
 # make a heatmap of top 1000 variable genes across all life stages
 
 ```shell
@@ -755,8 +765,6 @@ Fig - Kalliso  top 1000 most variable genes across lifestages
 
 
 ### Run clustering analysis of gene expression across the life stages
-
-
 
 Need to generate a replicates file that tells CLUST what samples to group.
 
