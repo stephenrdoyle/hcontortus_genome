@@ -3,16 +3,266 @@
 ## Table of contents
 
 1.
-2.
+2. [World map of sampling sites](#global_sampling_map)
 3. [Genome wide nucleotide diversity analysis](#nuc_div)
 
 
 
+# PCA of mtDNA genotypes
+#--- filter
+```shell
+bcftools-1.9 view -e 'FORMAT/DP[0]<10 | MQ[*]<30' 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz | bcftools-1.9 view -i 'TYPE="snp" & AF>0.01' -O z -o allsamples.mtDNA.filtered.vcf.gz
+
+awk -F '[_]' '{print $0,$1,$2}' OFS="\t" samples.list > samples.pops.list
+```
+```R
+R-3.5.0
+library(gdsfmt)
+library(SNPRelate)
+library(ggplot2)
+
+vcf.in <- "allsamples.mtDNA.filtered.vcf.gz"
+gds<-snpgdsVCF2GDS(vcf.in, "mtDNA.gds", method="biallelic.only")
+
+genofile <- snpgdsOpen(gds)
+
+pca	<-	snpgdsPCA(genofile, num.thread=2,autosome.only = F)
+
+pops<-	read.table("samples.pops.list",header=F)
+
+tab <- data.frame(sample.id = pca$sample.id,
+                  EV1 = pca$eigenvect[,1],    # the first eigenvector
+                  EV2 = pca$eigenvect[,2],
+                  EV3 = pca$eigenvect[,3],
+                  EV4 = pca$eigenvect[,4],
+                  EV5 = pca$eigenvect[,5],
+                  EV6 = pca$eigenvect[,6],    # the second eigenvector
+                  COUNTRY = pops$V2,
+                  POP = pops$V3,
+                  stringsAsFactors = FALSE)
+
+plot(tab$EV2, tab$EV1, xlab="eigenvector 2", ylab="eigenvector 1",pch=20,cex=2,col=pops$V2)
+```
+
+
+
+```R
+R-3.5.0
+library(vcfR)
+library(poppr)
+library(ape)
+library(RColorBrewer)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(patchwork)
+
+metadata<-read.table("sample_metadata_colours.list",header=T,comment.char="")
+
+rubi.VCF <- read.vcfR("allsamples.mtDNA.filtered.vcf.gz")
+pop.data <- read.table("samples.pops.list", sep = "\t", header = F)
+gl.rubi <- vcfR2genlight(rubi.VCF)
+ploidy(gl.rubi) <- 1
+
+pop(gl.rubi) <- metadata$country
+
+
+
+# distance matrix from genlight object
+x.dist <- poppr::bitwise.dist(gl.rubi)
+
+
+
+# make a tree
+tree <- aboot(gl.rubi, tree = "upgma", distance = bitwise.dist, sample = 100, showtree = F, cutoff = 50, quiet = T)
+write.tree(tree, file="MyNewickTreefile.nwk")
+
+
+cols <- brewer.pal(n = nPop(gl.rubi), name = "Dark2")
+plot.phylo(tree, cex = 0.3, font = 2, adj = 0)
+nodelabels(tree$node.label, adj = c(1.3, -0.5), frame = "n", cex = 0.3,font = 3, xpd = TRUE)
+#legend(35,10,c("CA","OR","WA"),cols, border = FALSE, bty = "n")
+legend('topleft', legend = c("CA","OR","WA"),fill = cols, border = FALSE, bty = "n", cex = 2)
+axis(side = 1)
+title(xlab = "Genetic distance (proportion of loci that are different)")
 
 
 
 
 
+# pca
+
+
+rubi.pca <- glPca(gl.rubi, nf = 10)
+var_frac <- rubi.pca$eig/sum(rubi.pca$eig)*100
+rubi.pca.scores <- as.data.frame(rubi.pca$scores)
+rubi.pca.scores$pop <- pop(gl.rubi)
+rubi.pca.scores$strain <- metadata$strain
+set.seed(9)
+
+
+#--- plot eigenvectors
+barplot(100*rubi.pca$eig/sum(rubi.pca$eig), col = heat.colors(50), main="PCA Eigenvalues")
+title(ylab="Percent of variance\nexplained", line = 2)
+title(xlab="Eigenvalues", line = 1)
+
+
+#--- plot PCA
+
+
+p12 <- ggplot(rubi.pca.scores, aes(x=PC1, y=PC2, colour=pop, label=pop)) + geom_point(size=2)+ theme_bw() + geom_text_repel(data = subset(rubi.pca.scores, pop == "ZAI" ))
+p34 <- ggplot(rubi.pca.scores, aes(x=PC3, y=PC4, colour=pop, label=pop)) + geom_point(size=2)+ theme_bw() + geom_text_repel(data = subset(rubi.pca.scores, pop == "ZAI" ))
+p56 <- ggplot(rubi.pca.scores, aes(x=PC5, y=PC6, colour=pop, label=pop)) + geom_point(size=2)+ theme_bw() + geom_text_repel(data = subset(rubi.pca.scores, pop == "ZAI" ))
+p12 + p34 + p56
+
+
+ggplot(rubi.pca.scores, aes(x=PC1, y=PC2, colour=pop, label=pop)) + geom_point(size=3)+ theme_bw()
+
+
+# netview - this all works, but is not very informative
+# https://github.com/esteinig/netview/blob/master/tutorials/PearlOysterTutorial.md
+#
+# library("netview")
+# library(DT)
+# library(networkD3)
+#
+# rubi.dist <- bitwise.dist(gl.rubi)
+# rubi.dist.matrix <- as.matrix(rubi.dist)
+#
+# metadata <- read.table("sample_metadata_colours.list",header=T,comment.char="")
+#
+# oysterOptions <- netviewOptions(selectionTitle="k-Selection", nodeID="sample_id", nodeGroup="country", nodeColour="country_colour", communityAlgorithms=c("Walktrap", "Infomap", "Fast-Greedy"))
+#
+# graphs <- netview(rubi.dist.matrix, metadata, k=1:60, cluster = TRUE, options=oysterOptions)
+# kPlot <- plotSelection(graphs, options=oysterOptions)
+#
+# k20 <- graphs$k20
+# plot(k20, vertex.size=7, vertex.label=NA)
+# legend('topleft',legend=levels(as.factor(metadata$country)),col=levels(as.factor(metadata$country_colour)),pch=20)
+
+
+
+
+# DAPC
+
+pnw.dapc <- dapc(gl.rubi, n.pca = 3, n.da = 2)
+
+scatter(pnw.dapc, cex = 2, legend = TRUE, clabel = F, posi.leg = "bottomleft", scree.pca = TRUE, posi.pca = "topleft", cleg = 0.75)
+
+
+
+dapc.results <- as.data.frame(pnw.dapc$posterior)
+dapc.results$pop <- pop(gl.rubi)
+dapc.results$indNames <- rownames(dapc.results)
+library(reshape2)
+dapc.results <- melt(dapc.results)
+colnames(dapc.results) <- c("Original_Pop","Sample","Assigned_Pop","Posterior_membership_probability")
+p <- ggplot(dapc.results, aes(x=Sample, y=Posterior_membership_probability, fill=Assigned_Pop))
+p <- p + geom_bar(stat='identity')
+p <- p + facet_grid(~Original_Pop, scales = "free")
+p <- p + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+p
+
+
+### to do - look at variant contribution from dapc to ID SNPs with greatest discrimination power - could rank SNPs this way
+#eg.
+
+contrib <- loadingplot(pnw.dapc$var.contr, axis = 2, thres = 0.07, lab.jitter = 1)
+# setting axis between 1 or 2 will ID SNPs with greatest impact -  dapc was made with only two axes originally, however this could be increased.
+heatmap.2(pnw.dapc$var.contr)
+
+
+
+# PCA plot comparison between SNPrealte and DAPC
+dapc_PCA <- ggplot(rubi.pca.scores, aes(x=PC1, y=PC2, colour=pop, label=pop)) + geom_point(size=3)+ theme_bw()+stat_ellipse(level = 0.95, size = 1)
+snprelate_PCA <- ggplot()+geom_point(aes(tab$EV1*-1, tab$EV2,group=metadata$country,col=metadata$country),size=3)+scale_fill_manual(values=metadata$country_colour)+ theme_bw()
+snprelate_PCA + dapc_PCA
+
+
+# check subpopulaitons within each country - simply change the pop code in the geom_text_repel section
+dapc_PCA <- ggplot(rubi.pca.scores, aes(x=PC1, y=PC2, colour=pop, label=strain))+
+				geom_point(size=3)+ theme_bw()+
+				geom_text_repel(data = subset(rubi.pca.scores, pop == "GB"  ))+
+				scale_fill_manual(values=metadata$country_colour)
+
+
+# check subpopulaitons within each country - simply change the pop code in the geom_text_repel section
+
+ch_data	<-	rubi.pca.scores[(rubi.pca.scores$pop=="CH"),]
+gb_data	<-	rubi.pca.scores[(rubi.pca.scores$pop=="GB"),]
+pk_data	<-	rubi.pca.scores[(rubi.pca.scores$pop=="PK"),]
+us_data	<-	rubi.pca.scores[(rubi.pca.scores$pop=="US"),]
+new_data <- dplyr::bind_rows(ch_data,gb_data,pk_data,us_data)
+
+final_PCA <- ggplot()+
+			geom_point(aes(rubi.pca.scores$PC1, rubi.pca.scores$PC2, colour=rubi.pca.scores$pop),alpha=1,size=2,stroke = NA)+
+			geom_point(aes(new_data$PC1, new_data$PC2, colour=new_data$pop),size=2,stroke = NA)+
+			theme_bw()+
+			scale_fill_manual(values=metadata$country_colour)+
+			xlab(paste("PC1: variance = ",var_frac[1]))+ylab(paste("PC2: variance = ",var_frac[2]))
+
+```			
+
+
+
+
+
+
+
+
+
+
+
+
+### 02 - World map of sampling sites <a name="global_sampling_map"></a>
+Make a map of H.contortus sampling sites from global population set
+
+Working environment
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY
+```
+
+
+
+```R
+R-3.5.0
+
+library(ggplot2)
+library(ggmap)
+library(maps)
+library(mapdata)
+library(dplyr)
+library(ggrepel)
+
+metadata = read.delim("global_sampling_coords.txt",header=TRUE,sep="\t")
+
+palette(c("#31A197","#E15956","#EF724B","#D35E5C","#606EB8","#6570B0","#34AFE7","#6973A8","#3C9C93","#6E75A0","#C56462","#B76968","#A64EB4","#727898","#A96F6E","#9B7474","#3FA8D8","#8D7A7A"))
+
+pdf("global_sampling_map1.pdf",useDingbats=FALSE)
+par(fg = "black")
+map("world",col="grey85",fill=TRUE, border=FALSE)
+map.axes()
+points(metadata$lon, metadata$lat, cex=1, pch=c(16,17)[as.numeric(metadata$dataset)],col=metadata$country_code)
+legend( x="bottomright", legend=c("New data; n = 74","Salle et al (2018); n = 264"),col=c("black"), lwd="1", lty=c(0,0), pch=c(17,16),box.lwd = 0,cex = 0.9)
+
+dev.off()
+
+pdf("global_sampling_map_inset.pdf",useDingbats=FALSE)
+par(fg = "white")
+map("world", col="grey85",fill=TRUE, border=TRUE, xlim=c(-25,25), ylim=c(35,65))
+#map.axes()
+points(metadata$lon, metadata$lat, cex=1.5, pch=c(16,17)[as.numeric(metadata$dataset)],col=metadata$country_code)
+dev.off()
+
+
+```
+
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/global_sampling_map*  ~/Documents/workbook/hcontortus_genome/04_analysis
+
+global_sampling_map*
+
+```
 
 
 
@@ -164,7 +414,7 @@ chrX_single_pi<-read.table("chrX.singletons.pi.windowed.pi",header=T)
 chrX_shared_pi<-read.table("chrX.shared.pi.windowed.pi",header=T)			
 chrX_fst <- read.table("chrX_fst_100k_allpop.windowed.weir.fst",header=T)
 
-
+# calculate genome wide average Fst, and confidence intervals
 fst_all <- rbind(chr1_fst,chr2_fst,chr3_fst,chr4_fst,chr5_fst,chrX_fst)
 error <- qt(0.975,df=length(fst_all$WEIGHTED_FST)-1)*sd(fst_all$WEIGHTED_FST)/sqrt(length(fst_all$WEIGHTED_FST))
 fst_upper_ci <- mean(fst_all$WEIGHTED_FST)+error
@@ -195,7 +445,7 @@ chr1_fst_plot <- ggplot()+
 
 
 chr1_gene_plot	<-	ggplot()+
-               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr1$V2),ymax=1),fill="#b2182b")+
+               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr1$V2),ymax=1),fill="#b2182b",alpha=0.5)+
                geom_rect(aes(xmin=chr1N$V2,ymin=-1,xmax=chr1N$V3,ymax=1),fill="white",linetype=0)+
                geom_linerange(aes(chr1pos$V2,ymin=0,ymax=1),size=0.1,alpha=0.2)+
                geom_linerange(aes(chr1neg$V2,ymin=-1,ymax=0),size=0.1,alpha=0.2)+
@@ -232,7 +482,7 @@ chr2_fst_plot <- ggplot()+
                axis.ticks.x=element_blank())
 
 chr2_gene_plot <- ggplot()+
-               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr2$V2),ymax=1),fill="#fc8d59")+
+               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr2$V2),ymax=1),fill="#fc8d59",alpha=0.5)+
                geom_rect(aes(xmin=chr2N$V2,ymin=-1,xmax=chr2N$V3,ymax=1),fill="white",linetype=0)+
                geom_linerange(aes(chr2pos$V2,ymin=0,ymax=1),size=0.1,alpha=0.3)+
                geom_linerange(aes(chr2neg$V2,ymin=-1,ymax=0),size=0.1,alpha=0.3)+
@@ -268,7 +518,7 @@ chr3_fst_plot <- ggplot()+
                axis.ticks.x=element_blank())
 
 chr3_gene_plot <- ggplot()+
-               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr3$V2),ymax=1),fill="#fee090")+
+               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr3$V2),ymax=1),fill="#fee090",alpha=0.5)+
                geom_rect(aes(xmin=chr3N$V2,ymin=-1,xmax=chr3N$V3,ymax=1),fill="white",linetype=0)+
                geom_linerange(aes(chr3pos$V2,ymin=0,ymax=1),size=0.1,alpha=0.3)+
                geom_linerange(aes(chr3neg$V2,ymin=-1,ymax=0),size=0.1,alpha=0.3)+
@@ -303,7 +553,7 @@ chr4_fst_plot <- ggplot()+
                axis.text.x=element_blank(),
                axis.ticks.x=element_blank())
 chr4_gene_plot <- ggplot()+
-               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr4$V2),ymax=1),fill="#d1e5f0")+
+               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr4$V2),ymax=1),fill="#d1e5f0",alpha=0.5)+
                geom_rect(aes(xmin=chr4N$V2,ymin=-1,xmax=chr4N$V3,ymax=1),fill="white",linetype=0)+
                geom_linerange(aes(chr4pos$V2,ymin=0,ymax=1),size=0.1,alpha=0.3)+
                geom_linerange(aes(chr4neg$V2,ymin=-1,ymax=0),size=0.1,alpha=0.3)+
@@ -339,7 +589,7 @@ chr5_fst_plot <- ggplot()+
                axis.ticks.x=element_blank())
 
 chr5_gene_plot <- ggplot()+
-               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr5$V2),ymax=1),fill="#67a9cf")+
+               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chr5$V2),ymax=1),fill="#67a9cf",alpha=0.5)+
                geom_rect(aes(xmin=chr5N$V2,ymin=-1,xmax=chr5N$V3,ymax=1),fill="white",linetype=0)+
                geom_linerange(aes(chr5pos$V2,ymin=0,ymax=1),size=0.1,alpha=0.3)+
                geom_linerange(aes(chr5neg$V2,ymin=-1,ymax=0),size=0.1,alpha=0.3)+
@@ -374,7 +624,7 @@ chrX_fst_plot <- ggplot()+
                axis.ticks.x=element_blank())
 
 chrX_gene_plot <- ggplot()+
-               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chrX$V2),ymax=1),fill="#4575b4")+
+               geom_rect(aes(xmin=1,ymin=-1,xmax=max(chrX$V2),ymax=1),fill="#4575b4",alpha=0.5)+
                geom_rect(aes(xmin=chrXN$V2,ymin=-1,xmax=chrXN$V3,ymax=1),fill="white",linetype=0)+
                geom_linerange(aes(chrXpos$V2,ymin=0,ymax=1),size=0.1,alpha=0.3)+
                geom_linerange(aes(chrXneg$V2,ymin=-1,ymax=0),size=0.1,alpha=0.3)+
