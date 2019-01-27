@@ -6,8 +6,10 @@ annotation# Haemonchus genome - transcriptome analyses
 2.
 3. [Manual Curation in Apollo](#manual_curation_apollo)
 4. [Annotation QC](#annoation_qc)
-5. [Kallisto](#kallisto)
-6. [Differential splicing w Leafcutter](#ds_leafcutter)
+5. [Gene model plots](#gene_model_plotter)
+6. [Orthology](#orthology)
+7. [Kallisto](#kallisto)
+8. [Differential splicing w Leafcutter](#ds_leafcutter)
 
 
 
@@ -38,18 +40,24 @@ Once out of Apollo, some curation needs to be done to clean things up a little. 
 
 ### Working environment
 ```shell
-/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION
 
 ```
-
+Get dumped GFF form local computer
+```shell
+scp Desktop/hc_v4.gff3.xz sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
+```
 
 ```shell
+#unzip it - it is in xz format
+unxz hc_v4.gff3.xz
+
 # make a copy to work on
-mv hc_v4.gff3 HC_V4_WBP11plus_190118.gff3
-ln -s HC_V4_WBP11plus_190118.gff3 tmp.gff
+mv hc_v4.gff3 HCON_V4_WBP11plus_190125.gff3
+
 
 # get mRNAs IDs and NAMES
-awk '$3=="mRNA" {print $0}' OFS="\t"  tmp.gff | sed -e 's/Note=Manually dissociate transcript from gene;//g' | cut -f3,5 -d ";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDs_NAMEs.txt
+awk '$3=="mRNA" {print $0}' OFS="\t"  HCON_V4_WBP11plus_190125.gff3 | sed -e 's/Note=Manually dissociate transcript from gene;//g' | cut -f3,5 -d ";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDs_NAMEs.txt
 
 # remove transcript extensions
 cat mRNA_IDs_NAMEs.txt | awk  '{ $2 = substr($2, 1,13); print }' OFS="\t" | sort -k2 > mRNA_IDs_NAMEs_trimmed-sorted.txt
@@ -66,7 +74,7 @@ export PATH="/nfs/users/nfs_s/sd21/lustre118_link/software/anaconda2/bin:$PATH"
 # fsed - https://github.com/wroberts/fsed
 awk '{print $1,$3}' OFS="\t" mRNA_IDs_NAMEs_transcriptIDs.txt > mRNA_IDs_NAMEs_transcriptIDs.2.txt
 
-fsed --pattern-format=tsv --output HCON_V4_WBP11plus_190118.renamed.gff3  mRNA_IDs_NAMEs_transcriptIDs.2.txt HCON_V4_WBP11plus_190118.gff3 &
+fsed --pattern-format=tsv --output HCON_V4_WBP11plus_190125.renamed.gff3  mRNA_IDs_NAMEs_transcriptIDs.2.txt HCON_V4_WBP11plus_190125.gff3 &
 
 ```
 
@@ -74,29 +82,30 @@ fsed --pattern-format=tsv --output HCON_V4_WBP11plus_190118.renamed.gff3  mRNA_I
 Fixing GFF to prepare for interproscan. Stripping out info from existing interproscan, as is is incorrectly formatted.
 
 ```shell
-sed -e 's/;info.*$//g' -e 's/method.*//g' -e '/^$/d' HCON_V4_WBP11plus_190118.renamed.gff3 > tmp.gff
+sed -e 's/;info.*$//g' -e 's/method.*//g' -e '/^$/d' HCON_V4_WBP11plus_190125.renamed.gff3 > tmp.gff
 
 echo '##FASTA' >> tmp.gff
-ln -s ../../REF/HAEM_V4_final.chr.fa
+ln -sf ../../REF/HAEM_V4_final.chr.fa
 cat tmp.gff HAEM_V4_final.chr.fa > tmp.gff2; mv tmp.gff2 tmp.gff
 ```
 
 interproscan
 ```shell
 # generate a protein fasta from annotation and reference genome
-gffread -y PROTEINS.fa -g HAEM_V4_final.chr.fa HCON_V4_WBP11plus_190118.renamed.gff3
+gffread -y PROTEINS.fa -g HAEM_V4_final.chr.fa HCON_V4_WBP11plus_190125.renamed.gff3
 sed -e 's/\.//g' PROTEINS.fa > tmp; mv tmp PROTEINS.fa
 
 # run interproscan
 farm_interproscan -a PROTEINS.fa -o IPS.output.gff
 
 # lift over GO terms from interproscan to GFF
-extract_interproscan_go_terms -i IPS.output.gff -e tmp.gff
+extract_interproscan_go_terms -i IPS.output.gff -e HCON_V4_WBP11plus_190125.renamed.gff3
 
-# rename
-mv tmp.gff.go.gff HCON_V4_WBP11plus_190118.ips.gff3
+# filter and rename
+grep ^'\#\#\|hc' tmp.gff.go.gff | grep -v "mtDNA" | grep -v "FASTA" | grep -v ">" > HCON_V4_WBP11plus_190125.ips.gff3
+
+
 ```
-
 
 
 
@@ -106,7 +115,6 @@ mv tmp.gff.go.gff HCON_V4_WBP11plus_190118.ips.gff3
 
 ## 03 - Annotation QC <a name="annotation_qc"></a>
 
-Date 190116
 
 Want to compare the final annotation to steps along the way. These include
 - V1 genome vs manually curated V1 genes
@@ -139,7 +147,7 @@ cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/V3/TRANSCRIPTOME/V1_MANUAL_CUR
 cp ~sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/V1/haemonchus_contortus.PRJEB506.WBPS8.annotations.gff3 HCON_V1.annotation.gff3
 
 # V4 final annotaiton
-cp ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190118.ips.gff3 HCON_V4_FINAL.gff3
+cp ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 HCON_V4_FINAL.gff3
 
 # V4 AUGUSTUS
 
@@ -174,40 +182,36 @@ Intron chain level:    33.3     |     0.7    |
 # V4 Final vs BRAKER
 gffcompare -R -r HCON_V4_FINAL.gff3 -o V4_FINAL_vs_BRAKER HCON_V4_BRAKER.gff3
 # Result
-#-----------------| Sensitivity | Precision  |
-        Base level:    85.5     |    79.7    |
-        Exon level:    89.7     |    86.7    |
-      Intron level:    94.8     |    93.9    |
-Intron chain level:    67.5     |    61.5    |
-  Transcript level:    72.7     |    56.3    |
 
-       Locus level:    78.0     |    60.6    |
-
+       #-----------------| Sensitivity | Precision  |
+               Base level:    85.4     |    79.7    |
+               Exon level:    89.6     |    86.7    |
+             Intron level:    94.8     |    93.9    |
+       Intron chain level:    67.5     |    61.4    |
+         Transcript level:    72.7     |    56.3    |
+              Locus level:    78.0     |    60.6    |
 
 # V4 Final vs PASA_CHR
 gffcompare -R -r HCON_V4_FINAL.gff3 -o V4_FINAL_vs_PASA HCON_V4_PASA.gff3
 
-#-----------------| Sensitivity | Precision  |
-        Base level:    85.0     |    97.6    |
-        Exon level:    89.7     |    95.4    |
-      Intron level:    90.1     |    96.5    |
-Intron chain level:    33.3     |    32.9    |
-
-  Transcript level:    33.2     |    30.8    |
-       Locus level:    30.3     |    29.8    |
-
+       #-----------------| Sensitivity | Precision  |
+               Base level:    85.0     |    97.7    |
+               Exon level:    89.6     |    95.4    |
+             Intron level:    90.0     |    96.5    |
+       Intron chain level:    33.3     |    32.9    |
+         Transcript level:    33.3     |    30.8    |
+              Locus level:    30.3     |    29.8    |
 
 # V4 Final vs EVM
 gffcompare -R -r HCON_V4_FINAL.gff3 -o V4_FINAL_vs_EVM HCON_V4_EVM.gff3
-#-----------------| Sensitivity | Precision  |
-        Base level:    92.9     |    98.7    |
-        Exon level:    94.8     |    96.2    |
-      Intron level:    96.4     |    98.1    |
-Intron chain level:    84.2     |    84.3    |
-  Transcript level:    86.8     |    86.8    |
 
-       Locus level:    87.6     |    86.5    |
-
+       #-----------------| Sensitivity | Precision  |
+               Base level:    92.9     |    98.7    |
+               Exon level:    94.7     |    96.1    |
+             Intron level:    96.3     |    98.0    |
+       Intron chain level:    84.1     |    84.1    |
+         Transcript level:    86.7     |    86.6    |
+              Locus level:    87.5     |    86.4    |
 ```
 
 Don't think it is worth including the V1 comparison, as these curated genes would have been incorporated into the final annotation. Not really a good comparison. V1 precision is low due to only a subset of genes being used.
@@ -217,15 +221,6 @@ Results suggest:
 - increase in Sensitivity and Precision from PASA to EVM
 
 
-###### HACK - didn't use this in the end, but keeping for reference
-- There are some additionaly lines contaminating the final gff, and so while that is being fixed, need a workaround to extract sd21_modified genes from final gff3
-- plan: grep relevant mRNA lines, and extract mRNA name (HCON etc) and ID (apollo unique ID), and use this as a list to grep out relevant lines back out from the original GFF
-
-```shell  
-grep "^hcon" HCON_V4_FINAL.gff3 | awk '$3=="mRNA" {print $0}' OFS="\t"  | cut -f 9 | sed -e 's/=/\t/g' -e 's/;/\t/g' | awk '{print $6,$10}' OFS="\n" > sd21_genes.list
-
-while read NAME; do grep "=$NAME;" HCON_V4_FINAL.gff3; done  < sd21_genes.list >  sd21_genes.gff
-sort sd21_genes.gff | uniq > sd21_genes.uniq.gff
 ```
 
 
@@ -235,15 +230,419 @@ sort sd21_genes.gff | uniq > sd21_genes.uniq.gff
 Working environment
 ```shell
 cd ~/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
-mkdir HCON_V4_WBP11plus_190118_ANALYSIS
-cd HCON_V4_WBP11plus_190118_ANALYSIS
+mkdir HCON_V4_WBP11plus_190125_ANALYSIS
+cd HCON_V4_WBP11plus_190125_ANALYSIS
 ```
 
 ```shell
-
-gag.py -f .
-./HAEM_V4_final.chr.fa -g HCON_V4_WBP11plus_190118.ips.gff3
+ln -sf ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3
+gag.py -f ../HAEM_V4_final.chr.fa -g HCON_V4_WBP11plus_190125.ips.gff3
 ```
+
+
+
+## 03 - Gene model plotter <a name="gene_model_plotter"></a>
+
+Working environment and data
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/GENE_MODEL_PLOTS
+
+#gff
+ln -fs /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff
+#ccs subread data
+
+# generate bed files of isoseq reads in bam file : /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/POOLED
+#bedtools-2 bamtobed -cigar -split -i pooled_ccs_subreads.sorted.bam > pooled_ccs_subreads.sorted.bed
+#bedtools-2 bamtobed -cigar -i pooled_ccs_subreads.sorted.bam > pooled_ccs_subreads.sorted.whole.bed
+
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/POOLED/pooled_ccs_subreads.sorted.bed
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/POOLED/pooled_ccs_subreads.sorted.whole.bed
+
+# old V1 annotations
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EXONERATE_CHR/V1_2_V4/exonerate.V1_2_V4.gff OLD_ANNOTATIONS.gff
+
+```
+
+
+
+```R
+R-3.5.0
+#install.packages("data.table")
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install("ggbio", version = "3.8")
+
+library(data.table)
+library(ggplot2)
+library(dplyr)
+
+# load data
+# --- genome annotation
+gff<-fread(cmd="grep ^hcontortus ANNOTATION.gff")
+colnames(gff) <- c("chr","source","feature","start","end","point1","strand","frame","info")
+
+# --- isoseq data - gaps
+iso_gap<-fread("pooled_ccs_subreads.sorted.bed")
+colnames(iso_gap) <- c("chr","start","end","readname","score","frame")
+
+# --- isoseq data - full length
+iso_whole<-fread("pooled_ccs_subreads.sorted.whole.bed")
+colnames(iso_whole) <- c("chr","start","end","readname","score","frame","cigar")
+
+# --- V1 genome annotation GFF
+old_gff <- fread(cmd="grep exonerate OLD_ANNOTATIONS.gff",sep="\t", sep2=";")
+colnames(old_gff) <- c("chr","source","feature","start","end","point1","strand","frame","info")
+
+
+
+# select gene ID
+gene='HCON_00001040'
+
+
+# filter data to select chromosome anf mRNA
+mrna_data <- gff[grep(gene, gff$info), ]
+mrna_data <- mrna_data[mrna_data$feature=='mRNA',]
+mrna_data <- cbind(mrna_data, read.table(text = as.character(mrna_data$info), sep = ";"))
+mrna_data <- cbind(mrna_data, read.table(text = as.character(mrna_data$V3), sep = "=",col.names=c("ID","unique_ID")))
+mrna_id <- head(data.frame(mrna_data$unique_ID),1)  # gives 1st isoform if multiple
+chromosome <- mrna_data[1,1]
+colnames(chromosome)<-c("chromosome_ID")
+
+data <- gff[grep(mrna_id$mrna_data.unique_ID, gff$info), ]
+
+# filter by feature type
+cds <- data[data$feature=="CDS",]
+mrna <- data[data$feature=="mRNA",]
+#gene <- data[data$feature=="gene",]
+
+
+intron<-data.frame(head(cds$end,-1),tail(cds$start,-1),(tail(cds$start,-1)-head(cds$end,-1))/2)
+colnames(intron)<-c("start","end","midpoint")
+
+utr5<-data.frame(head(mrna$start,1),head(sort(cds$start),1))
+colnames(utr5)<-c("start","end")
+utr3<-data.frame(head(mrna$end,1),tail(sort(cds$end),1))
+colnames(utr3)<-c("start","end")
+utr<-rbind(utr5,utr3)
+
+
+
+#longest 20 full length ccs reads
+iso_gap2 <- iso_gap[(iso_gap$chr==chromosome$chromosome_ID) & (iso_gap$start > (mrna$start-(0.1*(mrna$end-mrna$start)))) & (iso_gap$end < (mrna$end+(0.1*(mrna$end-mrna$start)))),]
+iso_whole2 <- iso_whole[(iso_whole$chr==chromosome$chromosome_ID) & (iso_whole$start > (mrna$start-(0.1*(mrna$end-mrna$start)))) & (iso_whole$end < (mrna$end+(0.1*(mrna$end-mrna$start)))),]
+iso_whole2$length <- (iso_whole2$end-iso_whole2$start)
+iso_whole2_10 <- tail(iso_whole2[order(iso_whole2$length)],20)
+iso_whole2_10$rank <- 1:nrow(iso_whole2_10)*1/20*5
+
+
+test_join <- dplyr:::inner_join(iso_gap2, iso_whole2_10, by = "readname")
+
+# filter V1 gff file
+old_gff2 <- old_gff[old_gff$chr==chromosome$chromosome_ID & old_gff$start > (mrna$start-(0.1*(mrna$end-mrna$start))) & old_gff$end < (mrna$end+(0.1*(mrna$end-mrna$start))),]
+old_gff2 <- cbind(old_gff2, read.table(text = as.character(old_gff2$info), sep = ";",col.names=c("exonerate_ID","V1_ID")))
+
+if(mrna$strand=="+"){
+  arrow <- data.frame(mrna$end,mrna$end+(0.02*(mrna$end-mrna$start)))
+  intron<-data.frame(head(cds$end,-1),tail(cds$start,-1),(tail(cds$start,-1)-head(cds$end,-1))/2)
+
+  } else {
+  arrow <- data.frame(mrna$start,mrna$start-(0.02*(mrna$end-mrna$start)))
+  intron<-data.frame(tail(cds$end,-1),head(cds$start,-1),(head(cds$start,-1)-tail(cds$end,-1))/2)
+  }
+
+colnames(arrow) <-  c("start","end")
+colnames(intron)  <-  c("start","end","midpoint")
+
+# make plot
+ggplot()+
+  #geom_rect(data=mrna,aes(xmin=mrna$V4,ymin=0,xmax=mrna$V5,ymax=1),fill="grey90")+
+  # new gene model
+  geom_rect(data=utr,aes(xmin=utr$start,ymin=0.5,xmax=utr$end,ymax=1.5),fill=NA,col="black",size=0.4)+
+  geom_segment(data=intron,aes(x=intron$start,xend=intron$start+intron$midpoint,y=1,yend=0.5),size=0.5)+
+  geom_segment(data=intron,aes(x=intron$start+intron$midpoint,xend=intron$end,y=0.5,yend=1),size=0.5)+
+  geom_rect(data=cds,aes(xmin=cds$start,ymin=0.5,xmax=cds$end,ymax=1.5),fill="black",col=NA)+
+  geom_segment(data=arrow,aes(x=arrow$start,xend=arrow$end,y=1.5,yend=1),size=0.4)+
+  geom_segment(data=arrow,aes(x=arrow$start,xend=arrow$end,y=0.5,yend=1),size=0.4)+
+  geom_text(aes(x=mrna$end+(0.15*(mrna$end-mrna$start)), y=1, label = "Haem V4 Gene model"))+
+  # old gene model
+  geom_rect(data=old_gff2,aes(xmin=old_gff2$start,ymin=2.5,xmax=old_gff2$end,ymax=3.5,fill=old_gff2$V1_ID))+
+  geom_text(aes(x=mrna$end+(0.15*(mrna$end-mrna$start)), y=3, label = "Haem V1 CDS \n (Exonerate: protein2genome)"))+
+  # isoseq
+  geom_rect(data=iso_whole2_10,aes(xmin=iso_whole2_10$start,ymin=4+as.numeric(iso_whole2_10$rank)-0.02,xmax=iso_whole2_10$end,ymax=4+as.numeric(iso_whole2_10$rank)+0.02),fill="grey90")+
+  geom_rect(data=test_join,aes(xmin=test_join$start.x,ymin=4+test_join$rank-0.08,xmax=test_join$end.x,ymax=4+test_join$rank+0.08),fill="cornflowerblue")+
+  geom_text(aes(x=mrna$end+(0.15*(mrna$end-mrna$start)), y=5, label = "IsoSeq cDNA reads \n (minimap2 splice)"))+
+  # plot layout
+  theme_classic()+
+  #xlab("Genome position (bp)")+
+  labs(title= paste("Gene ID: ",gene), x =paste("Chromosome: ",chromosome," position (bp)"))+
+  xlim(mrna$start-(0.1*(mrna$end-mrna$start)),mrna$end+(0.25*(mrna$end-mrna$start)))+
+  scale_y_reverse(lim=c(10,0))+ scale_fill_discrete(guide=FALSE)+
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+## 04 - Orthology <a name="orthology"></a>
+---
+### Working envoronment
+```shell
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION
+```
+
+#### get data
+```shell
+wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS11/species/haemonchus_placei/PRJEB509/haemonchus_placei.PRJEB509.WBPS11.protein.fa.gz
+gunzip haemonchus_placei.PRJEB509.WBPS11.protein.fa.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS11/species/caenorhabditis_elegans/PRJNA13758/caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa.gz
+gunzip caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS11/species/haemonchus_contortus/PRJNA205202/haemonchus_contortus.PRJNA205202.WBPS11.protein.fa.gz
+gunzip haemonchus_contortus.PRJNA205202.WBPS11.protein.fa.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS10/species/haemonchus_contortus/PRJEB506/haemonchus_contortus.PRJEB506.WBPS10.protein.fa.gz
+gunzip haemonchus_contortus.PRJEB506.WBPS10.protein.fa.gz
+
+ln -fs ../TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3
+gffread HCON_V4_WBP11plus_190125.ips.gff3 -g HAEM_V4_final.chr.fa -y HCON_V4_WBP11plus_190125.ips.proteins.fa
+
+```
+
+```shell
+# curate data for input into orthofinder
+# get one coding sequence per gene - certainly Ce and HcV4 has multiple  isoforms, and therefore multiple coding sequneces per gene
+fastaq to_fasta -l0 caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa2
+fastaq to_fasta -l0 haemonchus_placei.PRJEB509.WBPS11.protein.fa haemonchus_placei.PRJEB509.WBPS11.protein.fa2
+fastaq to_fasta -l0 haemonchus_contortus.PRJEB506.WBPS10.protein.fa haemonchus_contortus.PRJEB506.WBPS10.protein.fa2
+fastaq to_fasta -l0 haemonchus_contortus.PRJNA205202.WBPS11.protein.fa haemonchus_contortus.PRJNA205202.WBPS11.protein.fa2
+fastaq to_fasta -l0 HCON_V4_WBP11plus_190125.ips.proteins.fa  HCON_V4_WBP11plus_190125.ips.proteins.fa2
+
+# fix fasta header - likely only c elegans that had excessive informaiton in the header, but fixed to make them all consistent
+awk '{if($1 ~ /^>/) print ">"$3,$2; else print $0}' caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa2 > ce.proteins.fa
+awk '{if($1 ~ /^>/) print ">"$3,$2; else print $0}' haemonchus_placei.PRJEB509.WBPS11.protein.fa2 > hp.proteins.fa
+awk '{if($1 ~ /^>/) print ">"$3,$2; else print $0}' haemonchus_contortus.PRJEB506.WBPS10.protein.fa2 > hc_V1.proteins.fa
+awk '{if($1 ~ /^>/) print ">"$3,$2; else print $0}' haemonchus_contortus.PRJNA205202.WBPS11.protein.fa2 > hc_McM.proteins.fa
+cat HCON_V4_WBP11plus_190125.ips.proteins.fa2 > hc_V4.proteins.fa
+
+#remove stop codons from hc_V4
+sed -i 's/[A-Z]*\.\.*[A-Z]//g' hc_V4.proteins.fa
+sed -i 's/\.$//g' hc_V4.proteins.fa
+
+# make unique gene lists
+grep ">" ce.proteins.fa | cut -f 1 -d " " | sort | uniq > unique.Ce_genes.list
+#> 20208 unique.Ce_genes.list
+
+grep ">" hp.proteins.fa | cut -f 1 -d " " | sort | uniq > unique.Hp_genes.list
+#> 21928 unique.Hp_genes.list
+
+grep ">" hc_McM.proteins.fa | cut -f 1 -d " " | sort | uniq > unique.Hc_McM_genes.list
+#> 23610 unique.Hc_McM_genes.list
+
+grep ">" hc_V1.proteins.fa | cut -f 1 -d " " | sort | uniq > unique.Hc_V1_genes.list
+#> 21869 unique.Hc_V1_genes.list
+
+
+grep ">" hc_V4.proteins.fa | cut -f 2 -d " " | sort | uniq > unique.Hc_V4_genes.list
+#19438 unique.Hc_V4-1901140_genes.list
+
+
+while read -r gene; do grep -m1 -A1 ${gene} ce.proteins.fa; done < unique.Ce_genes.list > ce.proteins.unique.fa &
+while read -r gene; do grep -m1 -A1 ${gene} hp.proteins.fa; done < unique.Hp_genes.list > hp.proteins.unique.fa &
+while read -r gene; do grep -m1 -A1 ${gene} hc_McM.proteins.fa; done < unique.Hc_McM_genes.list > hc_McM.proteins.unique.fa &
+while read -r gene; do grep -m1 -A1 ${gene} hc_V1.proteins.fa; done < unique.Hc_V1_genes.list > hc_V1.proteins.unique.fa &
+while read -r gene; do grep -m1 -A1 ${gene} hc_V4.proteins.fa; done < unique.Hc_V4_genes.list > hc_V4.proteins.unique.fa &
+
+
+# run OrthoFinder
+#--- setup data
+mkdir PROTEIN_FASTAs
+mv *.unique.fa PROTEIN_FASTAs
+cd PROTEIN_FASTAs
+for i in *.fa; do cut -f1 -d " " $i | sed '/^$/d' > tmp; mv tmp $i; done
+cd ../
+
+# run OF
+bsub.py --queue long --threads 20 20 orthofinder_2.2.7 "python2.7 /nfs/users/nfs_s/sd21/lustre118_link/software/POPGEN/OrthoFinder-2.2.7_source/orthofinder/orthofinder.py -t 20 -a 20 -S diamond -M msa -A mafft -f PROTEIN_FASTAs/"
+
+
+
+1:1 orthologs
+
+
+ce.proteins.unique      hc_McM.proteins.unique  hc_V1.proteins.unique   hc_V4.proteins.unique   hp.proteins.unique
+
+ce.proteins.unique      0.0     4424.0  4529.0  7361.0  6371.0
+hc_McM.proteins.unique  4424.0  0.0     6559.0  7581.0  7861.0
+hc_V1.proteins.unique   4529.0  6559.0  0.0     9595.0  7991.0
+hc_V4.proteins.unique   7361.0  7581.0  9595.0  0.0     9970.0
+hp.proteins.unique      6371.0  7861.0  7991.0  9970.0  0.0
+
+#--- KINFIN
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25
+mkdir KINFIN
+cd KINFIN
+ln -s ../WorkingDirectory/SpeciesIDs.txt
+ln -s ../WorkingDirectory/SequenceIDs.txt
+ln -s ../Orthogroups.txt
+ln -s ../Orthologues_*/SpeciesTree_rooted.txt
+
+
+#---- kinfin
+#-- made config.txt file containing
+echo -e "#IDX,TAXON,OUT
+0,ce.proteins.unique,1
+1,hc_mcm.proteins.unique,0
+2,hc_V1.proteins.unique,0
+3,hc_V4.proteins.unique,0
+4,hp.proteins.unique,0" > config.txt
+
+
+
+# run KINFIN
+/nfs/users/nfs_s/sd21/lustre118_link/software/POPGEN/kinfin/kinfin \
+--cluster_file Orthogroups.txt \
+--config_file config.txt \
+--sequence_ids_file SequenceIDs.txt \
+--fasta_dir /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs \
+--species_ids_file SpeciesIDs.txt \
+--tree_file SpeciesTree_rooted.txt
+
+#-- useful - kinfin generated a 1-to-1 ortholog list, with fuzzy matching, which basically means it allows some missingness, and not required to be in all samples
+
+/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan23_1/KINFIN/kinfin_results/all/all.all.cluster_1to1s.txt
+#> 5746 all.all.cluster_1to1s.txt
+#>
+
+
+
+
+
+# plotting orthogroups - all and 1to1 - using UpSetR
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_*/KINFIN/kinfin_results/TAXON
+
+cat TAXON.cluster_summary.txt | awk '{print $1,$9,$10,$11,$12,$13}' OFS="\t" | awk 'NR>1 {for(i=2;i<=NF;i++)if($i>0)$i=1}1' OFS="\t" > all_orthogroups.upsetr.data
+
+cat TAXON.cluster_summary.txt | awk '{print $1,$9,$10,$11,$12,$13}' OFS="\t" | head -n1 > 1to1_orthogroups.upsetr.data
+cat TAXON.cluster_summary.txt | awk '{print $1,$9,$10,$11,$12,$13}' OFS="\t" | awk 'NR>1{if ($2<=1 && $3 <=1 && $4 <= 1 && $5 <=1 && $6 <=1) print}' OFS="\t" >> 1to1_orthogroups.upsetr.data
+```
+
+```R
+R-3.5.0
+library(UpSetR)
+all_orthogroups<-read.table("all_orthogroups.upsetr.data",header=T,comment.char="")
+pdf("all_orthogroups_plot.upsetr.pdf",height=5,width=10,useDingbats=FALSE)
+upset(all_orthogroups)
+dev.off()
+
+png("all_orthogroups_plot.upsetr.png",height=5,width=10)
+upset(all_orthogroups)
+dev.off()
+
+one2one_orthogroups <- read.table("1to1_orthogroups.upsetr.data",header=T,comment.char="")
+pdf("one2one_orthogroups_plot.upsetr.pdf",height=5,width=10,useDingbats=FALSE)
+upset(one2one_orthogroups)
+dev.off()
+
+png("one2one_orthogroups_plot.upsetr.png",height=5,width=10)
+upset(one2one_orthogroups)
+dev.off()
+
+```
+
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25/KINFIN/kinfin_results/TAXON/*pdf ~/Documents/workbook/hcontortus_genome/04_analysis
+```
+
+
+
+
+
+### Making GO term databases
+- lifting C elegans GO terms to 1:1 orthologs
+- lifting over many:1 or 1:many, providing all GO terms for the many are all the same
+- extracting interpro GO terms from IPS annotation in gff
+- sorting / filtering to get a unique set.
+
+
+
+
+Get 1:1s
+```shell
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS
+
+ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25/Orthologues_Jan25/Orthologues/Orthologues_ce.proteins.unique/ce.proteins.unique__v__hc_V4.proteins.unique.csv
+
+ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/
+ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_1901
+25.ips.gff3
+
+# from local computer - transfer downloaded Ce GO terms from WBP
+scp 02_data/WBP_Ce_GOterms_download.txt sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS/
+
+# extract 1:1s
+awk 'NF==3 {print $2,$3}' OFS="\t" ce.proteins.unique__v__hc_V4.proteins.unique.csv | sed -e 's/gene=//g' -e 's/\-.*//g' -e 's/\..*//g' | grep -v "unique" > ce_hcV4_1to1.list
+#--- 7361 ce_hc4_1to1.list
+
+
+# extract GO terms from mRNAs in GFF
+awk '$3=="mRNA" {print $0}' OFS="\t" HCON_V4_WBP11plus_190125.ips.gff3 | grep "Ontology_term" | cut -f 9 | cut -f3,4 -d ";" | sed -e 's/;/\t/g' -e 's/Name=//g' -e 's/"//g' -e 's/Ontology_term=//g' -e 's/-.*\t/\t/g' -e 's/,/\t/g' -e 's/\..*\t/\t/g' > annotation_GO_per_gene.txt
+
+# work through columns to split multiple go terms per gene into one term per gene, repeating the gene name if multiple GO terms present
+awk '{for(i=2; i<=NF; i++) {print $1,$i}}' OFS="\t" annotation_GO_per_gene.txt > annotation_GO_per_gene_split.txt
+
+# convert Ce terms into Hc terms.
+# ce genes with GO terms: 14638
+# total ce GO terms: 195609
+
+cut -f2,3 WBP_Ce_GOterms_download.txt | grep "GO:" > Ce_genes_GOterms.txt
+
+# run the real substitution
+export PATH="/nfs/users/nfs_s/sd21/lustre118_link/software/anaconda2/bin:$PATH"
+# fsed - https://github.com/wroberts/fsed
+
+fsed --pattern-format=tsv --output Ce_genes_GOterms_Hc_sub.txt  ce_hcV4_1to1.list Ce_genes_GOterms.txt &
+
+grep "HCON" Ce_genes_GOterms_Hc_sub.txt > Hc_genes_Ce_GOterms.txt
+
+# bring it all together and sorted
+cat Hc_genes_Ce_GOterms.txt annotation_GO_per_gene_split.txt | sort | uniq -c
+
+cat Hc_genes_Ce_GOterms.txt annotation_GO_per_gene_split.txt | sort | uniq > HCON_V4_GOterm.db
+
+# Before liftover - original IPS annotation
+#--- total GO terms: 20418
+#--- total genes with GO term: 7824
+
+# After liftover
+#--- total GO terms: 60001
+#--- total genes with GO term: 9627
+```
+
+
+
+# find GO terms for multi Ce: single Hc genes, for which all GO terms in the multi Ce are conserved.
+cat ce.proteins.unique__v__hc_V4.proteins.unique.csv | cut -f2 | awk '{print NF,$1}' OFS="\t"  > ce.fields
+cat ce.proteins.unique__v__hc_V4.proteins.unique.csv | cut -f3 | awk '{print NF,$1}' OFS="\t"   > hc.fields
+cat ce.proteins.unique__v__hc_V4.proteins.unique.csv | awk -F '[\t]'  '{print $2}' | sed -e 's/gene=//g' -e 's/,//g' > ce.genes
+paste ce.fields hc.fields ce.genes  | awk '$1>1 && $2==1 {print $0}' > hc_1toMulti.txt
+# number of Hc genes: 616
+
+
+
 
 
 
@@ -268,8 +667,8 @@ cd KALLISTO
 
 ### Get the GFF to work on
 ```shell
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa REF.fa
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190118.ips.gff3 ANNOTATION.gff3
+ln -fs /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa REF.fa
+ln -fs /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff3
 ```
 
 ### get some raw data
@@ -385,7 +784,7 @@ ggsave("kallistoQC_L3_plots.png",width = 28, height = 28, units = "cm")
 ```
 - Copy to local dir - run this from local machine
 ```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_L3_plots.png ~/Documents/workbook/hcontortus_genome/04_analysis
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_L3_plots.* ~/Documents/workbook/hcontortus_genome/04_analysis
 ```
 
 ![Kallisto QC - L3 plots](04_analysis/kallistoQC_L3_plots.png)
@@ -430,7 +829,7 @@ ggsave("kallistoQC_allsamples2_plots.png",width = 28, height = 10, units = "cm")
 ```
 - Copy to local dir - run this from local machine
 ```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_allsamples2_plots.png ~/Documents/workbook/hcontortus_genome/04_analysis
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_allsamples2_plots.* ~/Documents/workbook/hcontortus_genome/04_analysis
 ```
 
 ![Kallisto QC - All samples with L3 fixed](04_analysis/kallistoQC_allsamples2_plots.png)
@@ -610,17 +1009,17 @@ sleuth_table_ADULTFvGUT <- sleuth_results(hc_so_ADULTFvGUT, 'reduced:full', 'lrt
 write.table(sleuth_table_ADULTFvGUT,file="sleuth_table_ADULTFvGUT.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
-hc_so_ADULTFvGUT_wt<-sleuth_wt(hc_so_ADULTFvGUT,'nameADULT_F',which_model = "full")
-sleuth_table_ADULTFvGUT_wt <- sleuth_results(hc_so_ADULTFvGUT_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
-sleuth_significant_ADULTFvGUT_wt <- dplyr::filter(sleuth_table_ADULTFvGUT_wt, qval <= 0.05)
-head(sleuth_significant_ADULTFvGUT_wt, 100)
+#hc_so_ADULTFvGUT_wt<-sleuth_wt(hc_so_ADULTFvGUT,'nameADULT_F',which_model = "full")
+#sleuth_table_ADULTFvGUT_wt <- sleuth_results(hc_so_ADULTFvGUT_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
+#sleuth_significant_ADULTFvGUT_wt <- dplyr::filter(sleuth_table_ADULTFvGUT_wt, qval <= 0.05)
+#head(sleuth_significant_ADULTFvGUT_wt, 100)
 
 
 
 
 
 # Adult Female vs Egg
-hc_so_ADULTFvEGG	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata_L3fixed$name=="L1"),]
+hc_so_ADULTFvEGG	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata_L3fixed$name=="ADULT_F"),]
 hc_so_ADULTFvEGG <- sleuth_prep(hc_so_ADULTFvEGG, extra_bootstrap_summary = TRUE,num_cores=1)
 hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~name, 'full')
 hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~1, 'reduced')
@@ -633,10 +1032,10 @@ sleuth_table_ADULTFvEGG <- sleuth_results(hc_so_ADULTFvEGG, 'reduced:full', 'lrt
 write.table(sleuth_table_ADULTFvEGG,file="sleuth_table_ADULTFvEGG.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
-hc_so_ADULTFvEGG	<-	sleuth_wt(hc_so_ADULTFvEGG,'name',which_model = "full")
-sleuth_table_ADULTFvEGG_wt	<-	sleuth_results(hc_so_ADULTFvEGG_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
-sleuth_significant_ADULTFvEGG_wt <- dplyr::filter(sleuth_table_ADULTFvEGG_wt, qval <= 0.05)
-head(sleuth_significant_ADULTFvEGG_wt, 100)
+#hc_so_ADULTFvEGG	<-	sleuth_wt(hc_so_ADULTFvEGG,'name',which_model = "full")
+#sleuth_table_ADULTFvEGG_wt	<-	sleuth_results(hc_so_ADULTFvEGG_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
+#sleuth_significant_ADULTFvEGG_wt <- dplyr::filter(sleuth_table_ADULTFvEGG_wt, qval <= 0.05)
+#head(sleuth_significant_ADULTFvEGG_wt, 100)
 
 
 save.image(file = "hc_genome_kallisto.RData")
@@ -663,7 +1062,7 @@ for i in ` ls -1d *out `; do echo $i > ${i}.tpm ; cat ${i}/abundance.tsv | cut -
 #while read ID NAME; do sed -i "s/${ID}/${NAME}/g" transcripts.list; done < mRNA_IDtoNAME_conversion.txt &
 
 # ALTERNATE WAY, direct from the annotaiton
-echo "ID" > transcripts.list; awk '$3=="mRNA" {print $9}' ../ANNOTATION.gff3 | cut -f5 -d";" | sed -e 's/Name=//g' >> transcripts.list
+echo "ID" > transcripts.list; grep ">" ../TRANSCRIPTS.fa | cut -f1 -d" " | sed -e 's/>//g' >> transcripts.list
 
 
 
@@ -755,7 +1154,7 @@ dev.off()
 
 - Copy to local dir - run this from local machine
 ```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/top1000variablegenes_allstages_minTPM1.png ~/Documents/workbook/hcontortus_genome/04_analysis
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/top1000variablegenes_allstages_minTPM1.* ~/Documents/workbook/hcontortus_genome/04_analysis
 ```
 
 ![Kallisto - top 1000 most variable genes across lifestages](04_analysis/top1000variablegenes_allstages_minTPM1.png)
@@ -777,20 +1176,31 @@ cp kallisto_allsamples.tpm.table clust_data/
 Run clust
 - requires a replicates dataset - see "replicates.txt"
 
+kallisto_allsamples.tpm.table   EGG     kallisto_7059_6_1_out   kallisto_7059_6_2_out   kallisto_7059_6_3_out
+kallisto_allsamples.tpm.table   L1      kallisto_7059_6_4_out   kallisto_7059_6_5_out   kallisto_7059_6_6_out
+kallisto_allsamples.tpm.table   SHL3    kallisto_7062_6_10_out  kallisto_7062_6_11_out  kallisto_7062_6_8_out
+kallisto_allsamples.tpm.table   EXL3    kallisto_7062_6_12_out  kallisto_7062_6_9_out
+kallisto_allsamples.tpm.table   L4      kallisto_7059_6_7_out   kallisto_7059_6_8_out   kallisto_7059_6_9_out
+kallisto_allsamples.tpm.table   ADULT_F kallisto_7059_6_10_out  kallisto_7059_6_11_out  kallisto_7059_6_12_out
+kallisto_allsamples.tpm.table   ADULT_M kallisto_7062_6_1_out   kallisto_7062_6_2_out   kallisto_7062_6_3_out
+kallisto_allsamples.tpm.table   GUT     kallisto_7062_6_13_out  kallisto_7062_6_14_out  kallisto_7062_6_15_out
+
+
 ```shell
 # run clust
 clust $PWD/clust_data -r replicates.txt
 ```
-Clust produces a cluster profile PDF containing all Clusters. However, it is not that nice, and so will make better onces using ggplot. Need to convert PDF to PNG to post however.
+Clust produces a cluster profile PDF containing all Clusters. However, it is not that nice, and so will make better ones using ggplot. Need to convert PDF to PNG to post however.
 
 ```shell
 # pdf to png conversion
+cd Results
 convert Clusters_profiles.pdf -quality 200  Clusters_profiles.png
 ```
 
 - Copy to local dir - run this from local machine
 ```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19/Clusters_profiles*.png ~/Documents/workbook/hcontortus_genome/04_analysis/
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_*/Clusters_profiles*.png ~/Documents/workbook/hcontortus_genome/04_analysis/
 ```
 
 ![Clust - cluster profiles ](04_analysis/Clusters_profiles-0.png)
@@ -808,10 +1218,10 @@ Results
 
 Make nice clust plots using ggplot2
 ```shell
-cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_26_Jan_19
 
 # make gene lists for each cluster set
-for i in {1..20}; do cut -f "${i}" Clusters_Objects.tsv | sed '2d' | cut -f1 -d " " | sed '/^$/d' > cluster_${i}.list; done
+for i in {1..19}; do cut -f "${i}" Clusters_Objects.tsv | sed '2d' | cut -f1 -d " " | sed '/^$/d' > cluster_${i}.list; done
 ```
 ```R
 R-3.5.0
@@ -847,7 +1257,7 @@ Import into Illustrator to make a nice figure.
 
 - Copy to local dir - run this from local machine
 ```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19/cluster*.pdf ~/Documents/workbook/hcontortus_genome/04_analysis
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_*/cluster*.pdf ~/Documents/workbook/hcontortus_genome/04_analysis
 ```
 
 ### Distribution of clustered gene expression profiles across the genome
@@ -856,7 +1266,7 @@ Want to explore whether genome locate has any impact on the coexpression of gene
 
 # get genome coordinates of genes in clusters
 ```shell
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190118.ips.gff3 ANNOTATION.gff
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff
 
 while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_1.list > cluster_1.coords
 while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_2.list > cluster_2.coords
@@ -950,7 +1360,7 @@ cluster_19$cluster <- 19
 cluster_20$cluster <- 20
 
 
-clusters <- rbind(cluster_1,cluster_2,cluster_3,cluster_4,cluster_5,cluster_6,cluster_7,cluster_8,cluster_9,cluster_10,cluster_11,cluster_12,cluster_13,cluster_14,cluster_15,cluster_16,cluster_17,cluster_18,cluster_19,cluster_20)
+clusters <- rbind(cluster_1,cluster_2,cluster_3,cluster_4,cluster_5,cluster_6,cluster_7,cluster_8,cluster_9,cluster_10,cluster_11,cluster_12,cluster_13,cluster_14,cluster_15,cluster_16,cluster_17,cluster_18,cluster_19)
 
 #ggplot(clusters,aes(clusters$V2,clusters$cluster))+ geom_jitter(alpha=0.1,size=0.5)+facet_grid(.~clusters$V1)+theme_bw()+ scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
 
@@ -975,7 +1385,7 @@ c16<-read.table("cluster_16.counts",header=F)
 c17<-read.table("cluster_17.counts",header=F)
 c18<-read.table("cluster_18.counts",header=F)
 c19<-read.table("cluster_19.counts",header=F)
-c20<-read.table("cluster_20.counts",header=F)
+#c20<-read.table("cluster_20.counts",header=F)
 
 
 # calculate the expected number of clustered transcripts per window with the null hypothesis that they are equally distributed throughout the genome.
@@ -1113,14 +1523,14 @@ c19_stat$chqsq<-(c19$V4 - all$V4*(sum(c19$V4)/21007))^2/(all$V4*sum(c19$V4)/2100
 c19_stat$pvalue <- pchisq(c19_stat$chqsq,df=1,lower.tail=FALSE)
 c19_stat$cluster <- 19
 
-c20_stat<-all
-c20_stat$observed<-c20$V4
-c20_stat$expected<-all$V4*(sum(c20$V4)/21007)
-c20_stat$chqsq<-(c20$V4 - all$V4*(sum(c20$V4)/21007))^2/(all$V4*sum(c20$V4)/21007)
-c20_stat$pvalue <- pchisq(c20_stat$chqsq,df=1,lower.tail=FALSE)
-c20_stat$cluster <- 20
+#c20_stat<-all
+#c20_stat$observed<-c20$V4
+#c20_stat$expected<-all$V4*(sum(c20$V4)/21007)
+#c20_stat$chqsq<-(c20$V4 - all$V4*(sum(c20$V4)/21007))^2/(all$V4*sum(c20$V4)/21007)
+#c20_stat$pvalue <- pchisq(c20_stat$chqsq,df=1,lower.tail=FALSE)
+#c20_stat$cluster <- 20
 
-cluster_stats <- rbind(c1_stat,c2_stat,c3_stat,c4_stat,c5_stat,c6_stat,c7_stat,c8_stat,c9_stat,c10_stat,c11_stat,c12_stat,c13_stat,c14_stat,c15_stat,c16_stat,c17_stat,c18_stat,c19_stat,c20_stat)
+cluster_stats <- rbind(c1_stat,c2_stat,c3_stat,c4_stat,c5_stat,c6_stat,c7_stat,c8_stat,c9_stat,c10_stat,c11_stat,c12_stat,c13_stat,c14_stat,c15_stat,c16_stat,c17_stat,c18_stat,c19_stat)
 cluster_stats <- cluster_stats[cluster_stats$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
 cluster_stats[is.na(cluster_stats)] <- 1
 cluster_stats$neglogP <- -log10(cluster_stats$pvalue)
@@ -1146,7 +1556,7 @@ ggsave("clust_profiles_across_genome.png",width = 28, height = 10, units = "cm")
 ```
 - Copy to local dir - run this from local machine
 ```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_19_Jan_19/clust_profiles_across_genome.* ~/Documents/workbook/hcontortus_genome/04_analysis
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_*/clust_profiles_across_genome.* ~/Documents/workbook/hcontortus_genome/04_analysis
 ```
 
 ![CLust - expression profiles across genome](04_analysis/clust_profiles_across_genome.png)
