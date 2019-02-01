@@ -244,6 +244,7 @@ gag.py -f ../HAEM_V4_final.chr.fa -g HCON_V4_WBP11plus_190125.ips.gff3
 ## 03 - Gene model plotter <a name="gene_model_plotter"></a>
 
 Working environment and data
+
 ```shell
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/GENE_MODEL_PLOTS
 
@@ -296,14 +297,18 @@ colnames(old_gff) <- c("chr","source","feature","start","end","point1","strand",
 
 
 # select gene ID
-gene='HCON_00001040'
+gene='HCON_00107450'
+
+#btub1 HCON_00005260
 
 
-# filter data to select chromosome anf mRNA
+gene_model_plot <- function(gene){
+
+# filter data to select chromosome and mRNA
 mrna_data <- gff[grep(gene, gff$info), ]
 mrna_data <- mrna_data[mrna_data$feature=='mRNA',]
 mrna_data <- cbind(mrna_data, read.table(text = as.character(mrna_data$info), sep = ";"))
-mrna_data <- cbind(mrna_data, read.table(text = as.character(mrna_data$V3), sep = "=",col.names=c("ID","unique_ID")))
+mrna_data <- cbind(mrna_data, read.table(text = as.character(mrna_data$V1), sep = "=",col.names=c("ID","unique_ID")))
 mrna_id <- head(data.frame(mrna_data$unique_ID),1)  # gives 1st isoform if multiple
 chromosome <- mrna_data[1,1]
 colnames(chromosome)<-c("chromosome_ID")
@@ -372,7 +377,7 @@ ggplot()+
   geom_rect(data=test_join,aes(xmin=test_join$start.x,ymin=4+test_join$rank-0.08,xmax=test_join$end.x,ymax=4+test_join$rank+0.08),fill="cornflowerblue")+
   geom_text(aes(x=mrna$end+(0.15*(mrna$end-mrna$start)), y=5, label = "IsoSeq cDNA reads \n (minimap2 splice)"))+
   # plot layout
-  theme_classic()+
+  theme_bw()+
   #xlab("Genome position (bp)")+
   labs(title= paste("Gene ID: ",gene), x =paste("Chromosome: ",chromosome," position (bp)"))+
   xlim(mrna$start-(0.1*(mrna$end-mrna$start)),mrna$end+(0.25*(mrna$end-mrna$start)))+
@@ -380,6 +385,10 @@ ggplot()+
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
+
+}
+
+gene_model_plot('')
 
 ```
 
@@ -389,6 +398,34 @@ ggplot()+
 
 
 
+#Annotation comparisons
+
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_SUMMARY_STATS
+```
+
+```R
+R-3.5.0
+library(ggplot2)
+data<-read.table("summary_stats.txt",sep="\t",header=T)
+
+
+ggplot()+
+     geom_point(aes(x=log10(data$count),y=log10(data$mean),col=data$class,shape=data$Species),size=3)+
+     theme_bw()+
+     labs(y="Mean length (log10[bp])",x="Feature count (log10[total])")
+
+ggsave("annotation_comparison_4species_scatter.pdf",useDingbats=F)
+ggsave("annotation_comparison_4species_scatter.png")
+```
+
+- Copy to local dir - run this from local machine
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_SUMMARY_STATS/annotation_comparison_4species_scatter.* ~/Documents/workbook/hcontortus_genome/04_analysis
+```
+
+![Annotation summary stats comparison between Ce HcV1 hcV4 HcMcM](04_analysis/annotation_comparison_4species_scatter.png)
+Fig - Annotation summary stats comparison between Ce HcV1 hcV4 HcMcM
 
 
 
@@ -585,6 +622,8 @@ Get 1:1s
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS
 
 ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25/Orthologues_Jan25/Orthologues/Orthologues_ce.proteins.unique/ce.proteins.unique__v__hc_V4.proteins.unique.csv
+ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25/Orthologues_Jan25/Or
+thologues/Orthologues_hc_V4.proteins.unique/hc_V4.proteins.unique__v__ce.proteins.unique.csv
 
 ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/
 ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_1901
@@ -635,14 +674,39 @@ cat Hc_genes_Ce_GOterms.txt annotation_GO_per_gene_split.txt | sort | uniq > HCO
 
 
 # find GO terms for multi Ce: single Hc genes, for which all GO terms in the multi Ce are conserved.
-cat ce.proteins.unique__v__hc_V4.proteins.unique.csv | cut -f2 | awk '{print NF,$1}' OFS="\t"  > ce.fields
-cat ce.proteins.unique__v__hc_V4.proteins.unique.csv | cut -f3 | awk '{print NF,$1}' OFS="\t"   > hc.fields
+cat hc_V4.proteins.unique__v__ce.proteins.unique.csv | cut -f2 | awk '{print NF}' OFS="\t"  > hc.fields
+cat hc_V4.proteins.unique__v__ce.proteins.unique.csv | cut -f3 | awk '{print NF}' OFS="\t"   > ce.fields
+
 cat ce.proteins.unique__v__hc_V4.proteins.unique.csv | awk -F '[\t]'  '{print $2}' | sed -e 's/gene=//g' -e 's/,//g' > ce.genes
 paste ce.fields hc.fields ce.genes  | awk '$1>1 && $2==1 {print $0}' > hc_1toMulti.txt
 # number of Hc genes: 616
 
+cat hc_V4.proteins.unique__v__ce.proteins.unique.csv | cut -f2 > hc.genes
+paste hc.fields ce.fields hc.genes ce.genes > hc.ce.data
+
+awk '$1==1 && $2>1 {print $0}' hc.ce.data | sed 's/-.*\t/\t/g' | cut -f3,4 | sort -k3 | uniq > hc.ce.data.filtered
+
+>hcgenes.cemultiGOs
+while read hgene cgene; do
+     echo -e "$hgene $cgene" | awk '{for(i=2; i<=NF; i++) {print $i}}' > ${hgene}.tmp
+     count=$(wc -l ${hgene}.tmp | cut -f1 -d " ")
+     grep -f ${hgene}.tmp WBP_Ce_GOterms_download.txt | cut -f 3 | sort | uniq -c | awk -v count="${count}" -v hgene="${hgene}" '{if($1>=count && $2!="") print hgene,$2}' OFS="\t" >> hcgenes.cemultiGOs;
+     done < hc.ce.data.filtered
+
+rm *tmp*
+
+cat HCON_V4_GOterm.db hcgenes.cemultiGOs | sort | uniq > tmp; mv tmp HCON_V4_GOterm.db
+
+# multiCe genes : single Hc genes
+#--- additional GO terms: 3694
+#--- additional genes with GO term: 517
 
 
+
+#Total
+#--- genes with GO terms: 9739
+#--- GO terms: 62733
+```
 
 
 
@@ -1561,6 +1625,336 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 
 ![CLust - expression profiles across genome](04_analysis/clust_profiles_across_genome.png)
 Fig - CLust - expression profiles across genome
+
+
+
+
+# GO term analysis of cluster_stats
+
+```R
+R-3.5.0
+library(topReviGO)
+genes<-c(t(read.table("~/lustre118_link/hc/GENOME/GO_ANALYSIS/all_genes",header=F)))
+mapfile<-read.table("HCON_V4_GOterm.db")
+
+
+cluster1<-c(t(read.table("clust_cluster1.genelist",header=F)))
+c1_allGenes <-  factor(as.integer((genes) %in% cluster1))
+names(c1_allGenes) <- (genes)
+
+topReviGO(c1_allGenes, "cluster1_MF", "/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS/HCON_V4_GOterm.db", mapOrDb = "map", p = 0.05,ontology="MF")
+topReviGO(c1_allGenes, "cluster1_BP", "/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS/HCON_V4_GOterm.db", mapOrDb = "map", p = 0.05,ontology="BP")
+
+
+cluster8<-c(t(read.table("clust_cluster8.genelist",header=F)))
+c8_allGenes <-  factor(as.integer((genes) %in% cluster8))
+names(c8_allGenes) <- (genes)
+
+topReviGO(c8_allGenes, "cluster8_MF", "/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS/HCON_V4_GOterm.db", mapOrDb = "map", p = 0.05,ontology="MF")
+topReviGO(c8_allGenes, "cluster8_BP", "/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS/HCON_V4_GOterm.db", mapOrDb = "map", p = 0.05,ontology="BP")
+
+
+
+
+# plot cluster 8
+revigo.names <- c("term_ID","description","frequency_%","plot_X","plot_Y","plot_size","log10_p_value","uniqueness","dispensability");
+revigo.data <- rbind(c("GO:0004175","endopeptidase activity", 1.918,-0.793, 6.971, 5.431,-8.2757,0.713,0.000),
+c("GO:0005328","neurotransmitter:sodium symporter activity", 0.057, 5.352, 4.778, 3.907,-2.5528,0.795,0.000),
+c("GO:0019211","phosphatase activator activity", 0.013,-5.142,-3.744, 3.247,-1.3143,0.892,0.000),
+c("GO:0030246","carbohydrate binding", 0.723, 5.887,-4.605, 5.007,-2.0605,0.885,0.000),
+c("GO:0004329","formate-tetrahydrofolate ligase activity", 0.023,-6.798, 0.072, 3.510,-1.3143,0.866,0.023),
+c("GO:0004609","phosphatidylserine decarboxylase activity", 0.041,-3.990,-0.303, 3.757,-1.3143,0.866,0.024),
+c("GO:0008410","CoA-transferase activity", 0.076, 2.166,-6.048, 4.030,-2.1675,0.839,0.026),
+c("GO:0000150","recombinase activity", 0.105,-5.806, 3.755, 4.171,-1.3143,0.864,0.026),
+c("GO:0016646","oxidoreductase activity, acting on the CH-NH group of donors, NAD or NADP as acceptor", 0.239, 7.170, 0.594, 4.527,-1.3778,0.815,0.029),
+c("GO:0016874","ligase activity", 3.540, 1.894,-2.047, 5.698,-1.6757,0.859,0.039),
+c("GO:0035639","purine ribonucleoside triphosphate binding",15.815,-0.700, 1.487, 6.348,-2.5528,0.901,0.077),
+c("GO:0003831","beta-N-acetylglucosaminylglycopeptide beta-1,4-galactosyltransferase activity", 0.001,-2.123,-5.397, 2.053,-1.3143,0.848,0.130),
+c("GO:0004001","adenosine kinase activity", 0.008, 0.275,-6.320, 3.060,-1.3143,0.844,0.148),
+c("GO:0004067","asparaginase activity", 0.022,-2.704, 6.251, 3.483,-1.3143,0.820,0.188),
+c("GO:0004365","glyceraldehyde-3-phosphate dehydrogenase (NAD+) (phosphorylating) activity", 0.014, 6.875,-0.518, 3.282,-1.3143,0.824,0.240),
+c("GO:0005337","nucleoside transmembrane transporter activity", 0.064, 4.925, 5.319, 3.953,-1.3778,0.811,0.398),
+c("GO:0008121","ubiquinol-cytochrome-c reductase activity", 0.043, 5.942, 3.133, 3.782,-1.3143,0.728,0.554),
+c("GO:0004185","serine-type carboxypeptidase activity", 0.143,-0.249, 7.172, 4.303,-1.6478,0.736,0.611));
+
+one.data <- data.frame(revigo.data);
+names(one.data) <- revigo.names;
+one.data <- one.data [(one.data$plot_X != "null" & one.data$plot_Y != "null"), ];
+one.data$plot_X <- as.numeric( as.character(one.data$plot_X) );
+one.data$plot_Y <- as.numeric( as.character(one.data$plot_Y) );
+one.data$plot_size <- as.numeric( as.character(one.data$plot_size) );
+one.data$log10_p_value <- as.numeric( as.character(one.data$log10_p_value) );
+one.data$frequency <- as.numeric( as.character(one.data$frequency) );
+one.data$uniqueness <- as.numeric( as.character(one.data$uniqueness) );
+one.data$dispensability <- as.numeric( as.character(one.data$dispensability) );
+#head(one.data);
+
+# --------------------------------------------------------------------------
+# Names of the axes, sizes of the numbers and letters, names of the columns,
+# etc. can be changed below
+
+p1 <- ggplot( data = one.data );
+p1 <- p1 + geom_point( aes( plot_X, plot_Y, colour = log10_p_value, size = plot_size), alpha = I(0.6) ) + scale_size_area();
+p1 <- p1 + scale_colour_gradientn( colours = c("blue", "green", "yellow", "red"), limits = c( min(one.data$log10_p_value), 0) );
+p1 <- p1 + geom_point( aes(plot_X, plot_Y, size = plot_size), shape = 21, fill = "transparent", colour = I (alpha ("black", 0.6) )) + scale_size_area();
+p1 <- p1 + scale_size( range=c(5, 25)) + theme_bw(); # + scale_fill_gradientn(colours = heat_hcl(7), limits = c(-300, 0) );
+ex <- one.data [ one.data$dispensability < 0.15, ];
+p1 <- p1 + geom_label_repel( data = ex, aes(plot_X, plot_Y, label = description), colour = I(alpha("black", 0.85)), size = 2.5 ,force=2);
+p1 <- p1 + labs (y = "semantic space x", x = "semantic space y");
+p1 <- p1 + theme(legend.key = element_blank()) ;
+one.x_range = max(one.data$plot_X) - min(one.data$plot_X);
+one.y_range = max(one.data$plot_Y) - min(one.data$plot_Y);
+p1 <- p1 + xlim(min(one.data$plot_X)-one.x_range/10,max(one.data$plot_X)+one.x_range/10);
+p1 <- p1 + ylim(min(one.data$plot_Y)-one.y_range/10,max(one.data$plot_Y)+one.y_range/10);
+
+# --------------------------------------------------------------------------
+# Output the plot to screen
+p1;
+
+
+
+
+
+# cluster 1
+revigo.names <- c("term_ID","description","frequency_%","plot_X","plot_Y","plot_size","log10_p_value","uniqueness","dispensability");
+revigo.data <- rbind(c("GO:0000977","RNA polymerase II regulatory region sequence-specific DNA binding", 0.160,-5.206,-4.503, 4.352,-2.4089,0.783,0.000),
+c("GO:0000981","RNA polymerase II transcription factor activity, sequence-specific DNA binding", 0.640, 6.209, 0.321, 4.954,-2.1487,0.791,0.000),
+c("GO:0004888","transmembrane signaling receptor activity", 0.962,-0.366,-6.201, 5.132,-10.0969,0.792,0.000),
+c("GO:0015075","ion transmembrane transporter activity", 3.726,-5.688, 1.839, 5.720,-2.6778,0.473,0.000),
+c("GO:0016413","O-acetyltransferase activity", 0.066, 3.105, 4.825, 3.966,-2.0969,0.761,0.000),
+c("GO:0019825","oxygen binding", 0.057, 4.144,-4.291, 3.904,-1.5498,0.783,0.037),
+c("GO:0015018","galactosylgalactosylxylosylprotein 3-beta-glucuronosyltransferase activity", 0.009, 0.218, 6.442, 3.086,-1.6459,0.761,0.148),
+c("GO:0005344","oxygen transporter activity", 0.033,-5.524, 2.740, 3.662,-1.6271,0.548,0.501));
+
+one.data <- data.frame(revigo.data);
+names(one.data) <- revigo.names;
+one.data <- one.data [(one.data$plot_X != "null" & one.data$plot_Y != "null"), ];
+one.data$plot_X <- as.numeric( as.character(one.data$plot_X) );
+one.data$plot_Y <- as.numeric( as.character(one.data$plot_Y) );
+one.data$plot_size <- as.numeric( as.character(one.data$plot_size) );
+one.data$log10_p_value <- as.numeric( as.character(one.data$log10_p_value) );
+one.data$frequency <- as.numeric( as.character(one.data$frequency) );
+one.data$uniqueness <- as.numeric( as.character(one.data$uniqueness) );
+one.data$dispensability <- as.numeric( as.character(one.data$dispensability) );
+#head(one.data);
+
+# --------------------------------------------------------------------------
+# Names of the axes, sizes of the numbers and letters, names of the columns,
+# etc. can be changed below
+
+p1 <- ggplot( data = one.data );
+p1 <- p1 + geom_point( aes( plot_X, plot_Y, colour = log10_p_value, size = plot_size), alpha = I(0.6) ) + scale_size_area();
+p1 <- p1 + scale_colour_gradientn( colours = c("blue", "green", "yellow", "red"), limits = c( min(one.data$log10_p_value), 0) );
+p1 <- p1 + geom_point( aes(plot_X, plot_Y, size = plot_size), shape = 21, fill = "transparent", colour = I (alpha ("black", 0.6) )) + scale_size_area();
+p1 <- p1 + scale_size( range=c(5, 25)) + theme_bw(); # + scale_fill_gradientn(colours = heat_hcl(7), limits = c(-300, 0) );
+ex <- one.data [ one.data$dispensability < 0.15, ];
+p1 <- p1 + geom_label_repel( data = ex, aes(plot_X, plot_Y, label = description), colour = I(alpha("black", 0.85)), size = 2.5 ,force=2);
+p1 <- p1 + labs (y = "semantic space x", x = "semantic space y");
+p1 <- p1 + theme(legend.key = element_blank()) ;
+one.x_range = max(one.data$plot_X) - min(one.data$plot_X);
+one.y_range = max(one.data$plot_Y) - min(one.data$plot_Y);
+p1 <- p1 + xlim(min(one.data$plot_X)-one.x_range/10,max(one.data$plot_X)+one.x_range/10);
+p1 <- p1 + ylim(min(one.data$plot_Y)-one.y_range/10,max(one.data$plot_Y)+one.y_range/10);
+
+# --------------------------------------------------------------------------
+# Output the plot to screen
+p1;
+```
+
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS/revigo_cluster.* ~/Documents/workbook/hcontortus_genome/04_analysis
+```
+
+
+
+
+---
+## 05 - Splice Leader analyses
+
+
+Setup Working directory and reference sequences
+```shell
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME
+mkdir SPLICE_LEADERS
+cd SPLICE_LEADERS
+
+ln -s ../../REF/HAEM_V4_final.chr.fa REF.fa
+ln -s ../TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff3
+
+```
+
+Slice leader sequences
+SL1 - GGTTTAATTACCCAAGTTTGAG
+SL2 - GGTTTTAACCCAGTATCTCAAG
+
+
+
+
+
+Run the splice leader analysis tools
+
+```shell
+# run splice leader finder scripts for SL1 and SL2 sequences
+bsub.py --queue yesterday 1 merged_AdultF_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_AdultF_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultF_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultF_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_AdultM_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_AdultM_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultM_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultM_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_BXC_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_BXC_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_BXC_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_BXC_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_EXL3_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_EXL3_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_EXL3_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_EXL3_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_gut_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_gut_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_gut_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_gut_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_ISE_BXWF_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_ISE_BXWF_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_ISE_BXWF_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_ISE_BXWF_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_L1_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_L1_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L1_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L1_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_L4_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_L4_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L4_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L4_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_SHL3_SL1 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_SHL3_SL1 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTAATTACCCAAGTTTGAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R2.fastq.gz
+
+
+bsub.py --queue yesterday 1 merged_AdultF_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_AdultF_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultF_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultF_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_AdultM_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_AdultM_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultM_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_AdultM_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_BXC_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_BXC_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_BXC_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_BXC_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_EXL3_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_EXL3_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_EXL3_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_EXL3_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_gut_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_gut_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_gut_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_gut_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_ISE_BXWF_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_ISE_BXWF_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_ISE_BXWF_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_ISE_BXWF_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_L1_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_L1_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L1_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L1_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_L4_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_L4_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L4_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_L4_R2.fastq.gz
+bsub.py --queue yesterday 1 merged_SHL3_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_SHL3_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R2.fastq.gz
+```
+
+Run subsequence analyses to collate and summarise data
+```shell
+# collate all splice window coordinates
+cat *SL1_SL_ANALYSIS_out/*SL-only.bed > SL1.SL-only.bed
+cat *SL2_SL_ANALYSIS_out/*SL-only.bed > SL2.SL-only.bed
+
+# get the transcript start and internal window coordinates - these are identical in each of the sub-analyses, so just choose one set
+cp merged_EXL3_SL1_SL_ANALYSIS_out/merged_EXL3_SL1_transcript_start_windows.bed transcript_start_windows.bed
+cp merged_EXL3_SL1_SL_ANALYSIS_out/merged_EXL3_SL1_internal_cds_windows.bed internal_cds_windows.bed
+
+# get SL coverage per transcript start for both SL1 and SL2 sequences
+bedtools coverage -s -b transcript_start_windows.bed -a SL1.SL-only.bed | sort -k1,1 -k2,2n > SL1_transcript_start_windows.SL.coverage
+bedtools coverage -s -b transcript_start_windows.bed -a SL2.SL-only.bed | sort -k1,1 -k2,2n > SL2_transcript_start_windows.SL.coverage
+
+
+# get SL coverage per internal CDSs (skipping terminal CDSs) for both SL1 and SL2 sequences
+bedtools coverage -s -b internal_cds_windows.bed -a SL1.SL-only.bed | sort -k1,1 -k2,2n > SL1_internal_cds_windows.SL.coverage
+bedtools coverage -s -b internal_cds_windows.bed -a SL2.SL-only.bed | sort -k1,1 -k2,2n > SL2_internal_cds_windows.SL.coverage
+
+
+awk '{if($7>=1) print $4}' SL1_transcript_start_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > transcript_start_windows.SL1.genelist
+awk '{if($7>=1) print $4}' SL1_transcript_start_windows.SL.coverage | wc -l
+#>> 7174 transcripts
+cut -f1 -d "." transcript_start_windows.SL1.genelist | sort | uniq | wc -l
+#>> 6661 genes
+
+
+
+awk '{if($7>=1) print $4}' SL1_internal_cds_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > internal_cds_windows.SL1.genelist
+awk '{if($7>=1) print $4}' SL1_internal_cds_windows.SL.coverage | wc -l
+#>> 5933 transcripts
+cut -f1 -d "." internal_cds_windows.SL1.genelist | sort | uniq | wc -l
+#>> 3824 genes
+
+
+
+awk '{if($7>=1) print $4}' SL2_transcript_start_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > transcript_start_windows.SL2.genelist
+awk '{if($7>=1) print $4}' SL2_transcript_start_windows.SL.coverage | wc -l
+#>> 1103 transcripts
+cut -f1 -d "." transcript_start_windows.SL2.genelist | sort | uniq | wc -l
+#>> 1025 genes
+
+awk '{if($7>=1) print $4}' SL2_internal_cds_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > internal_cds_windows.SL2.genelist
+awk '{if($7>=1) print $4}' SL2_internal_cds_windows.SL.coverage | wc -l
+#>> 950 transcripts
+cut -f1 -d "." internal_cds_windows.SL2.genelist | sort | uniq | wc -l
+#>> 766 genes
+
+
+
+
+##########################################################################################
+# distance and density of genes, and their relationship between SL1 and SL2
+
+
+
+awk -F '[\t=;]' '{if($3=="mRNA" && $7=="+") print $1,$4,$5,$10,$6,$7}' OFS="\t" HCON_V4.renamed.gff3 > transcripts.pos_strand.bed
+awk -F '[\t=;]' '{if($3=="mRNA" && $7=="-") print $1,$4,$5,$10,$6,$7}' OFS="\t" HCON_V4.renamed.gff3 > transcripts.neg_strand.bed
+
+
+bedtools-2 spacing -i transcripts.pos_strand.bed | sed 's/\.$/NA/g' > transcripts.pos_strand.spacing.bed
+bedtools-2 spacing -i transcripts.neg_strand.bed | sed 's/\.$/NA/g' > transcripts.neg_strand.spacing.bed
+
+awk '{print $4,$7}' OFS="\t" transcripts.pos_strand.spacing.bed > transcripts.pos_strand.spacing
+awk '{print $4,$7}' OFS="\t" transcripts.neg_strand.spacing.bed > transcripts.neg_strand.spacing
+
+# fix neg strand coords to correct for orientation
+cut -f 1 transcripts.neg_strand.spacing | head -n -1 > neg.1.tmp
+cut -f 2 transcripts.neg_strand.spacing | tail -n +2 > neg.2.tmp
+paste neg.1.tmp neg.2.tmp > transcripts.neg_strand.spacing
+
+
+awk '{print $1,"SL1"}' OFS="\t" transcript_start_windows.SL1.genelist > mRNA_SL1.list
+awk '{print $1,"SL2"}' OFS="\t" transcript_start_windows.SL2.genelist > mRNA_SL2.list
+
+cat mRNA_SL1.list mRNA_SL2.list > mRNA_SLall.list
+```
+
+
+
+```R
+R-3.4.0
+library(ggplot2)
+library(patchwork)
+library("ggsci")
+
+pos<-read.table("transcripts.pos_strand.spacing",header=F)
+neg<-read.table("transcripts.neg_strand.spacing",header=F)
+sl<-read.table("mRNA_SLall.list",header=F)
+
+data_pos<-dplyr::left_join(pos,sl,by="V1")
+data_neg<-dplyr::left_join(neg,sl,by="V1")
+
+sl1_pos<-data_pos[(data_pos$V2.y=="SL1"),]
+sl2_pos<-data_pos[(data_pos$V2.y=="SL2"),]
+
+sl1_neg<-data_neg[(data_neg$V2.y=="SL1"),]
+sl2_neg<-data_neg[(data_neg$V2.y=="SL2"),]
+
+
+
+par(mfrow=c(2,2))
+plot(density(log10(sl1_pos$V2.x),na.rm=T),xlim=c(0,6))
+plot(density(log10(sl1_neg$V2.x),na.rm=T),xlim=c(0,6))
+plot(density(log10(sl2_pos$V2.x),na.rm=T),xlim=c(0,6))
+plot(density(log10(sl2_neg$V2.x),na.rm=T),xlim=c(0,6))
+
+
+plot_pos_all <- ggplot()+geom_histogram(aes(log10(data_pos$V2.x),fill=data_pos$V2.y),bins = 100, alpha = 0.5,position="identity")+theme_bw()+xlab("Distance to upstream gene (log10(bp))")+ylab("Count")+scale_fill_npg(na.value="grey90")+xlim(0,6)+ylim(0,500)
+plot_neg_all <- ggplot()+geom_histogram(aes(log10(data_neg$V2.x),fill=data_neg$V2.y),bins = 100, alpha = 0.5,position="identity")+theme_bw()+xlab("Distance to upstream gene (log10(bp))")+ylab("Count")+scale_fill_npg(na.value="grey90")+xlim(0,6)+ylim(0,500)
+plot_pos <- ggplot()+geom_histogram(aes(log10(sl1_pos$V2.x),stat(ndensity)),bins = 100,fill = "#E64B35B2", alpha = 0.5)+geom_histogram(aes(log10(sl2_pos$V2.x),stat(ndensity)),bins = 100,fill = "#4DBBD5B2", alpha = 0.5)+theme_bw()+xlab("Distance to upstream gene (log10(bp))")+ylab("Density")+xlim(0,6)
+plot_neg <- ggplot()+geom_histogram(aes(log10(sl1_neg$V2.x),stat(ndensity)),bins = 100,fill = "#E64B35B2", alpha = 0.5)+geom_histogram(aes(log10(sl2_neg$V2.x),stat(ndensity)),bins = 100,fill = "#4DBBD5B2", alpha = 0.5)+theme_bw()+xlab("Distance to upstream gene (log10(bp))")+ylab("Density")+xlim(0,6)
+
+
+plot_pos_all + plot_neg_all + plot_pos + plot_neg
+```
+
+
+### weblogo plots
+
+```shell
+*_adapters.fixedlength.fa
+*_SL1.twentymer.fasta
+
+cat *SL1_SL_ANALYSIS_out/*_adapters.fixedlength.fa > SL1_adapters_fixedlength.fa
+cat *SL2_SL_ANALYSIS_out/*_adapters.fixedlength.fa > SL2_adapters_fixedlength.fa
+
+~sd21/lustre118_link/software/bin/weblogo --format pdf --datatype fasta --ignore-lower-case <  SL1_adapters_fixedlength.fa >  SL1_adapters_fixedlength.weblogo.pdf
+~sd21/lustre118_link/software/bin/weblogo --format pdf --datatype fasta --ignore-lower-case <  SL2_adapters_fixedlength.fa >  SL2_adapters_fixedlength.weblogo.pdf
+
+cat *SL1_SL_ANALYSIS_out/*_SL1.twentymer.fasta > SL1_splicesite_20mer.fa
+cat *SL2_SL_ANALYSIS_out/*_SL2.twentymer.fasta > SL2_splicesite_20mer.fa
+
+~sd21/lustre118_link/software/bin/weblogo --format pdf --datatype fasta --ignore-lower-case <  SL1_splicesite_20mer.fa >  SL1_splicesite_20mer.weblogo.pdf
+~sd21/lustre118_link/software/bin/weblogo --format pdf --datatype fasta --ignore-lower-case <  SL2_splicesite_20mer.fa >  SL2_splicesite_20mer.weblogo.pdf
+```
+
 
 
 ---
