@@ -1818,6 +1818,11 @@ bsub.py --queue yesterday 1 merged_L4_SL2 ~sd21/bash_scripts/run_spliceleader_fi
 bsub.py --queue yesterday 1 merged_SHL3_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_SHL3_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R2.fastq.gz
 ```
 
+
+awk '{if($6=="+" || $6=="-") print $0}' ${PREFIX}_transcript_start_windows.tmp.bed | sed 's/-[0-9][0-9]*/1/' transcript_start_windows.bed
+
+
+
 Run subsequence analyses to collate and summarise data
 ```shell
 # collate all splice window coordinates
@@ -1840,42 +1845,42 @@ bedtools coverage -s -b internal_cds_windows.bed -a SL2.SL-only.bed | sort -k1,1
 
 awk '{if($7>=1) print $4}' SL1_transcript_start_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > transcript_start_windows.SL1.genelist
 awk '{if($7>=1) print $4}' SL1_transcript_start_windows.SL.coverage | wc -l
-#>> 7174 transcripts
-cut -f1 -d "." transcript_start_windows.SL1.genelist | sort | uniq | wc -l
-#>> 6661 genes
+#>> 7895 transcripts
+cut -f1 -d "-" transcript_start_windows.SL1.genelist | sort | uniq | wc -l
+#>> 7293 genes
 
 
 
-awk '{if($7>=1) print $4}' SL1_internal_cds_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > internal_cds_windows.SL1.genelist
-awk '{if($7>=1) print $4}' SL1_internal_cds_windows.SL.coverage | wc -l
-#>> 5933 transcripts
-cut -f1 -d "." internal_cds_windows.SL1.genelist | sort | uniq | wc -l
-#>> 3824 genes
+# awk '{if($7>=1) print $4}' SL1_internal_cds_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > internal_cds_windows.SL1.genelist
+# awk '{if($7>=1) print $4}' SL1_internal_cds_windows.SL.coverage | wc -l
+# #>> 5933 transcripts
+# cut -f1 -d "-" internal_cds_windows.SL1.genelist | sort | uniq | wc -l
+# #>> 3824 genes
 
 
 
 awk '{if($7>=1) print $4}' SL2_transcript_start_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > transcript_start_windows.SL2.genelist
 awk '{if($7>=1) print $4}' SL2_transcript_start_windows.SL.coverage | wc -l
-#>> 1103 transcripts
-cut -f1 -d "." transcript_start_windows.SL2.genelist | sort | uniq | wc -l
-#>> 1025 genes
+#>> 1222 transcripts
+cut -f1 -d "-" transcript_start_windows.SL2.genelist | sort | uniq | wc -l
+#>> 1139 genes
 
-awk '{if($7>=1) print $4}' SL2_internal_cds_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > internal_cds_windows.SL2.genelist
-awk '{if($7>=1) print $4}' SL2_internal_cds_windows.SL.coverage | wc -l
-#>> 950 transcripts
-cut -f1 -d "." internal_cds_windows.SL2.genelist | sort | uniq | wc -l
-#>> 766 genes
+# awk '{if($7>=1) print $4}' SL2_internal_cds_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > internal_cds_windows.SL2.genelist
+# awk '{if($7>=1) print $4}' SL2_internal_cds_windows.SL.coverage | wc -l
+# #>> 950 transcripts
+# cut -f1 -d "-" internal_cds_windows.SL2.genelist | sort | uniq | wc -l
+# #>> 766 genes
 
 
-
+# #>> 3824 genes
 
 ##########################################################################################
 # distance and density of genes, and their relationship between SL1 and SL2
 
 
 
-awk -F '[\t=;]' '{if($3=="mRNA" && $7=="+") print $1,$4,$5,$10,$6,$7}' OFS="\t" HCON_V4.renamed.gff3 > transcripts.pos_strand.bed
-awk -F '[\t=;]' '{if($3=="mRNA" && $7=="-") print $1,$4,$5,$10,$6,$7}' OFS="\t" HCON_V4.renamed.gff3 > transcripts.neg_strand.bed
+awk -F '[\t=;]' '{if($3=="mRNA" && $7=="+") print $1,$4,$5,$10,$6,$7}' OFS="\t" ANNOTATION.gff3 | sort -k1,1 -k2,2n > transcripts.pos_strand.bed
+awk -F '[\t=;]' '{if($3=="mRNA" && $7=="-") print $1,$4,$5,$10,$6,$7}' OFS="\t" ANNOTATION.gff3 | sort -k1,1 -k2,2n > transcripts.neg_strand.bed
 
 
 bedtools-2 spacing -i transcripts.pos_strand.bed | sed 's/\.$/NA/g' > transcripts.pos_strand.spacing.bed
@@ -1897,9 +1902,26 @@ cat mRNA_SL1.list mRNA_SL2.list > mRNA_SLall.list
 ```
 
 
+# hybrid SL1/SL2 shared sites
+bedtools-2 intersect -s -a SL1.SL-only.bed -b SL2.SL-only.bed > SL1SL2_sharedsites.bed
+
+bedtools coverage -s -b transcript_start_windows.bed -a SL1SL2_sharedsites.bed | sort -k1,1 -k2,2n > SL1SL2_sharedsites_transcript_start_windows.SL.coverage
+
+awk '{if($7>=1) print $4}' SL1SL2_sharedsites_transcript_start_windows.SL.coverage | sed -e 's/;/\t/g' -e 's/ID=//g' | cut -f1 > SL1SL2_sharedsites.genelist
+awk '{if($7>=1) print $4}' SL1SL2_sharedsites_transcript_start_windows.SL.coverage | wc -l
+# #>> 1021 transcripts
+cut -f1 -d "-" SL1SL2_sharedsites.genelist | sort | uniq | wc -l
+# #>> 1019 genes
+
+
+
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/SPLICE_LEADERS
+```
+
 
 ```R
-R-3.4.0
+R-3.5.0
 library(ggplot2)
 library(patchwork)
 library("ggsci")
@@ -1918,7 +1940,6 @@ sl1_neg<-data_neg[(data_neg$V2.y=="SL1"),]
 sl2_neg<-data_neg[(data_neg$V2.y=="SL2"),]
 
 
-
 par(mfrow=c(2,2))
 plot(density(log10(sl1_pos$V2.x),na.rm=T),xlim=c(0,6))
 plot(density(log10(sl1_neg$V2.x),na.rm=T),xlim=c(0,6))
@@ -1932,8 +1953,34 @@ plot_pos <- ggplot()+geom_histogram(aes(log10(sl1_pos$V2.x),stat(ndensity)),bins
 plot_neg <- ggplot()+geom_histogram(aes(log10(sl1_neg$V2.x),stat(ndensity)),bins = 100,fill = "#E64B35B2", alpha = 0.5)+geom_histogram(aes(log10(sl2_neg$V2.x),stat(ndensity)),bins = 100,fill = "#4DBBD5B2", alpha = 0.5)+theme_bw()+xlab("Distance to upstream gene (log10(bp))")+ylab("Density")+xlim(0,6)
 
 
-plot_pos_all + plot_neg_all + plot_pos + plot_neg
+# combined pos and neg
+data_all <- dplyr::bind_rows(data_pos,data_neg)
+sl1_all<-data_all[(data_all$V2.y=="SL1"),]
+sl2_all<-data_all[(data_all$V2.y=="SL2"),]
+
+
+p1 <- ggplot()+
+     geom_histogram(aes(log10(data_all$V2.x),fill=(data_all$V2.y)),bins=100, alpha = 0.7,position="identity")+
+     theme_bw()+
+     xlab("Distance to upstream gene (log10(bp))")+ylab("Count")+scale_fill_npg(na.value="grey80")+
+     xlim(0,6)+ylim(0,500)
+
+p2 <- ggplot()+
+     geom_histogram(aes(log10(sl1_all$V2.x),stat(ndensity)),bins = 100,fill = "#E64B35B2", alpha = 0.5)+
+     geom_histogram(aes(log10(sl2_all$V2.x),stat(ndensity)),bins = 100,fill = "#4DBBD5B2", alpha=0.5)+
+     theme_bw()+xlab("Distance to upstream gene (log10[bp])")+
+     guides(fill = guide_legend(reverse = TRUE))+
+     ylab("Density")+xlim(0,6)
+
+p1 + p2 + plot_layout(ncol=2)
+ggsave("SL_gene_distance.pdf")
+
 ```
+
+```shell
+scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/SPLICE_LEADERS/SL_gene_distance.pdf /Users/sd21/Documents/workbook/hcontortus_genome/04_analysis
+
+
 
 
 ### weblogo plots
@@ -1960,3 +2007,190 @@ cat *SL2_SL_ANALYSIS_out/*_SL2.twentymer.fasta > SL2_splicesite_20mer.fa
 ---
 ## 05 - Differential splicing w Leafcutter <a name="ds_leafcutter"></a>
 ---
+
+LEAFCUTTER
+following http://davidaknowles.github.io/leafcutter/articles/Usage.html
+
+
+##### NOTE - made modification to leafcutter scripts
+# modified the following scripts
+# --  ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R
+# --  ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/leafviz/prepare_results.R
+# -- ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/ds_plots.R
+# -- ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/leafviz/run_leafviz.R
+
+# changed the header from:
+#  #!/usr/bin/env Rscript
+#
+# to
+#
+# #!/usr/bin/env /software/R-3.5.0/bin/Rscript
+#
+# to ensure the correct Rscript version was being used.
+
+
+```shell
+export PATH=$PATH:~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/
+
+# raw data: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/LEAFCUTTER
+
+ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff3
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa REF.fa
+```
+
+Need to make a gtf of the annotation and curate it for leafcutter
+```
+# make gtf from gff
+gffread -T -g REF.fa -o ANNOTATION.gtf ANNOTATION.gff3
+
+# use leafcutter script to curate
+perl ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/leafviz/gtf2leafcutter.pl -o HCON_V4 ANNOTATION.gtf
+```
+
+
+
+
+
+```shell
+# map RNAseq reads to reference using STAR
+ while read name lane; do \
+ 		/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/STAR/bin/Linux_x86_64/STAR \
+ 		--twopassMode Basic \
+ 		--runThreadN 8 \
+ 		--genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4chr_rnaseq_star_index \
+ 		--readFilesIn ../RAW/${lane}_1.fastq.gz ../RAW/${lane}_2.fastq.gz \
+ 		--readFilesCommand zcat \
+ 		--outSAMstrandField intronMotif \
+ 		--outSAMtype BAM Unsorted \
+ 		--outFileNamePrefix ${name}; \
+ done < lanes.list
+
+
+
+# make junc files
+mkdir LEAFCUTTER_JUNCS
+
+for bamfile in `ls STAR_MAPPING/*bam | awk -F "/" '{print $NF}' `; do \
+		echo Converting $PWD/STAR_MAPPING/$bamfile to $PWD/LEAFCUTTER_JUNCS/$bamfile.junc; \
+		sh bam2junc.sh $PWD/STAR_MAPPING/$bamfile $PWD/LEAFCUTTER_JUNCS/$bamfile.junc ; \
+		echo $PWD/STAR_MAPPING/$bamfile.junc >> $PWD/LEAFCUTTER_JUNCS/test_juncfiles.txt; \
+done
+
+
+
+# make exon list
+
+echo "chr start end strand gene_name" > HCON_V4.renamed.exons.leafcutter.list; \
+     awk -F'[\t=;]' '{if($3=="exon") print $1,$4,$5,$7,$12}'  ANNOTATION.gff3 | sort -k1,1 -k 2,2n >> HCON_V4.renamed.exons.leafcutter.list
+gzip HCON_V4.renamed.exons.leafcutter.list
+```
+
+
+Run full analysis
+```shell
+# make comparison directories
+mkdir LC_EGG_L1
+mkdir LC_L1_SHL3
+mkdir LC_EXL3_L4
+mkdir LC_L4_AdultF
+mkdir LC_EXL3_L4
+mkdir LC_L4_AdultF
+mkdir LC_L4_AdultM
+mkdir LC_GUT_AdultF
+mkdir LC_FEMALE_EGG
+mkdir LC_SHL3_EXL3
+mkdir LC_ADULTM_ADULTF
+
+
+# copy junc files to each comparison dirctory
+cp LEAFCUTTER_JUNCS/AdultF*junc LC_L4_AdultF/
+cp LEAFCUTTER_JUNCS/AdultF*junc LC_GUT_AdultF
+cp LEAFCUTTER_JUNCS/AdultF*junc LC_FEMALE_EGG
+cp LEAFCUTTER_JUNCS/AdultM*junc LC_L4_AdultM
+cp LEAFCUTTER_JUNCS/Adult*junc LC_ADULTM_ADULTF
+cp LEAFCUTTER_JUNCS/egg*junc LC_EGG_L1
+cp LEAFCUTTER_JUNCS/egg*junc LC_FEMALE_EGG
+cp LEAFCUTTER_JUNCS/L1*junc LC_EGG_L1
+cp LEAFCUTTER_JUNCS/L1*junc LC_L1_SHL3
+cp LEAFCUTTER_JUNCS/L4*junc LC_EXL3_L4
+cp LEAFCUTTER_JUNCS/L4*junc LC_L4_AdultF
+cp LEAFCUTTER_JUNCS/L4*junc LC_L4_AdultM/
+cp LEAFCUTTER_JUNCS/gut*junc LC_GUT_AdultF
+
+cp LEAFCUTTER_JUNCS/SHL3*junc LC_SHL3_EXL3
+cp LEAFCUTTER_JUNCS/EXL3*junc LC_SHL3_EXL3
+
+# fix for renaming of SHL3 and EXL3 as per kallisto analysis
+cd LC_SHL3_EXL3
+mv SHL3_3_236476_2305_3914314Aligned.out.bam.junc EXL3_kallisto_7062_6_12_out.junc
+mv EXL3_2_236476_2305_3914310Aligned.out.bam.junc SHL3_kallisto_7062_6_8_out.junc
+rm EXL3_1_236476_2305_3914309Aligned.out.bam.junc
+
+# move correct samples to other directories
+cp EXL3*junc ../LC_EXL3_L4
+cp SHL3*junc ../LC_L1_SHL3
+
+cd ../
+
+
+# make list of junc files in each comparison directory
+for i in LC_* ; do \
+		ls -1  $i/*junc | \
+		xargs -n1 basename > ${i}/juncfiles.list; \
+		done
+
+
+
+
+# cluster splice junctions
+#--- min depth 5
+for i in LC_* ; do \
+     cd ${i} && \
+     python2.7 ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/clustering/leafcutter_cluster.py -j juncfiles.list -m 5 -o ${i}_cov5 -l 500000 && \
+     cd ../; \
+     done
+
+#--- min depth 10
+for i in LC_* ; do \
+     cd ${i} && \
+     python2.7 ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/clustering/leafcutter_cluster.py -j juncfiles.list -m 10 -o ${i}_cov10 -l 500000 && \
+     cd ../; \
+     done
+
+
+
+# perfrom differental analysis
+#--- made "samples_groups.list" files for each comparison manually, as the sample names were not really parsable
+#--- min depth 5
+for i in LC_FEMALE_EGG LC_GUT_AdultF LC_L1_SHL3 LC_L4_AdultF LC_L4_AdultM LC_ADULTM_ADULTF LC_EGG_L1; do \
+     		cd ${i} && \
+     		~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
+     		--min_samples_per_intron=3 --min_samples_per_group=3 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov5_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov5 && \
+     		cd ../ ; \
+     		done
+
+for i in LC_SHL3_EXL3 LC_EXL3_L4 ; do \
+               cd ${i} && \
+               ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
+               --min_samples_per_intron=2 --min_samples_per_group=2 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov5_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov5 && \
+               cd ../ ; \
+               done
+
+
+
+
+
+
+#--- min depth 10
+for i in LC_* ; do \
+     		cd ${i} && \
+     		~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
+     		--min_samples_per_intron=3 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov10_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov10 && \
+     		cd ../ ; \
+     		done
+
+
+#--- made "samples_groups.list" files for each comparison manually, as the sample names were not really parsable
+for i in LC*; do cd $i; ls -1 *junc | awk -F'[_]' '{print $0,$1}' OFS="\t" > samples_groups.list; cd ../ ;  done
