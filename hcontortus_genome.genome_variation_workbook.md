@@ -805,7 +805,7 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 
 
 
-
+```
 # R-3.4.0
 # library(ggplot2)
 # library(patchwork)		
@@ -830,7 +830,7 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 #
 #
 # div_plot + fst_plot + bz_plot + plot_layout(ncol = 1)
-
+```
 
 ```shell
 cd /nfs/users/nfs_s/sd21/lustre118_link/play
