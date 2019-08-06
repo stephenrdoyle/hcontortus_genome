@@ -10,6 +10,455 @@
 
 
 
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW
+
+for i in 16693_1#1 16693_2#1 16720_1#1 16720_2#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#2 16693_2#2 16720_1#2 16720_2#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#3 16693_2#3 16720_1#3 16720_2#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#4 16693_2#4 16720_1#4 16720_2#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#5 16693_2#5 16720_1#5 16720_2#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#6 16693_2#6 16720_1#6 16720_2#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#7  16693_2#7  16720_1#7  16720_2#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#8  16693_2#8  16720_1#8  16720_2#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#9  16693_2#9  16720_1#9  16720_2#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#10  16693_2#10  16720_1#10  16720_2#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#11  16693_2#11  16720_1#11  16720_2#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#12  16693_2#12  16720_1#12  16720_2#12; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#13  16693_2#13  16720_1#13  16720_2#13; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#14  16693_2#14  16720_1#14  16720_2#14; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#15  16693_2#15  16720_1#15  16720_2#15; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#16  16693_2#16  16720_1#16  16720_2#16; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#17  16693_2#17  16720_1#17  16720_2#17; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#18  16693_2#18  16720_1#18  16720_2#18; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#19  16693_2#19  16720_1#19  16720_2#19; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#20  16693_2#20  16720_1#20  16720_2#20; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#21  16693_2#21  16720_1#21  16720_2#21; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#22  16693_2#22  16720_1#22  16720_2#22; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#23  16693_2#23  16720_1#23  16720_2#23; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#24  16693_2#24  16720_1#24  16720_2#24; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#34  15150_2#34  16553_1#34  16553_2#34; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#35  15150_2#35  16553_1#35  16553_2#35; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#36  15150_2#36  16553_1#36  16553_2#36; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#19  15150_2#19  16553_1#19  16553_2#19; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#20  15150_2#20  16553_1#20  16553_2#20; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#21  15150_2#21  16553_1#21  16553_2#21; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#22  15150_2#22  16553_1#22  16553_2#22; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#23  15150_2#23  16553_1#23  16553_2#23; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#24  15150_2#24  16553_1#24  16553_2#24; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#25  15150_2#25  16553_1#25  16553_2#25; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#26  15150_2#26  16553_1#26  16553_2#26; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#27  15150_2#27  16553_1#27  16553_2#27; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#28  15150_2#28  16553_1#28  16553_2#28; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#29  15150_2#29  16553_1#29  16553_2#29; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#30  15150_2#30  16553_1#30  16553_2#30; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#31  15150_2#31  16553_1#31  16553_2#31; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#32  15150_2#32  16553_1#32  16553_2#32; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#33  15150_2#33  16553_1#33  16553_2#33; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#1  15045_2#1  16552_1#1  16552_2#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#2  15045_2#2  16552_1#2  16552_2#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#3  15045_2#3  16552_1#3  16552_2#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#4  15045_2#4  16552_1#4  16552_2#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#5  15045_2#5  16552_1#5  16552_2#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#6  15045_2#6  16552_1#6  16552_2#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#7  15045_2#7  16552_1#7  16552_2#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#8  15045_2#8  16552_1#8  16552_2#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#9  15045_2#9  16552_1#9  16552_2#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#10  15045_2#10  16552_1#10  16552_2#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#11  15045_2#11  16552_1#11  16552_2#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#12  15045_2#12  16552_1#12  16552_2#12; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#13  15045_2#13  16552_1#13  16552_2#13; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#14  15045_2#14  16552_1#14  16552_2#14; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#15  15045_2#15  16552_1#15  16552_2#15; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+
+
+
+# mapping
+#--- run_bwamem_splitter automatically submits jobs to LSF, so no need to bsub it. Will slowly work though the list when running screen
+#--- samples_lanes.list was curated in excel (See: "Genome_paper_population_diversity_samples.xls"), but is a tab delimited text file containing sample name and sequencing lane ID for all samples to be mapped
+# CH_SWI_001	16693_1#13
+# CH_SWI_001	16693_2#13
+# CH_SWI_001	16720_1#13
+# CH_SWI_001	16720_2#13
+# CH_SWI_002	16693_1#14
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING
+
+echo "while read name lane; do \
+~sd21/bash_scripts/run_bwamem_splitter $"{name}"_$"{lane}" /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW/$"{lane}"_1.fastq.gz \
+/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW/$"{lane}"_2.fastq.gz; \
+done < /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/samples_lanes.list" > run_mapping
+chmod a+x run_mapping
+screen
+./run_mapping &
+
+
+
+GB_IRE_002_20601_8_5_bwasplitter_out
+PK_PAK_011_15045_1_11_bwasplitter_out
+PK_PAK_011_15045_2_11_bwasplitter_out
+PK_PAK_011_16552_1_11_bwasplitter_out
+
+
+
+
+
+# merge bams
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING
+
+echo "while read name lane; do ls -1 $"{name}"_*_out/$"{name}"*merged.sorted.marked.bam > $"{name}".bamlist ; \
+samtools-1.3 merge -c -b $"{name}".bamlist $"{name}".merge.bam; done < ../samples_lanes.list" > run_merge
+
+chmod a+x run_merge
+
+bsub.py --queue yesterday 5 merge_bams ./run_merge
+
+# index bams
+echo -e "for i in *bam; do samtools index -@ 7 -b $"{i}"; done" > run_index_bams
+chmod a+x run_index_bams
+bsub.py --queue yesterday 1 --threads 7 index_bams ./run_index_bams
+
+
+# cleanup
+mkdir BAM_STATS
+mv *out/*stat* BAM_STATS/
+rm -r *out
+
+
+
+# getting reads from guillumes global data
+cd /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223
+
+cat /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223/*.list > /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/samples.bamlist
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/
+
+while read list; do name=$( echo ${list} | cut -f 2 -d "." ); samtools view -ub --threads 4 ${list} | samtools sort -n - | samtools fastq -1 ${name}.R1.fastq.gz -2 ${name}.R2.fastq.gz - ; done < samples.bamlist  &
+
+
+
+# extracting name and lane IDs from Guillaumes BAM files
+while read file; do
+name=$( echo ${file} | cut -f 2 -d "." )
+lane=$( samtools view -H $file | grep map_splitter | cut -f3 | awk -F " " '{print $NF}' | awk -F "/" '{print $NF}' | sed -e 's/_2.fastq.gz//g' )
+echo -e "$name\t$lane" >> sample_lanes.list;
+done < samples.bamlist
+
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW
+while read sample lane; do pathfind -t lane -i $lane --symlink ./ --rename --filetype fastq ; done < ../sample_lanes.list
+
+
+cd ..
+
+sort sample_lanes.list | uniq -c | awk '{print $2,$3}' OFS="\t" | sed -e "s/\#/_/g" > sample_lanes.list2
+
+mkdir MAPPING
+cd MAPPING
+
+echo "while read name lane; do \
+~sd21/bash_scripts/run_bwamem_splitter $"{name}"_$"{lane}" /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW/$"{lane}"_1.fastq.gz \
+/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW/$"{lane}"_2.fastq.gz; \
+done < /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/sample_lanes.list2" > run_mapping
+
+chmod a+x run_mapping
+./run_mapping
+
+
+# looks like some samples failed to map properly, which I think is due to hitting a memory limit. To check and print the suspect dirs, will check to see if the flagstat file is made
+# in this case, 870 samples were ok, 170 failed
+
+for i in *out; do if [ ! -f ${i}/*flag* ]; then echo ${i} ; fi; done | wc -l
+
+#--- once happy those samples are no good, remove them with a modification to the above script, and then restart mapping
+
+for i in *out; do if [ ! -f ${i}/*flag* ]; then rm -r ${i} ; fi; done
+
+# merge bams
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/MAPPING
+
+echo "while read name lane; do ls -1 $"{name}"_*_out/$"{name}"*merged.sorted.marked.bam > $"{name}".bamlist ; \
+samtools merge --threads 7 -c -b $"{name}".bamlist $"{name}".merge.bam; done < ../sample_lanes.list2" > run_merge
+
+chmod a+x run_merge
+
+bsub.py --queue yesterday 1 --threads 7 merge_bams ./run_merge
+
+# index bams
+echo -e "for i in *bam; do samtools index -@ 7 -b $"{i}"; done" > run_index_bams
+chmod a+x run_index_bams
+bsub.py --queue yesterday 1 --threads 7 index_bams ./run_index_bams
+
+# cleanup
+mkdir BAM_STATS
+mv *out/*stat* BAM_STATS/
+rm -r *out
+rm *bamlist
+
+
+
+
+echo -e "for i in *.bam; do gatk-4.0.3.0 AddOrReplaceReadGroups --INPUT=$"{i}" --OUTPUT=$"{i%.bam}d.bam" --RGID=$"{i%.merge.bam}" --RGLB=$"{i%.merge.bam}" --RGPL=HS --RGPU=WSI --RGSM=$"{i%.merge.bam}"; done" > run_fix_bam_header
+chmod a+x run_fix_bam_header
+bsub.py --queue yesterday 1 --threads 7 fix_bam_header ./run_fix_bam_header
+
+gatk-4.0.3.0 HaplotypeCaller --input ZAI_ZAI_OA_015.merge2.bam --output ZAI_ZAI_OA_015.merge.vcf --reference ../../HAEM_V4_final.chr.fa
+
+
+# create bam list using full path to bams - this allos bams to be anywhere
+#ls $PWD/*bam > bam.list   
+BAM_LIST=/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/MERGED_BAMS/bam.list   # new samples
+
+# specify data using full paths to bam list and fasta refernce sequence
+BAM_LIST=/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/MAPPING/bam.list   # guillaumes samples
+REFERENCE=/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa
+
+mkdir GATK_HC_GVCF
+cd GATK_HC_GVCF
+mkdir REF_sequences
+
+# make reference seqeunces
+cp ${REFERENCE} REF_sequences/REF.fa
+samtools faidx REF_sequences/REF.fa
+samtools dict REF_sequences/REF.fa > REF_sequences/REF.dict
+cp ${BAM_LIST} bam.list
+grep ">" REF_sequences/REF.fa | sed -e 's/>//g' > sequences.list
+
+ulimit -c unlimited
+#/software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar
+
+# make jobs
+while read BAM; do \
+	n=1
+	SAMPLE=$( echo ${BAM} | awk -F '/' '{print $NF}' | sed -e 's/.bam//g' )  
+	mkdir ${SAMPLE}_GATK_HC_GVCF
+	mkdir ${SAMPLE}_GATK_HC_GVCF/LOGFILES
+	echo "gatk-4.0.3.0 GatherVcfsCloud \\" > ${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf
+	while read SEQUENCE; do
+	echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar HaplotypeCaller --input ${BAM} --output ${SAMPLE}_GATK_HC_GVCF/${n}.${SAMPLE}.${SEQUENCE}.tmp.gvcf.gz --reference $PWD/REF_sequences/REF.fa --intervals ${SEQUENCE} --emit-ref-confidence GVCF " > ${SAMPLE}_GATK_HC_GVCF/run_hc_${SAMPLE}.${SEQUENCE}.tmp.job_${n};
+	echo -e "--input ${PWD}/${SAMPLE}_GATK_HC_GVCF/${n}.${SAMPLE}.${SEQUENCE}.tmp.gvcf.gz \\" >> ${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf;
+	let "n+=1"; done < sequences.list;
+
+	echo -e "--output ${PWD}/${SAMPLE}_GATK_HC_GVCF/${SAMPLE}.gvcf.gz; tabix -p vcf ${PWD}/${SAMPLE}_GATK_HC_GVCF/${SAMPLE}.gvcf.gz" >> ${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf;
+
+	echo -e "rm ${PWD}/${SAMPLE}_GATK_HC_GVCF/*.tmp.* && mv ${PWD}/${SAMPLE}_GATK_HC_GVCF/*.[oe] ${SAMPLE}_GATK_HC_GVCF/LOGFILES && cd ${PWD} && mv ${PWD}/${SAMPLE}_GATK_HC_GVCF ${PWD}/${SAMPLE}_GATK_HC_GVCF_complete" > ${SAMPLE}_GATK_HC_GVCF/run_clean_${SAMPLE};
+
+	chmod a+x ${SAMPLE}_GATK_HC_GVCF/run_*
+
+	# setup job conditions
+	JOBS=$( ls -1 ${SAMPLE}_GATK_HC_GVCF/run_hc_* | wc -l )
+	ID="U$(date +%s)"
+
+	#submit job array to call variants put scaffold / contig
+	bsub -q long -R'span[hosts=1] select[mem>15000] rusage[mem=15000]' -n 6 -M15000 -J GATK_HC_${ID}_[1-$JOBS]%100 -e ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_[1-$JOBS].e -o ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_[1-$JOBS].o "./${SAMPLE}_GATK_HC_GVCF/run_hc_${SAMPLE}.*job_\$LSB_JOBINDEX"
+
+	#submit job to gather gvcfs into a single, per sample gvcf
+	bsub -q normal -w "done(GATK_HC_${ID}_[1-$JOBS])" -R'span[hosts=1] select[mem>500] rusage[mem=500]' -n 1 -M500 -J GATK_HC_${ID}_gather_gvcfs -e ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_gather_gvcfs.e -o ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_gather_gvcfs.o "./${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf"
+
+	# clean up
+	bsub -q normal -w "done(GATK_HC_${ID}_gather_gvcfs)" -R'span[hosts=1] select[mem>500] rusage[mem=500]' -n 1 -M500 -J GATK_HC_${ID}_clean -e ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_clean.e -o ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_clean.o "./${SAMPLE}_GATK_HC_GVCF/run_clean_${SAMPLE}"
+
+	sleep 1
+done < ${BAM_LIST}
+
+
+
+
+
+
+
+#echo "gatk-4.0.3.0 GatherVcfsCloud \\" > run_gather_${SAMPLE}_gvcf
+#echo -e "--input ${SAMPLE}_GATK_HC_GVCF/${n}.${SAMPLE}.${SEQUENCE}.g.vcf.tmp \\" >> run_gather_${SAMPLE}_gvcf
+#
+# echo -e "--output ${SAMPLE}.g.vcf" >> run_gather_${SAMPLE}_gvcf
+# chmod a+x run_gather_${SAMPLE}_gvcf
+
+mkdir GATK_HC_MERGED
+cd GATK_HC_MERGED
+
+ls -1 ../GATK_HC/*complete/*gz > gvcf.list
+ls -1 ../../GS_ORIGINAL/GATK_HC/*complete/*gz >> gvcf.list
+
+GVCF_LIST=$PWD/gvcf.list
+REFERENCE=/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa
+
+# echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar CombineGVCFs -R ${REFERENCE} \\" > run_merge_gvcfs
+# while read SAMPLE; do
+# echo -e "--variant ${SAMPLE} \\" >> run_merge_gvcfs;
+#    done < ${GVCF_LIST}
+#    echo -e "--output cohort.g.vcf.gz" >> run_merge_gvcfs
+
+# chmod a+x run_merge_gvcfs
+# bsub.py --queue hugemem --threads 30 200 merge_vcfs "./run_merge_gvcfs"
+# threads make a big difference, even thoguh they are not a parameter in the tool
+
+
+grep ">" ${REFERENCE} | sed -e 's/>//g' > sequences.list
+
+n=1
+while read SEQUENCE; do
+echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar CombineGVCFs -R ${REFERENCE} --intervals ${SEQUENCE} \\" > ${n}.run_merge_gvcfs_${SEQUENCE}
+while read SAMPLE; do
+echo -e "--variant ${SAMPLE} \\" >> ${n}.run_merge_gvcfs_${SEQUENCE};
+   done < ${GVCF_LIST}
+   echo -e "--output ${SEQUENCE}.cohort.g.vcf.gz" >> ${n}.run_merge_gvcfs_${SEQUENCE};
+   let "n+=1"; done < sequences.list
+
+chmod a+x *run_merge_gvcfs*
+
+for i in *run_merge_gvcfs*; do
+bsub.py --queue hugemem --threads 30 200 merge_vcfs "./${i}"; done
+
+
+# single genotyping call,
+# bsub.py --queue hugemem --threads 30 200 genotype_vcfs "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar GenotypeGVCFs \
+#    -R /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+#    -V cohort.g.vcf.gz \
+#    -O cohort.vcf.gz"
+
+
+# split each chromosome up into separate jobs, and run genotyping on each individually.   
+n=1
+while read SEQUENCE; do
+echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar GenotypeGVCFs \
+-R /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+-V ${SEQUENCE}.cohort.g.vcf.gz \
+--intervals ${SEQUENCE} \
+-O ${n}.${SEQUENCE}.cohort.vcf.gz" > run_hc_genotype.${SEQUENCE}.tmp.job_${n};
+let "n+=1"; done < sequences.list
+
+chmod a+x run_hc_genotype*
+
+mkdir LOGFILES
+
+	# setup job conditions
+	JOBS=$( ls -1 run_hc_* | wc -l )
+	ID="U$(date +%s)"
+
+# ln -s /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/cohort.g.vcf.gz
+# ln -s /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/cohort.g.vcf.gz.tbi
+
+bsub -q yesterday -R'span[hosts=1] select[mem>20000] rusage[mem=20000]' -n 6 -M20000 -J GATK_HC_GENOTYPE_${ID}_[1-$JOBS] -e LOGFILES/GATK_HC_GENOTYPE_${ID}_[1-$JOBS].e -o LOGFILES/GATK_HC_GENOTYPE_${ID}_[1-$JOBS].o "./run_hc_*\$LSB_JOBINDEX"
+
+```
+
+## MtDNA analysis
+```shell
+
+###########################################################################################
+# MTDNA ANALYSIS
+
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY
+cat samples_lanes.list GS_ORIGINAL/sample_lanes.list2 | cut -f1 | sort | uniq > MAPPING/GATK_HC_MERGED/MTDNA_ANALYSIS/samples.list
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/GATK_HC_MERGED/MTDNA_ANALYSIS
+
+samtools faidx HAEM_V4_final.chr.fa hcontortus_chr_mtDNA_arrow_pilon > hcontortus_chr_mtDNA_arrow_pilon.fa
+samtools faidx hcontortus_chr_mtDNA_arrow_pilon.fa
+samtools dict hcontortus_chr_mtDNA_arrow_pilon.fa > hcontortus_chr_mtDNA_arrow_pilon.dict
+
+mkdir INDV_VCFS
+
+
+# rm run_select_variants
+# while read NAME; do \
+# echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar SelectVariants \
+# --variant 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz \
+# --reference hcontortus_chr_mtDNA_arrow_pilon.fa \
+# --sample-name ${NAME} \
+# -select 'vc.getGenotype(\"${NAME}\").isHomVar()' \
+# -select-type SNP \
+# -select-type INDEL \
+# -xl-select-type MNP \
+# --output INDV_VCFS/${NAME}.raw.vcf.gz" >> run_select_variants ; done < samples.list
+
+rm run_select_variants
+while read NAME; do \
+echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar SelectVariants \
+--variant 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz \
+--reference hcontortus_chr_mtDNA_arrow_pilon.fa \
+--sample-name ${NAME} \
+-select-type SNP \
+-select-type INDEL \
+-xl-select-type MNP \
+-select 'vc.getGenotype(\"${NAME}\").isHomVar()' \
+--output INDV_VCFS/${NAME}.raw.vcf.gz" >> run_select_variants ; done < samples.list
+
+
+chmod a+x run_select_variants
+
+bsub.py --queue yesterday 1 selectvars2 ./run_select_variants
+
+mkdir INDV_FASTAS
+
+for i in ` ls -1 *.raw.vcf.gz | sed -e 's/.raw.vcf.gz//g' ` ; do bsub -I java -jar ~sd21/lustre118_link/software/SNP_CALLING/GATK-3.6/GenomeAnalysisTK.jar -T FastaAlternateReferenceMaker --variant ${i}.raw.vcf.gz -o ${i}.mtDNA_consensus.fa -R ../hcontortus_chr_mtDNA_arrow_pilon.fa; sed -i 's/^>.*.$/>'"${i}"'/g' ${i}.mtDNA_consensus.fa; done &
+
+
+java -jar GenomeAnalysisTK.jar \
+-T VariantFiltration \
+-R hs37d5.fa \
+-V unfiltered_snps.vcf \
+--filterExpression "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
+--filterName "my_snp_filter" \
+-o filtered_snps.vc
+
+
+
+
+
+
+export PATH="/nfs/users/nfs_s/sd21/lustre118_link/software/anaconda2/bin:$PATH"
+
+
+
+
+
+# SNP filtering using BCFTOOLS,
+# generates a mask file of positions with low depth (<10) and MQ (<30) score, whcih it will convert to Ns when the consensus is made
+# only considers SNPs that are homozygous variant, MQ > 30, and population AF > 0.01
+
+bcftools-1.9 query --list-samples 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz > samples.list
+
+while read SAMPLE; do
+bcftools-1.9 view --samples $SAMPLE 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz | bcftools-1.9 view -i 'FORMAT/DP[0]<10 | MQ[0]<30' > $SAMPLE.mask
+bcftools-1.9 view --samples $SAMPLE 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz | bcftools-1.9 view -i 'TYPE="snp" & FORMAT/GT[0]="1/1" & MQ[0]>30 & AF[0]>0.01' > $SAMPLE.keep
+bcftools-1.9 consensus  --sample $SAMPLE -i 'TYPE="snp" & FORMAT/GT[0]="1/1" & MQ[0]>30 & AF[0]>0.01' -f hcontortus_chr_mtDNA_arrow_pilon.fa --mask $SAMPLE.mask 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz > $SAMPLE.pseudomtDNA.fa;
+sed -e "s/hcontortus_chr_mtDNA_arrow_pilon/$SAMPLE/g" $SAMPLE.pseudomtDNA.fa | sed -e 's/_OA_/_/g' -e 's/_CH_/_/g' -e 's/_//g' > $SAMPLE.pseudomtDNA.fa.tmp; mv $SAMPLE.pseudomtDNA.fa.tmp $SAMPLE.pseudomtDNA.fa;
+done < samples.list
+
+
+
+
+
+cat *pseudomtDNA.fa hplacei_mtDNA_genome_AP017687.1.fa tcircumcincta_mtDNA_genome_AP017699.1.fa > all_pseudoref.outgroups.fa
+
+
+
+
+```
+
+
+
+
 # PCA of mtDNA genotypes
 
 
@@ -345,7 +794,7 @@ ggplot(a,aes(a$V2,a$V4))+geom_point(aes(col=a$V1))+facet_grid(a$V1~.)+geom_smoot
 
 
 
-# Alan wrote a script to make a bed file of gaps in the genome 
+# Alan wrote a script to make a bed file of gaps in the genome
 python3 ~alt/python/bin/fasta_gaps_to_bed.py REF.fa > HAEM_V4_final.chr.Ns.bed
 ```
 
@@ -720,3 +1169,201 @@ chrX_gene_plot +
 plot_layout(ncol=1)
 
 ```
+
+
+
+
+
+## Genetic Map V4
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENETICMAP_V4/
+
+mkdir 00_RAW 01_REFERENCE 02_MAPPING 03_VARIANTS 04_ANALYSIS
+
+
+# curated sample lanes and sample names
+/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENETICMAP_V4/00_RAW/samples_lanes_IDs.list
+
+# get raw data
+
+while read NAME LANE; do pf data -t lane -i ${LANE} -f fastq -r -l ./ ; done < samples_lanes_IDs.list
+
+# mapping
+
+cd ../02_MAPPING
+
+screen
+
+# repeat this a few times and it'll kick of multiple mapping runs
+while read NAME LANE; do ~sd21/bash_scripts/run_bwamem_splitter ${NAME}_${LANE} /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENETICMAP_V4/01_REFERENCE/HAEM_V4_final.chr.fa /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENETICMAP_V4/00_RAW/${LANE}_1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENETICMAP_V4/00_RAW/${LANE}_2.fastq.gz; done < ../00_RAW/samples_lanes_IDs.list &
+
+
+# once mapping is complete, need to merge
+#--- note this was placed in a script and bsubbed
+while read name lane; do ls -1 ${name}*merged.sorted.marked.bam > ${name}.bamlist ; samtools merge --threads 7 -c -b ${name}.bamlist ${name}.merge.bam; done < ../00_RAW
+/samples_lanes_IDs.list
+
+# clean up
+rm *bamlist
+rm *marked.bam.bai
+rm *marked.bam
+
+
+
+# fix read headers
+for i in *.bam; do bsub.py --threads 3 10 fix_bam_header "gatk-4.0.3.0 AddOrReplaceReadGroups \
+     --INPUT=${i} \
+     --OUTPUT=${i%.bam}d.bam \
+     --RGID=${i%.merge.bam} \
+     --RGLB=${i%.merge.bam} \
+     --RGPL=HS --RGPU=WSI --RGSM=${i%.merge.bam}";\
+done
+
+# remake indices
+for i in *.merged.bam; do \
+     bsub.py 1 index_bams "samtools index ${i}";
+done
+
+rm *.merge.bam
+rm *.merge.bam.bai
+
+
+# variant celling
+
+ls -1 $PWD/*merged.bam > bams.list
+
+cd ../03_VARIANTS
+
+# specify data using full paths to bam list and fasta refernce sequence
+BAM_LIST=/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENETICMAP_V4/02_MAPPING/bams.list
+REFERENCE=/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENETICMAP_V4/01_REFERENCE/HAEM_V4_final.chr.fa
+
+mkdir GATK_HC_GVCF
+cd GATK_HC_GVCF
+mkdir REF_sequences
+
+# make reference seqeunces
+cp ${REFERENCE} REF_sequences/REF.fa
+samtools faidx REF_sequences/REF.fa
+samtools dict REF_sequences/REF.fa > REF_sequences/REF.dict
+cp ${BAM_LIST} bam.list
+grep ">" REF_sequences/REF.fa | sed -e 's/>//g' > sequences.list
+
+ulimit -c unlimited
+#/software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar
+
+# make jobs
+while read BAM; do \
+	n=1
+	SAMPLE=$( echo ${BAM} | awk -F '/' '{print $NF}' | sed -e 's/.bam//g' )
+	if [ -d "${SAMPLE}_GATK_HC_GVCF_complete" ]; then
+	continue
+	fi
+	mkdir ${SAMPLE}_GATK_HC_GVCF
+	mkdir ${SAMPLE}_GATK_HC_GVCF/LOGFILES
+	echo "gatk-4.0.3.0 GatherVcfsCloud \\" > ${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf
+	while read SEQUENCE; do
+	echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar HaplotypeCaller --input ${BAM} --output ${SAMPLE}_GATK_HC_GVCF/${n}.${SAMPLE}.${SEQUENCE}.tmp.gvcf.gz --reference $PWD/REF_sequences/REF.fa --intervals ${SEQUENCE} --emit-ref-confidence GVCF " > ${SAMPLE}_GATK_HC_GVCF/run_hc_${SAMPLE}.${SEQUENCE}.tmp.job_${n};
+	echo -e "--input ${PWD}/${SAMPLE}_GATK_HC_GVCF/${n}.${SAMPLE}.${SEQUENCE}.tmp.gvcf.gz \\" >> ${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf;
+	let "n+=1"; done < sequences.list;
+
+	echo -e "--output ${PWD}/${SAMPLE}_GATK_HC_GVCF/${SAMPLE}.gvcf.gz; tabix -p vcf ${PWD}/${SAMPLE}_GATK_HC_GVCF/${SAMPLE}.gvcf.gz" >> ${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf;
+
+	echo -e "rm ${PWD}/${SAMPLE}_GATK_HC_GVCF/*.tmp.* && mv ${PWD}/${SAMPLE}_GATK_HC_GVCF/*.[oe] ${SAMPLE}_GATK_HC_GVCF/LOGFILES && cd ${PWD} && mv ${PWD}/${SAMPLE}_GATK_HC_GVCF ${PWD}/${SAMPLE}_GATK_HC_GVCF_complete" > ${SAMPLE}_GATK_HC_GVCF/run_clean_${SAMPLE};
+
+	chmod a+x ${SAMPLE}_GATK_HC_GVCF/run_*
+
+	# setup job conditions
+	JOBS=$( ls -1 ${SAMPLE}_GATK_HC_GVCF/run_hc_* | wc -l )
+	ID="U$(date +%s)"
+
+	#submit job array to call variants put scaffold / contig
+	bsub -q long -R'span[hosts=1] select[mem>15000] rusage[mem=15000]' -n 6 -M15000 -J GATK_HC_${ID}_[1-$JOBS]%100 -e ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_[1-$JOBS].e -o ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_[1-$JOBS].o "./${SAMPLE}_GATK_HC_GVCF/run_hc_${SAMPLE}.*job_\$LSB_JOBINDEX"
+
+	#submit job to gather gvcfs into a single, per sample gvcf
+	bsub -q normal -w "done(GATK_HC_${ID}_[1-$JOBS])" -R'span[hosts=1] select[mem>500] rusage[mem=500]' -n 1 -M500 -J GATK_HC_${ID}_gather_gvcfs -e ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_gather_gvcfs.e -o ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_gather_gvcfs.o "./${SAMPLE}_GATK_HC_GVCF/run_gather_${SAMPLE}_gvcf"
+
+	# clean up
+	bsub -q normal -w "done(GATK_HC_${ID}_gather_gvcfs)" -R'span[hosts=1] select[mem>500] rusage[mem=500]' -n 1 -M500 -J GATK_HC_${ID}_clean -e ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_clean.e -o ${SAMPLE}_GATK_HC_GVCF/GATK_HC_${ID}_clean.o "./${SAMPLE}_GATK_HC_GVCF/run_clean_${SAMPLE}"
+
+	sleep 1
+done < ${BAM_LIST}
+
+
+
+
+
+
+
+#echo "gatk-4.0.3.0 GatherVcfsCloud \\" > run_gather_${SAMPLE}_gvcf
+#echo -e "--input ${SAMPLE}_GATK_HC_GVCF/${n}.${SAMPLE}.${SEQUENCE}.g.vcf.tmp \\" >> run_gather_${SAMPLE}_gvcf
+#
+# echo -e "--output ${SAMPLE}.g.vcf" >> run_gather_${SAMPLE}_gvcf
+# chmod a+x run_gather_${SAMPLE}_gvcf
+
+mkdir GATK_HC_MERGED
+cd GATK_HC_MERGED
+
+
+ls -1 *complete/*gz >> gvcf.list
+
+GVCF_LIST=$PWD/gvcf.list
+REFERENCE=/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa
+
+# echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar CombineGVCFs -R ${REFERENCE} \\" > run_merge_gvcfs
+# while read SAMPLE; do
+# echo -e "--variant ${SAMPLE} \\" >> run_merge_gvcfs;
+#    done < ${GVCF_LIST}
+#    echo -e "--output cohort.g.vcf.gz" >> run_merge_gvcfs
+
+# chmod a+x run_merge_gvcfs
+# bsub.py --queue hugemem --threads 30 200 merge_vcfs "./run_merge_gvcfs"
+# threads make a big difference, even thoguh they are not a parameter in the tool
+
+
+grep ">" ${REFERENCE} | sed -e 's/>//g' > sequences.list
+
+n=1
+while read SEQUENCE; do
+echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar CombineGVCFs -R ${REFERENCE} --intervals ${SEQUENCE} \\" > ${n}.run_merge_gvcfs_${SEQUENCE}
+while read SAMPLE; do
+echo -e "--variant ${SAMPLE} \\" >> ${n}.run_merge_gvcfs_${SEQUENCE};
+   done < ${GVCF_LIST}
+   echo -e "--output ${SEQUENCE}.cohort.g.vcf.gz" >> ${n}.run_merge_gvcfs_${SEQUENCE};
+   let "n+=1"; done < sequences.list
+
+chmod a+x *run_merge_gvcfs*
+
+for i in *run_merge_gvcfs*; do
+bsub.py --queue hugemem --threads 30 200 merge_vcfs "./${i}"; done
+
+
+# single genotyping call,
+# bsub.py --queue hugemem --threads 30 200 genotype_vcfs "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar GenotypeGVCFs \
+#    -R /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+#    -V cohort.g.vcf.gz \
+#    -O cohort.vcf.gz"
+
+
+# split each chromosome up into separate jobs, and run genotyping on each individually.   
+n=1
+while read SEQUENCE; do
+echo -e "java -Xmx15G -jar /software/pathogen/external/apps/usr/local/gatk-4.0.3.0/gatk-package-4.0.3.0-local.jar GenotypeGVCFs \
+-R /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+-V ${SEQUENCE}.cohort.g.vcf.gz \
+--intervals ${SEQUENCE} \
+-O ${n}.${SEQUENCE}.cohort.vcf.gz" > run_hc_genotype.${SEQUENCE}.tmp.job_${n};
+let "n+=1"; done < sequences.list
+
+chmod a+x run_hc_genotype*
+
+mkdir LOGFILES
+
+	# setup job conditions
+	JOBS=$( ls -1 run_hc_* | wc -l )
+	ID="U$(date +%s)"
+
+# ln -s /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/cohort.g.vcf.gz
+# ln -s /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/cohort.g.vcf.gz.tbi
+
+bsub -q yesterday -R'span[hosts=1] select[mem>20000] rusage[mem=20000]' -n 6 -M20000 -J GATK_HC_GENOTYPE_${ID}_[1-$JOBS] -e LOGFILES/GATK_HC_GENOTYPE_${ID}_[1-$JOBS].e -o LOGFILES/GATK_HC_GENOTYPE_${ID}_[1-$JOBS].o "./run_hc_*\$LSB_JOBINDEX"

@@ -2141,7 +2141,7 @@ for i in LC_* ; do \
 		xargs -n1 basename > ${i}/juncfiles.list; \
 		done
 
-
+#
 
 
 # cluster splice junctions
@@ -2159,38 +2159,474 @@ for i in LC_* ; do \
      cd ../; \
      done
 
+#--- min depth 30 (default)
+for i in LC_* ; do \
+          cd ${i} && \
+          python2.7 ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/clustering/leafcutter_cluster.py -j juncfiles.list -m 30 -o ${i}_cov30 -l 500000 && \
+          cd ../; \
+          done
 
 
-# perfrom differental analysis
-#--- made "samples_groups.list" files for each comparison manually, as the sample names were not really parsable
+
+# all samples
+mkdir LEAFCUTTER_JUNCS_V4
+cp LC_*/*junc LEAFCUTTER_JUNCS_V4
+cd LEAFCUTTER_JUNCS_V4
+
+ls -1 *junc > juncfiles.list
+
+python2.7 ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/clustering/leafcutter_cluster.py -j juncfiles.list -m 5 -o all_samples_cov5 -l 500000
+
+python2.7 ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/clustering/leafcutter_cluster.py -j juncfiles.list -m 10 -o all_samples_cov10 -l 500000
+
+python2.7 ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/clustering/leafcutter_cluster.py -j juncfiles.list -m 30 -o all_samples_cov30 -l 500000
+
+
+cd ..
+
+
+
+
+
+# perform differential analysis
+#--- made "samples_groups.list" files for each comparison manually, as the sample names were not really parsable.
 #--- min depth 5
 for i in LC_FEMALE_EGG LC_GUT_AdultF LC_L1_SHL3 LC_L4_AdultF LC_L4_AdultM LC_ADULTM_ADULTF LC_EGG_L1; do \
      		cd ${i} && \
      		~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
-     		--min_samples_per_intron=3 --min_samples_per_group=3 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov5_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov5 && \
+     		--min_samples_per_intron=3 --min_samples_per_group=3 --min_coverage=10 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov5_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov5 && \
      		cd ../ ; \
      		done
 
 for i in LC_SHL3_EXL3 LC_EXL3_L4 ; do \
                cd ${i} && \
                ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
-               --min_samples_per_intron=2 --min_samples_per_group=2 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov5_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov5 && \
+               --min_samples_per_intron=2 --min_samples_per_group=2 --min_coverage=10 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov5_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov5 && \
                cd ../ ; \
                done
 
 
 
-
-
-
 #--- min depth 10
-for i in LC_* ; do \
-     		cd ${i} && \
-     		~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
-     		--min_samples_per_intron=3 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov10_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov10 && \
-     		cd ../ ; \
-     		done
+for i in LC_FEMALE_EGG LC_GUT_AdultF LC_L1_SHL3 LC_L4_AdultF LC_L4_AdultM LC_ADULTM_ADULTF LC_EGG_L1; do \
+          cd ${i} && \
+          ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
+          --min_samples_per_intron=3 --min_samples_per_group=3 --min_coverage=10 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov10_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov10 && \
+          cd ../ ; \
+          done
+
+for i in LC_SHL3_EXL3 LC_EXL3_L4 ; do \
+          cd ${i} && \
+          ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
+          --min_samples_per_intron=2 --min_samples_per_group=2 -exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov10_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov10 && \
+          cd ../ ; \
+          done
+
+
+#--- min depth 30
+for i in LC_FEMALE_EGG LC_GUT_AdultF LC_L1_SHL3 LC_L4_AdultF LC_L4_AdultM LC_ADULTM_ADULTF LC_EGG_L1; do \
+                    cd ${i} && \
+                    ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
+                    --min_samples_per_intron=3 --min_samples_per_group=3 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov30_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov30 && \
+                    cd ../ ; \
+                    done
+
+for i in LC_SHL3_EXL3 LC_EXL3_L4 ; do \
+                    cd ${i} && \
+                    ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/scripts/leafcutter_ds.R \
+                    --min_samples_per_intron=2 --min_samples_per_group=2 --exon_file=../HCON_V4_all_exons.txt.gz ${i}_cov30_perind_numers.counts.gz samples_groups.list --output_prefix=${i}_cov30 && \
+                    cd ../ ; \
+                    done
 
 
 #--- made "samples_groups.list" files for each comparison manually, as the sample names were not really parsable
 for i in LC*; do cd $i; ls -1 *junc | awk -F'[_]' '{print $0,$1}' OFS="\t" > samples_groups.list; cd ../ ;  done
+
+
+# prepare results for visualisation
+#--- min depth 5
+for i in LC_* ; do \
+		cd ${i} && \
+		~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/leafviz/prepare_results.R ${i}_cov5_perind_numers.counts.gz ${i}_cov5_cluster_significance.txt ${i}_cov5_effect_sizes.txt ../HCON_V4 --meta_data_file samples_groups.list --output=${i}_leafviz_min5.RData && \
+		cd ../ ; \
+		done
+
+#--- min depth 10
+for i in LC_* ; do \
+		cd ${i} && \
+		~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/leafviz/prepare_results.R ${i}_cov10_perind_numers.counts.gz ${i}_cov5_cluster_significance.txt ${i}_cov5_effect_sizes.txt ../HCON_V4 --meta_data_file samples_groups.list --output=${i}_leafviz_min10.RData && \
+		cd ../ ; \
+		done
+
+
+
+#--- min depth 30
+for i in LC_* ; do \
+          cd ${i} && \
+          ~sd21/lustre118_link/software/TRANSCRIPTOME/leafcutter/leafviz/prepare_results.R ${i}_cov30_perind_numers.counts.gz ${i}_cov30_cluster_significance.txt ${i}_cov30_effect_sizes.txt ../HCON_V4 --meta_data_file samples_groups.list --output=${i}_leafviz_min30.RData && \
+          cd ../ ; \
+          done
+
+
+# copy data to laptop for visualisation
+
+for i in LC_* ; do cp ${i}/${i}_leafviz_min30.RData ~sd21/desktop_link/${i}_leafviz_min30.RData; done
+
+
+#- on laptop, move data here: /Users/sd21/Documents/Work/aaa_projects/haemonchus_contortus/project_hc_genome/data/Section_4/leafcutter_data
+cp /Volumes/sd21/desktop_link/*.RData .
+
+# obviosuly needs leafcutter installed locally, which is ehre: http://davidaknowles.github.io/leafcutter/articles/Installation.html
+
+# also copied
+
+# to visualise on laptop
+cd /Users/sd21/Documents/Work/aaa_projects/haemonchus_contortus/project_hc_genome/data/Section_4/leafcutter_data
+cp ~/Documents/bioinformatics_bin/leafcutter/leafviz/server.R .
+cp ~/Documents/bioinformatics_bin/leafcutter/leafviz/ui.R .
+
+~/Documents/bioinformatics_bin/leafcutter/leafviz/run_leafviz.R LF_L4_AdultM_leafviz.RData
+
+
+
+########################################################################################
+# Meta analysis - compare differential intro usage across all replicates for all lifestages
+########################################################################################
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/LEAFCUTTER
+mkdir METAANALYSIS_V4
+
+# get sig clusters from  cluster_significance.txt  - top 50 based of FDR pvalue
+for i in LC_* ; do \
+          cd ${i} && \
+          awk -F'[:\t]' '{if($7<0.05) print $2,$7}' OFS="\t" ${i}_cov30_cluster_significance.txt | sort -k2 -g | head -n 100 > ../METAANALYSIS_V4/${i}_sigclusters.list && \
+          cd ../ ; \
+          done
+
+
+# extract introns from clusters that are signficant from effect_sizes.txt
+
+rm METAANALYSIS_V4/sigclusters_introncoords.list
+
+for i in LC_* ; do \
+          cd ${i} && \
+          while read cluster sig; do \
+          grep $cluster ${i}_cov5_effect_sizes.txt; done < ../METAANALYSIS_V4/${i}_sigclusters.list  | awk -F'[:\t]' '{if($4>=5 || $4<=-5) print $1,$2,$3}' OFS=":" >> ../METAANALYSIS_V4/sigclusters_introncoords.list && \
+          cd ../ ; \
+          done
+
+cd METAANALYSIS_V4
+cat sigclusters_introncoords.list | sort -k1n | uniq > sigclusters_introncoords.sorted.list
+
+
+# extract counts using cluster, intro coords
+
+while read coords; do grep $coords <(zcat ../LEAFCUTTER_JUNCS_V4/all_samples_cov30_perind.counts.gz) ; done < sigclusters_introncoords.sorted.list > sigclusters_introncoords.junccounts
+
+
+# ---- Sample columns in all_samples_cov30_perind.counts.gz
+
+eggs1_236476_3881079Aligned.out.bam 20
+eggs2_236476_3881080Aligned.out.bam 19
+eggs3_236476_3881081Aligned.out.bam 14
+
+L1_1_236476_3881082Aligned.out.bam 24
+L1_2_236476_3881083Aligned.out.bam 10
+L1_3_236476_3881084Aligned.out.bam 4
+
+SHL3_1_236476_2305_3914312Aligned.out.bam 6
+SHL3_2_236476_2305_3914313Aligned.out.bam 12
+SHL3_kallisto_7062_6_8_out 22
+
+EXL3_3_236476_2305_3914311Aligned.out.bam 5
+EXL3_kallisto_7062_6_12_out 18
+
+L4_1_236476_3881085Aligned.out.bam 17
+L4_2_236476_3881086Aligned.out.bam 21
+L4_3_236476_3881087Aligned.out.bam 11
+
+
+AdultF1_236476_3881088Aligned.out.bam 2
+AdultF2_236476_3881089Aligned.out.bam 23
+AdultF3_236476_3881090Aligned.out.bam 8
+
+AdultM1_236476_2305_3914303Aligned.out.bam 7
+AdultM2_236476_2305_3914304Aligned.out.bam 9
+AdultM3_236476_2305_3914305Aligned.out.bam 3
+
+gut3_236476_635J_3914317Aligned.out.bam 13
+gut2_236476_1589_3914316Aligned.out.bam 15
+gut1_236476_1517_3914315Aligned.out.bam 16
+
+
+
+
+# reorder the columns to fit the haem lifecycle, and then calc the splice frequency
+awk '{print $20,$19,$14,$24,$10,$4,$6,$12,$22,$5,$18,$17,$21,$11,$2,$23,$8,$7,$9,$3,$13,$15,$16}' sigclusters_introncoords.junccounts |\
+	sed 's/\//\t/g' |\
+	awk '{print $1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001),$13/($14+=0.0001),$15/($16+=0.0001),$17/($18+=0.0001),$19/($20+=0.0001),$21/($22+=0.0001),$23/($24+=0.0001),$25/($26+=0.0001),$27/($28+=0.0001),$29/($30+=0.0001),$31/($32+=0.0001),$33/($34+=0.0001),$35/($36+=0.0001),$37/($38+=0.0001),$39/($40+=0.0001),$41/($42+=0.0001),$43/($44+=0.0001),$45/($46+=0.0001)}' OFS="\t" > sigclusters_introncoords.juncfreq
+	awk '{if(($1+$2+$3+$4+$5+$6+$7+$8+$9+$10+$11+$12+$13+$14+$15+$16+$17+$18+$19+$20+$21+$22+$23)>=0.5) print $0}' OFS="\t" sigclusters_introncoords.juncfreq > sigclusters_introncoords.juncfreq2
+
+
+# R commands to make heatmap
+R-3.5.0
+pdf("allsamples.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("Egg_1","Egg_2","Egg_3","L1_1","L1_2","L1_3","SHL3_1","SHL3_2","SHL3_3","EXL3_1","EXL3_2","L4_1","L4_2","L4_3","Adult_Female_1","Adult_Female_2","Adult_Female_3","Adult_Male_1","Adult_Male_2","Adult_Male_3","Gut_1","Gut_2","Gut_3")
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+
+cd ../
+
+
+########################################################################################
+# repeat extract significant clusters for each pairwise comparison
+
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/LEAFCUTTER
+
+
+# get sig clusters from  cluster_significance.txt  - top 100 based of FDR pvalue
+# --  done in the meta analysis step above
+
+# extract intron coords per sample, sort
+for i in LC_* ; do \
+		cd ${i} && \
+		awk -F'[:\t]' '{if($6<0.05) print $2,$7,$8}' OFS="\t" ${i}_cov30_cluster_significance.txt | sort -k2 -g | head -n 100 > ${i}_sigclusters.list
+		while read cluster sig mrna_id; do grep $cluster ${i}_cov30_effect_sizes.txt; done < ${i}_sigclusters.list  | awk -F'[:\t]' '{if($4>=5 || $4<=-5) print $1,$2,$3}' OFS=":" >  ${i}_sigclusters_introncoords.list
+		cat ${i}_sigclusters_introncoords.list | sort -k1n | uniq > ${i}_sigclusters_introncoords.sorted.list
+		while read coords; do grep $coords <(zcat ${i}_cov30_perind.counts.gz) ; done < ${i}_sigclusters_introncoords.sorted.list > ${i}_sigclusters_introncoords.junccounts
+		cd ../ ; \
+		done
+
+# eggs to L1
+cd LC_EGG_L1
+awk '{print $6,$5,$4,$3,$2,$7,$1}' LC_EGG_L1_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $16,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001)}' OFS="\t" > LC_EGG_L1_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_EGG_L1_sigclusters_introncoords.juncfreq; done < LC_EGG_L1_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print $2,$3,$4,$5,$6,$7}' OFS="\t" LC_EGG_L1_sigclusters_introncoords.juncfreq > LC_EGG_L1_sigclusters_introncoords.juncfreq2
+
+
+R-3.5.0
+pdf("LC_EGG_L1.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_EGG_L1_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("Egg_1","Egg_2","Egg_3","L1_1","L1_2","L1_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+
+cd ..
+
+
+
+# L1 to SHL3
+cd LC_L1_SHL3
+awk '{print $5,$2,$3,$6,$4,$7,$1}' LC_L1_SHL3_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $16,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001)}' OFS="\t" > LC_L1_SHL3_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_L1_SHL3_sigclusters_introncoords.juncfreq ; done < LC_L1_SHL3_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print $2,$3,$4,$5,$6,$7}' OFS="\t" LC_L1_SHL3_sigclusters_introncoords.juncfreq > LC_L1_SHL3_sigclusters_introncoords.juncfreq2
+
+
+R-3.5.0
+pdf("LC_L1_SHL3.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_L1_SHL3_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("L1_1","L1_2","L1_3","SHL3_1","SHL3_2","SHL3_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+
+cd ..
+
+
+
+# SHL3 to EXL3
+cd LC_SHL3_EXL3
+awk '{print $2,$3,$6,$4,$5,$1}' LC_SHL3_EXL3_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $14,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001)}' OFS="\t" > LC_SHL3_EXL3_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_SHL3_EXL3_sigclusters_introncoords.juncfreq ; done < LC_SHL3_EXL3_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6)>=0.5) print $2,$3,$4,$5,$6}' OFS="\t" LC_SHL3_EXL3_sigclusters_introncoords.juncfreq > LC_SHL3_EXL3_sigclusters_introncoords.juncfreq2
+
+R-3.5.0
+pdf("LC_SHL3_EXL3.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_SHL3_EXL3_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("SHL3_1","SHL3_2","SHL3_3","EXL3_1","EXL3_2")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+
+cd ../
+
+
+# EXL3 to L4
+cd LC_EXL3_L4
+awk '{print $4,$5,$2,$6,$3,$1}' LC_EXL3_L4_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $14,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001)}' OFS="\t" > LC_EXL3_L4_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_EXL3_L4_sigclusters_introncoords.juncfreq ; done < LC_EXL3_L4_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6)>=0.5) print $2,$3,$4,$5,$6}' OFS="\t" LC_EXL3_L4_sigclusters_introncoords.juncfreq > LC_EXL3_L4_sigclusters_introncoords.juncfreq2
+
+
+R-3.5.0
+pdf("LC_EXL3_L4.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_EXL3_L4_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("EXL3_1","EXL3_2","L4_1","L4_2","L4_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+cd ../
+
+
+
+# L4 to AdultMale
+cd LC_L4_AdultM
+awk '{print $2,$5,$3,$6,$7,$4,$1}' LC_L4_AdultM_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $16,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001)}' OFS="\t" > LC_L4_AdultM_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_L4_AdultM_sigclusters_introncoords.juncfreq ; done < LC_L4_AdultM_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print $2,$3,$4,$5,$6,$7}' OFS="\t" LC_L4_AdultM_sigclusters_introncoords.juncfreq > LC_L4_AdultM_sigclusters_introncoords.juncfreq2
+
+
+R-3.5.0
+pdf("LC_L4_AdultM.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_L4_AdultM_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("L4_1","L4_2","L4_3","Adult_Male_1","Adult_Male_2","Adult_Male_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+
+cd ../
+
+
+
+
+# L4 to AdultFemale
+cd LC_L4_AdultF
+awk '{print $2,$6,$4,$3,$5,$7,$1}' LC_L4_AdultF_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $16,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001)}' OFS="\t" > LC_L4_AdultF_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_L4_AdultF_sigclusters_introncoords.juncfreq ; done < LC_L4_AdultF_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print $2,$3,$4,$5,$6,$7}' OFS="\t" LC_L4_AdultF_sigclusters_introncoords.juncfreq > LC_L4_AdultF_sigclusters_introncoords.juncfreq2
+
+
+R-3.5.0
+pdf("LC_L4_AdultF.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_L4_AdultF_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("L4_1","L4_2","L4_3","Adult_Female_1","Adult_Female_2","Adult_Female_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))		
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+
+cd ../
+
+
+
+# AdultMale to AdultFemale
+cd LC_ADULTM_ADULTF
+awk '{print $5,$7,$3,$2,$4,$6,$1}' LC_ADULTM_ADULTF_sigclusters_introncoords.junccounts |\
+     sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+     awk '{print $16,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001)}' OFS="\t" > LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq ; done < LC_ADULTM_ADULTF_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print $2,$3,$4,$5,$6,$7}' OFS="\t" LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq > LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq2
+
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}_${cluster}/g" LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq ; done < LC_ADULTM_ADULTF_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print NR"_"$1,$2,$3,$4,$5,$6,$7}' OFS="\t" LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq > LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq2
+
+
+
+
+R-3.5.0
+pdf("LC_ADULTM_ADULTF.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_ADULTM_ADULTF_sigclusters_introncoords.juncfreq2",header=F,row.names=1)
+colnames(a)<- c("Adult_Male_1","Adult_Male_2","Adult_Male_3","Adult_Female_1","Adult_Female_2","Adult_Female_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+cd ../
+
+# AdultFemale to eggs
+cd LC_FEMALE_EGG
+awk '{print $2,$3,$7,$6,$5,$4,$1}' LC_FEMALE_EGG_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $16,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001)}' OFS="\t" > LC_FEMALE_EGG_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_FEMALE_EGG_sigclusters_introncoords.juncfreq ; done < LC_FEMALE_EGG_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print $2,$3,$4,$5,$6,$7}' OFS="\t" LC_FEMALE_EGG_sigclusters_introncoords.juncfreq > LC_FEMALE_EGG_sigclusters_introncoords.juncfreq2
+
+
+
+
+
+R-3.5.0
+pdf("LC_FEMALE_EGG.leafcutter_ds.top100.pdf")
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_FEMALE_EGG_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("Adult_Female_1","Adult_Female_2","Adult_Female_3","Egg_1","Egg_2","Egg_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+cd ../
+
+# AdultFemale to gut
+cd LC_GUT_AdultF
+awk '{print $2,$3,$7,$6,$5,$4,$1}' LC_GUT_AdultF_sigclusters_introncoords.junccounts |\
+sed -e 's/\//\t/g' -e 's/:/\t/g' |\
+awk '{print $16,$1/($2+=0.0001),$3/($4+=0.0001),$5/($6+=0.0001),$7/($8+=0.0001),$9/($10+=0.0001),$11/($12+=0.0001)}' OFS="\t" > LC_GUT_AdultF_sigclusters_introncoords.juncfreq
+while read cluster sig mrna; do sed -i "s/${cluster}/${mrna}/g" LC_GUT_AdultF_sigclusters_introncoords.juncfreq ; done < LC_GUT_AdultF_sigclusters.list
+awk '{if(($2+$3+$4+$5+$6+$7)>=0.5) print $2,$3,$4,$5,$6,$7}' OFS="\t" LC_GUT_AdultF_sigclusters_introncoords.juncfreq > LC_GUT_AdultF_sigclusters_introncoords.juncfreq2
+
+
+R-3.5.0
+pdf("LC_GUT_AdultF.leafcutter_ds.top100.pdf",)
+library(gplots)
+library(RColorBrewer)
+a<-read.table("LC_GUT_AdultF_sigclusters_introncoords.juncfreq2",header=F)
+colnames(a)<- c("Adult_Female_1","Adult_Female_2","Adult_Female_3","Gut_1","Gut_2","Gut_3")
+#heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,margins = c(10, 10))
+heatmap.2(as.matrix(a),Colv=NULL,trace="none",col= colorRampPalette(brewer.pal(8, "Blues"))(25),labRow=FALSE,labCol=FALSE,margins = c(10, 10),dendrogram='none',density.info='none')
+dev.off()
+quit(save = "no")
+cd ../
+
+# calculated summary stats
+for i in LC_*; do echo ${i}; \
+# total genes
+echo "total genes"; \
+cut -f7 ${i}/*cov30_cluster_significance.txt | sort | uniq | wc -l ; \
+echo "total significant genes"; \
+awk '{if($6<0.05) print $7}' ${i}/*cov30_cluster_significance.txt | sort | uniq | wc -l ; \
+# total introns
+echo "total introns"; \
+cat ${i}/*cov30_cluster_significance.txt | wc -l ; \
+# total significant introns
+echo "total significant introns"; \
+awk '{if($6<0.05) print $0}' ${i}/*cov30_cluster_significance.txt | wc -l; \
+echo " "
+done
