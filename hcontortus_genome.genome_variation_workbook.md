@@ -1053,6 +1053,70 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 
 ```
 
+# Fst outlier analysis
+
+
+
+
+
+
+#- plot top 1% of windows for each chromosome
+library(ggplot2)
+library(dplyr)
+
+a <- read.table("10k_allpop.windowed.weir.fst",header=F)
+
+
+pcent <- 0.01
+
+ggplot(a,aes(V2,V5))+
+	geom_point(alpha=0.5,size=0.5)+
+	geom_point(data=subset(a %>% filter(V1=="hcontortus_chr1_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))),aes(V2,V5),col="red")+
+	geom_point(data=subset(a %>% filter(V1=="hcontortus_chr2_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))),aes(V2,V5),col="red")+
+	geom_point(data=subset(a %>% filter(V1=="hcontortus_chr3_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))),aes(V2,V5),col="red")+
+	geom_point(data=subset(a %>% filter(V1=="hcontortus_chr4_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))),aes(V2,V5),col="red")+
+	geom_point(data=subset(a %>% filter(V1=="hcontortus_chr5_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))),aes(V2,V5),col="red")+
+	geom_point(data=subset(a %>% filter(V1=="hcontortus_chrX_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))),aes(V2,V5),col="red")+
+	facet_grid(.~V1)+
+	labs(x="Genomic position", y="Genetic differentiation between populations (Fst)")
+
+
+chr1_fstoutlier <- a %>% filter(V1=="hcontortus_chr1_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))
+chr2_fstoutlier <- a %>% filter(V1=="hcontortus_chr2_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))
+chr3_fstoutlier <- a %>% filter(V1=="hcontortus_chr3_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))
+chr4_fstoutlier <- a %>% filter(V1=="hcontortus_chr4_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))
+chr5_fstoutlier <- a %>% filter(V1=="hcontortus_chr5_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))
+chrX_fstoutlier <- a %>% filter(V1=="hcontortus_chrX_Celeg_TT_arrow_pilon") %>% filter(V5> quantile(V5,prob=1-pcent))
+
+fstoutlier <- dplyr::bind_rows(chr1_fstoutlier,chr2_fstoutlier,chr3_fstoutlier,chr4_fstoutlier,chr5_fstoutlier,chrX_fstoutlier)
+
+write.table(fstoutlier,"fstoutlier_10k_top1pc.txt",quote=FALSE, row.names = FALSE, col.names = FALSE, sep="\t")
+
+
+cut -f1,2,3 fstoutlier_10k_top1pc.txt > fstoutlier_10k_top1pc.bed
+
+bedtools intersect -b fstoutlier_10k_top1pc.bed -a ANNOTATION.gff | grep "mRNA" | cut -f9 | cut -c 4-16 | sort | uniq
+
+
+
+
+
+
+
+
+
+# nucleotide diversity summary stats
+```
+cat *.shared.pi.windowed.pi | grep "hcontortus" | sed 's/chr[12345]/chr/g' | datamash -g1 median 5 q1 5 q3 5
+hcontortus_chr_Celeg_TT_arrow_pilon	0.00419839	0.00354622	0.00486901
+hcontortus_chrX_Celeg_TT_arrow_pilon	0.00152453	0.00114663	0.00198185
+
+cat *.sin*.pi.windowed.pi | grep "hcontortus" | sed 's/chr[12345]/chr/g' | datamash -g1 median 5 q1 5 q3 5
+hcontortus_chr_Celeg_TT_arrow_pilon	0.0012937	0.00106099	0.00156967
+hcontortus_chrX_Celeg_TT_arrow_pilon	0.000517191	0.000393264	0.000722199
+
+```
+
 
 
 
@@ -1367,3 +1431,200 @@ mkdir LOGFILES
 # ln -s /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/cohort.g.vcf.gz.tbi
 
 bsub -q yesterday -R'span[hosts=1] select[mem>20000] rusage[mem=20000]' -n 6 -M20000 -J GATK_HC_GENOTYPE_${ID}_[1-$JOBS] -e LOGFILES/GATK_HC_GENOTYPE_${ID}_[1-$JOBS].e -o LOGFILES/GATK_HC_GENOTYPE_${ID}_[1-$JOBS].o "./run_hc_*\$LSB_JOBINDEX"
+
+
+
+# bring it all together
+ls -1v *.cohort.vcf.gz > vcffiles.fofn
+
+vcf-concat -f vcffiles.fofn | gzip -c >  HCV4_GENETICMAP_GATKHC.raw.vcf.gz
+
+
+# clean up
+rm *tmp*
+rm *.cohort.vcf.gz
+rm *.cohort.vcf.gz.tbi
+rm *.cohort.g.vcf.gz
+rm *.cohort.g.vcf.gz.tbi
+rm *run_merge_gvcfs*
+mv *.[oe] LOGFILES
+
+
+
+
+
+
+
+
+
+
+
+#--------------------------------------------------------------------------------
+# coverage variance berween samples, with particular focus on X chromosome coverage
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/GENOME_COVERAGE
+
+# extract coverage data for chr1 and chrX
+for i in *100000_window.cov; do data=$( cat $i | grep "chr[1|X]" | datamash median 5 -g 1 q1 5 q3 5 | awk 'BEGIN { ORS = " " } { print }' OFS="\t" ) ; country=$( echo $i | cut -c -3 ); echo ${i%.merged.100000_window.cov} ${country} ${data} ; done > genome_coverage.data
+
+
+
+
+R-3.5.0
+library(ggplot2)
+library(patchwork)
+
+data<-read.table("genome_coverage.data",header=F)
+
+# coverage plot comparing chr1 and chrX
+coverage_plot <- ggplot(data,aes(V4,V8))+
+     geom_pointrange(aes(ymin=V9, ymax=V10),alpha=0.2)+
+     geom_errorbarh(aes(xmax = V6, xmin = V5, height = 0),alpha=.2)+
+     scale_y_log10(limits = c(0.001,100))+
+     scale_x_log10(limits = c(0.001,100))+
+     geom_point(data=subset(data,(V10-V9)<(V6-V5)),aes(V4,V8),colour="orange",alpha=0.2)+
+     geom_point(data=subset(data,(V10-V9)>(V6-V5)),aes(V4,V8),colour="blue",alpha=0.2)+
+     labs(x="Log10(median) coverage of 100,000 bp window of Chr 1",y="Log10(median) coverage of 100,000 bp window of Chr X")+
+     theme_bw()
+
+
+
+
+variance_plot <- ggplot(data,aes(x=reorder(V2,(V10-V9)/(V6-V5),FUN = median),y=(V10-V9)/(V6-V5)))+
+     geom_boxplot()+
+     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
+     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
+     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX[Q3 - Q1] / chr1[Q3 - Q1])")+
+     theme_bw()
+
+
+coverage_plot + variance_plot + plot_layout(ncol=2)
+
+
+
+a_plot <-ggplot(data,aes(x=reorder(V2,(V6-V5),FUN = median),y=(V6-V5)))+
+     geom_boxplot()+
+     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
+     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
+     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX[Q3 - Q1] / chr1[Q3 - Q1])")+
+     theme_bw()
+
+
+b_plot <-ggplot(data,aes(x=reorder(V2,(V10-V9),FUN = median),y=(V10-V9)))+
+	     geom_boxplot()+
+	     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
+	     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
+	     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX[Q3 - Q1] / chr1[Q3 - Q1])")+
+	     theme_bw()
+a_plot + b_plot + plot_layout(ncol=2)
+
+
+
+
+
+
+#----- SNPeff
+
+# setup for HCON_V4
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff
+
+mkdir data/HCON_V4
+
+cd  data/HCON_V4
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa HCON_V4.fa
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 genes.gff
+gffread genes.gff -g HCON_V4.fa -y protein.fa
+
+
+# modify config file
+cd /nfs/users/nfs_s/sd21/lustre118_link/software/snpEff
+
+echo "
+
+# Haemonchus contortus chromosomes V4
+HCON_V4_20200130.genome : HCON_V4_20200130
+
+" > new.genome
+
+cat snpEff.config new.genome > tmp; mv tmp snpEff.config
+
+
+# build database
+java -jar snpEff.jar build -v HCON_V4
+
+
+
+
+# run SNPeff on population diversity VCFs to calcukated KnKs
+
+
+
+bsub.py 20 vcf_maf_chr1 "vcftools-0.1.14 --gzvcf 1.hcontortus_chr1_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr1_maf0.01"
+bsub.py 20 vcf_maf_chr2 "vcftools-0.1.14 --gzvcf 2.hcontortus_chr2_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr2_maf0.01"
+bsub.py 20 vcf_maf_chr3 "vcftools-0.1.14 --gzvcf 3.hcontortus_chr3_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr3_maf0.01"
+bsub.py 20 vcf_maf_chr4 "vcftools-0.1.14 --gzvcf 4.hcontortus_chr4_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr4_maf0.01"
+bsub.py 20 vcf_maf_chr5 "vcftools-0.1.14 --gzvcf 5.hcontortus_chr5_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr5_maf0.01"
+bsub.py 20 vcf_maf_chr6 "vcftools-0.1.14 --gzvcf 6.hcontortus_chrX_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chrX_maf0.01"
+
+bsub.py --done vcf_maf_chr1 20 snpeff_chr1 "java -Xmx4g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff/snpEff.jar -no-downstream -no-intergenic -no-intron -no-upstream -no-utr HCON_V4 chr1_maf0.01.recode.vcf \> chr1.maf0.01.snpeff.vcf.gz"
+bsub.py --done vcf_maf_chr2 20 snpeff_chr2 "java -Xmx4g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff/snpEff.jar -no-downstream -no-intergenic -no-intron -no-upstream -no-utr HCON_V4 chr2_maf0.01.recode.vcf \> chr2.maf0.01.snpeff.vcf.gz"
+bsub.py --done vcf_maf_chr3 20 snpeff_chr3 "java -Xmx4g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff/snpEff.jar -no-downstream -no-intergenic -no-intron -no-upstream -no-utr HCON_V4 chr3_maf0.01.recode.vcf \> chr3.maf0.01.snpeff.vcf.gz"
+bsub.py --done vcf_maf_chr4 20 snpeff_chr4 "java -Xmx4g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff/snpEff.jar -no-downstream -no-intergenic -no-intron -no-upstream -no-utr HCON_V4 chr4_maf0.01.recode.vcf \> chr4.maf0.01.snpeff.vcf.gz"
+bsub.py --done vcf_maf_chr5 20 snpeff_chr5 "java -Xmx4g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff/snpEff.jar -no-downstream -no-intergenic -no-intron -no-upstream -no-utr HCON_V4 chr5_maf0.01.recode.vcf \> chr5.maf0.01.snpeff.vcf.gz"
+bsub.py --done vcf_maf_chr6 20 snpeff_chrX "java -Xmx4g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff/snpEff.jar -no-downstream -no-intergenic -no-intron -no-upstream -no-utr HCON_V4 chrX_maf0.01.recode.vcf \> chrX.maf0.01.snpeff.vcf.gz"
+
+
+
+
+
+grep '^#\|missense_variant\|synonymous_variant' chr1.maf0.01.snpeff.vcf.gz chr2.maf0.01.snpeff.vcf.gz chr3.maf0.01.snpeff.vcf.gz chr4.maf0.01.snpeff.vcf.gz chr5.maf0.01.snpeff.vcf.gz chrX.maf0.01.snpeff.vcf.gz hcon.snpeff.vcf.gz > mis_syn.txt
+
+
+cat HCON_V4_WBP11plus_190125.ips.gff3 | grep "gene" | cut -f9 | cut -f2 -d ";" | cut -c6-20 > gene_list
+echo -e "NAME\tka_count\tka_freq\tks_count\tks_freq\tka_ks" > kaks_out
+
+while read GENE; do bsub.py --queue small 0.1 kaks_snps "./run_kaks_from_vcf_pergene snpeff.vcf.kaks mis_syn.txt ${GENE}" ; done < gene_list
+
+
+
+
+
+
+
+# male and female genome coverage_plot
+cd ~/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/GENOME_COVERAGE
+
+R-3.5.0
+library(ggplot2)
+library(patchwork)
+
+
+chr_colours<-c("#b2182b","#fc8d59","#fee090","#d1e5f0","#67a9cf","#4575b4")
+
+male<-read.table("GB_ISEN1_001.merged.100000_window.cov",header=F)
+male<-male[male$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+female<-read.table("GB_ISEN1_006.merged.100000_window.cov",header=F)
+female<-female[female$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+
+
+plot_female<-ggplot(female,aes(V2/10^6,log10(V5),col=V1))+
+	geom_point(alpha=0.8)+
+	scale_colour_manual(values=chr_colours, guide = FALSE)+
+	facet_grid(.~V1)+
+	labs(title="Sample: MHco3(ISE).N1_006 - female XX",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
+	theme_bw()+
+	ylim(0.5,2.25)
+
+plot_male<-ggplot(male,aes(V2/10^6,log10(V5),col=V1))+
+	geom_point(alpha=0.8)+
+	scale_colour_manual(values=chr_colours, guide = FALSE)+
+	facet_grid(.~V1)+
+	labs(title="Sample: MHco3(ISE).N1_001 - male XO",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
+	theme_bw()+
+	ylim(0.5,3)
+
+
+plot_female + plot_male + plot_layout(ncol=1)
+
+ggsave("male_v_female_genomecoverage.pdf", useDingbats = FALSE)

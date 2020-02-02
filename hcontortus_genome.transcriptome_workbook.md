@@ -14,6 +14,863 @@ annotation# Haemonchus genome - transcriptome analyses
 
 
 
+# V4 Genome Annotation notes
+WD: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME
+
+# --- RNAseq data - info
+cat /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/lanes.list
+
+eggs1_236476_3881079	7059_6#1
+eggs2_236476_3881080	7059_6#2
+eggs3_236476_3881081	7059_6#3
+L1_1_236476_3881082	7059_6#4
+L1_2_236476_3881083	7059_6#5
+L1_3_236476_3881084	7059_6#6
+L4_1_236476_3881085	7059_6#7
+L4_2_236476_3881086	7059_6#8
+L4_3_236476_3881087	7059_6#9
+AdultF1_236476_3881088	7059_6#10
+AdultF2_236476_3881089	7059_6#11
+AdultF3_236476_3881090	7059_6#12
+ISE_BXWF1_236476_3881091	7059_6#13
+ISE_BXWF2_236476_3881092	7059_6#14
+ISE_BXWF3_236476_3881093	7059_6#15
+AdultM1_236476_2305_3914303	7062_6#1
+AdultM2_236476_2305_3914304	7062_6#2
+AdultM3_236476_2305_3914305	7062_6#3
+BXC1_236476_2292_3914306	7062_6#4
+BXC2_236476_2292_3914307	7062_6#5
+BXC3_236476_2292_3914308	7062_6#6
+EXL3_1_236476_2305_3914309	7062_6#7
+EXL3_2_236476_2305_3914310	7062_6#8
+EXL3_3_236476_2305_3914311	7062_6#9
+SHL3_1_236476_2305_3914312	7062_6#10
+SHL3_2_236476_2305_3914313	7062_6#11
+SHL3_3_236476_2305_3914314	7062_6#12
+gut1_236476_1517_3914315	7062_6#13
+gut2_236476_1589_3914316	7062_6#14
+gut3_236476_635J_3914317	7062_6#15
+
+
+
+#-----------------------------------------------------------------------------------------
+
+mkdir STAR_MAP_ALL
+
+cd STAR_MAP_ALL
+
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
+
+mkdir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index
+
+#--- make reference index
+bsub.py --threads 8 20 01_star_index \
+~sd21/lustre118_link/software/bin/star_2.5.2 \
+--runMode genomeGenerate \
+--runThreadN 8 \
+--genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index \
+--genomeFastaFiles /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
+
+
+#--- map reads
+
+for i in ` cd ../RAW/ && ls -1d */ | sed -e 's/\///g' `; do \
+bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/STAR/bin/Linux_x86_64/STAR \
+--runThreadN 8 \
+--genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index \
+--readFilesIn ../RAW/${i}/${i}_1.fastq.gz ../RAW/${i}/${i}_2.fastq.gz \
+--readFilesCommand zcat \
+--alignIntronMin 10 \
+--outTmpDir starmap_${i}_tmp \
+--outFileNamePrefix starmap_${i}_other_out \
+--outSAMtype BAM SortedByCoordinate \
+; done
+
+
+
+# merge bams into a single bam for braker
+
+ls -1 *bam > bams.list
+bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
+
+
+cd ../
+
+
+#--- repeat for chromosome only
+
+mkdir STAR_MAP_CHR
+
+cd STAR_MAP_CHR
+
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
+
+ mkdir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4chr_rnaseq_star_index
+
+#--- make reference index
+bsub.py --threads 8 20 01_star_index_chr \
+~sd21/lustre118_link/software/bin/star_2.5.2 \
+--runMode genomeGenerate \
+--runThreadN 8 \
+--genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4chr_rnaseq_star_index \
+--genomeFastaFiles /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
+
+
+#--- map reads
+
+for i in ` cd ../RAW/ && ls -1d */ | sed -e 's/\///g' `; do \
+bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/STAR/bin/Linux_x86_64/STAR \
+--runThreadN 8 \
+--genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4chr_rnaseq_star_index \
+--readFilesIn ../RAW/${i}/${i}_1.fastq.gz ../RAW/${i}/${i}_2.fastq.gz \
+--readFilesCommand zcat \
+--alignIntronMin 10 \
+--outTmpDir starmap_${i}_tmp \
+--outFileNamePrefix starmap_${i}_other_out \
+--outSAMtype BAM SortedByCoordinate \
+; done
+
+
+
+# merge bams into a single bam for braker
+
+ls -1 *bam > bams.list
+bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
+
+
+cd ../
+
+
+# make intro hints from RNAseq
+
+#- make hints files
+bsub.py 10 01_bam2hints_RNAseq \
+"/lustre/scratch118/infgen/archive/ss34/SCHISTO/augustus/augustus-3.2.2//bin/bam2hints --intronsonly --minintronlen=20 --source=E --in=starmap_merge.chr.bam --out=starmap_merge.chr.intron-hints.gff"
+
+
+samtools-1.3 faidx HAEM_V4_final.chr.fa
+awk '{print $1,$2}' OFS="\t" HAEM_V4_final.chr.fa.fai >chromosome_size.list
+
+samtools-1.3 index -b starmap_merge.chr.bam
+/software/pathogen/external/apps/usr/local/Python-2.7.13/bin//bam2wig.py -i starmap_merge.chr.bam -s chromosome_size.list -o starmap_merge.chr_bam2wig_out; \
+cat starmap_merge.chr_bam2wig_out | \
+/software/pathogen/external/apps/usr/bin/wig2hints.pl --width=10 --margin=10 --minthresh=2 --minscore=4 --prune=0.1 --src=W --type=ep --radius=4.5 --pri=4 --strand="." > RNAseq.merge.exon-parts.gff
+
+
+
+
+#-----------------------------------------------------------------------------------------
+# Braker
+#-----------------------------------------------------------------------------------------
+
+mkdir BRAKER_ALL
+mkdir BRAKER_CHR
+
+cd BRAKER_ALL
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/STAR_MAP/starmap_merge.bam
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
+
+# paper: http://www.ncbi.nlm.nih.gov/pubmed/26559507
+
+
+
+export AUGUSTUS_CONFIG_PATH=/nfs/users/nfs_s/sd21/software/augustus-3.2.1/config
+export AUGUSTUS_SCRIPTS_PATH=/nfs/users/nfs_s/sd21/software/augustus-3.2.1/scripts
+export BAMTOOLS_PATH=/nfs/users/nfs_s/sd21/lustre118_link/software/bamtools/bin
+export GENEMARK_PATH=/nfs/users/nfs_s/sd21/lustre118_link/software/gm_et_linux_64/gmes_petap
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/software/gcc-4.9.2/lib64/libstdc++.so.6
+export BAMTOOLS_PATH=/nfs/users/nfs_s/sd21/lustre118_link/software/bamtools/bin
+
+### need to copy the gm_key to home directory for it to work. Only needs to be done once. Has a 400 day expiry
+#cp ~sd21/lustre118_link/software/gm_et_linux_64/gmes_petap/gm_key ~/.gm_key
+
+
+bsub.py --queue hugemem --threads 30 200 01_braker_all \
+/lustre/scratch118/infgen/team133/sd21/software/TRANSCRIPTOME/BRAKER_v2.0/braker.pl \
+--genome=HAEM_V4_final.all.fa \
+--bam=starmap_merge.all.bam \
+--cores 30 \
+--gff3 \
+--species=Hc_V4_all \
+--UTR=off \
+--overwrite \
+--workingdir=$PWD \
+--useexisting
+
+
+cd ../BRAKER_CHR/
+
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/STAR_MAP_CHR/starmap_merge.chr.bam
+
+bsub.py --queue long --threads 30 30 01_braker_chr \
+/lustre/scratch118/infgen/team133/sd21/software/TRANSCRIPTOME/BRAKER_v2.0/braker.pl \
+--genome=HAEM_V4_final.chr.fa \
+--bam=starmap_merge.chr.bam \
+--cores 30 \
+--gff3 \
+--species=Hc_V4_chr \
+--UTR=off \
+--overwrite \
+--workingdir=$PWD \
+--useexisting
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------------------
+# AUGUSTUS post Braker
+#-----------------------------------------------------------------------------------------
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/
+mkdir AUGUSTUS_POST_BRAKER
+cd AUGUSTUS_POST_BRAKER
+
+ln -s ../STAR_MAP_CHR/RNAseq.merge.exon-parts.gff
+ln -s ../STAR_MAP_CHR/starmap_merge.chr.intron-hints.gff
+ln -s ../ISOSEQ_MAP_CHR/hq-lq.merged.intron-hints.gff
+ln -s ../ISOSEQ_MAP_CHR/fl-nfl.merged.intron-hints.gff
+
+cat *gff > hints.gff
+
+
+# prepare reference
+ln -s ../../REF/HAEM_V4_final.chr.fa
+
+/software/pathogen/external/apps/usr/bin/splitMfasta.pl HAEM_V4_final.chr.fa --outputpath=./
+for f in *.split.*; do NAME=`grep ">" $f`; mv $f ${NAME#>}.fa; done
+
+/software/pathogen/external/apps/usr/bin/summarizeACGTcontent.pl HAEM_V4_final.chr.fa > basesummary.out
+
+# prepare augustus run files
+
+grep "bases" basesummary.out | awk -v PWD=$PWD -v HINTS=hints.gff '{print PWD"/"$3".fa",PWD"/"HINTS,"1",$1}' OFS="\t" > sequences.list
+
+
+/software/pathogen/external/apps/usr/bin/createAugustusJoblist.pl --sequences=sequences.list --wrap="#" --overlap=50000 --chunksize=3000000 --outputdir=augustus_split_out --joblist=jobs.lst --jobprefix=augsplit --command \
+"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/augustus_v3.3/bin/augustus --species=Hc_V4_chr --strand=both --genemodel=partial --protein=on --introns=on --start=on --stop=on --cds=on --codingseq=on --UTR=off --nc=off --gff3=on --alternatives-from-evidence=on --extrinsicCfgFile=/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/augustus_v3.3/config/species/Hc_V4_chr/extrinsic.Hc_V4_chr.modified.cfg --AUGUSTUS_CONFIG_PATH=/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/augustus_v3.3/config/"
+
+
+mkdir augustus_split_out
+
+# run augustus
+for i in augsplit*; do echo -e "bsub.py 4 augsplit_log ./${i}" >> run_augsplit; done        #Max memory used was 1.2Gb
+chmod a+x run_augsplit
+bsub.py --queue yesterday 1 run_splitter ./run_augsplit
+
+mkdir augsplit_run_dir
+mv augsplit* augsplit_run_dir
+
+cat augustus_split_out/*gff | /software/pathogen/external/apps/usr/bin/join_aug_pred.pl > HC_V4_augustus_merge.gff
+
+
+echo -e "##gff-version 3" > HC_V4_augustus_merge.filtered.gff; grep "AUGUSTUS" HC_V4_augustus_merge.gff >> HC_V4_augustus_merge.filtered.gff
+
+
+gffread HC_V4_augustus_merge.filtered.gff -g HAEM_V4_final.chr.fa -y HC_V4_augustus_merge.filtered.aa.fa
+
+
+
+#-----------------------------------------------------------------------------------------
+# Filtering post braker  AUGUSTUS output - MANUAL
+#-----------------------------------------------------------------------------------------
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/BRAKER_CHR/POST_BRAKER
+
+ln -s ../braker/Hc_V4_chr/augustus.gff3
+ln -s ../braker/Hc_V4_chr/augustus.aa
+ln -s ../HAEM_V4_final.chr.fa
+
+
+
+cut -f1 -d ' ' augustus.aa > augustus.aa2
+~sd21/bash_scripts/AAResidueFreqCalculator.pl
+
+
+grep -v "#" augustus.aa2.freq | head -n 31 | cut -f2- > augustus.aa2.freq2
+
+
+R
+a<-read.table("augustus.aa2.freq2",header=T,sep="\t")
+c<-prcomp(na.omit(t(a[1:ncol(a)])))
+d<-as.data.frame(c$x[,1:30])
+
+
+library(ggplot2)
+library(gplots)
+
+# Plot pairwise comparisons of PCs - do this iteratively to look for outlier clusters
+ggplot()+geom_point(aes(d$PC2,d$PC3,alpha=0.2),size=0.5)+theme_bw()
+
+# Plot rotations to look for drivers of PC variation - heatmap will short regression of factors with PCs, showing which part of the amino acid composition is driving partiular PCs
+heatmap.2(c$rotation,Rowv=FALSE,Colv=FALSE,trace="none",dendrogram="none")
+
+
+
+# apply filter based on PC distibutions - these need to be manually set based on looking at pairwise distributions of PCs and some blasting
+filter<-d[(d$PC2>=-15 & d$PC2<=20 &
+	d$PC3>=-25 & d$PC3<=20 &  
+	d$PC4>=-25 & d$PC4<=25 &
+	d$PC5>=-15 & d$PC5<=15 &
+	d$PC6>=-20 & d$PC6<=20 &
+	d$PC7>=-15 & d$PC7<=15 &
+	d$PC8>=-15 & d$PC8<=15 &
+	d$PC9>=-10 & d$PC9<=10 &
+	d$PC10>=-10 & d$PC10<=12.5),]
+
+
+filter<-d[(d$PC2>=-20 & d$PC2<=20 &
+	d$PC3>=-30 & d$PC3<=30 &  
+	d$PC4>=-25 & d$PC4<=35 &
+	d$PC5>=-25 & d$PC5<=20 &
+	d$PC6>=-25 & d$PC6<=30 &
+	d$PC7>=-20 & d$PC7<=15 &
+	d$PC8>=-20 & d$PC8<=15 &
+	d$PC9>=-20 & d$PC9<=20 &
+	d$PC10>=-15 & d$PC10<=12.5),]
+
+
+# check filtered
+ggplot()+geom_point(aes(filter$PC2,filter$PC3,alpha=0.2),size=0.5)+theme_bw()
+
+write.table(row.names(filter),file="freq_filtered_transcripts.list",quote=F,row.names=F,col.names=F)
+
+
+
+
+#--- filter transposon-like sequences
+
+#- diamond filtered repeatmasker output - from V3, but will be fine
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/V3/REPEATS/REPEATMASKER/consensi.fa.classified_SDfiltered.fa
+
+# make fasta of CDS
+gffread -g HAEM_V4_final.chr.fa -x HC_V4_augustus_merge.AAfiltered.CDS.fa HC_V4_augustus_merge.AAfiltered.gff
+
+# make blast database
+makeblastdb -in consensi.fa.classified_SDfiltered.fa -parse_seqids -dbtype nucl
+
+# run blast
+bsub.py --queue yesterday 10 01_blastn_repeats "/software/pubseq/bin/ncbi_blast+/blastn -outfmt 6 -db consensi.fa.classified_SDfiltered.fa  -query HC_V4_augustus_merge.AAfiltered.CDS.fa \> HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out"
+
+python3 ~alt/python/bin/blast_parser_for_filtering_retrotrans_by_length_of_cds.py HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out HC_V4_augustus_merge.AAfiltered.CDS.fa > repeats_vs_cds.out
+
+cat repeats_vs_cds.out |  awk '{if($4 >= 95){print$1}}' | sort > genes_to_remove.txt
+
+
+
+
+
+
+
+
+
+cat freq_filtered_transcripts.list genes_to_remove.txt | sort -V | uniq -c | awk '{if($1=="1") print $2}' > filtered_transcripts_to_keep.list
+
+
+while read id; do grep "${id}[;$]" augustus.gff3 >> filtered.augustus.gff.tmp; done < filtered_transcripts_to_keep.list
+grep "mRNA" filtered.augustus.gff.tmp | cut -f2 -d ';' | sed 's/Parent=//g' | sort -V | uniq > gene_list.tmp
+
+while read gene_id; do grep "ID=${gene_id};$" augustus.gff3; done < gene_list.tmp > genes.filtered.gff.tmp
+
+
+echo "##gff-version 3" > HC_V4_augustus_merge.AAfiltered.gff; cat filtered.augustus.gff.tmp genes.filtered.gff.tmp | sort -k1,1 -k4,4n >> HC_V4_augustus_merge.AAfiltered.gff
+while read name; do samtools-1.3 faidx HC_V4_augustus_merge.filtered.aa.fa2 ${name} >> HC_V4_augustus_merge.AAfiltered.aa; done < freq_filtered_transcripts.list
+
+
+
+#--- post evm
+while read id; do grep "${id}[;.]" HAEM_V4.chr.evm_merge.gff >> filtered.augustus.gff.tmp; done < filtered_transcripts_to_keep.list
+grep "mRNA" filtered.augustus.gff.tmp | cut -f2 -d ';' | sed 's/Parent=//g' | sort -V | uniq > gene_list.tmp
+
+while read gene_id; do grep "ID=${gene_id};" HAEM_V4.chr.evm_merge.gff >> genes.filtered.gff.tmp; done < gene_list.tmp
+echo "##gff-version 3" > HC_V4_augustus_merge.AAfiltered.gff; cat filtered.augustus.gff.tmp genes.filtered.gff.tmp | sort -k1,1 -k4,4n >> HC_V4_augustus_merge.AAfiltered.gff
+
+
+
+
+
+#-----------------------------------------------------------------------------------------
+# Filtering post braker  AUGUSTUS output - MANUAL
+#-----------------------------------------------------------------------------------------
+
+
+mkdir POST_AUGUSTUS_FILTER
+cd POST_AUGUSTUS_FILTER
+
+ln -s ../HC_V4_augustus_merge.filtered.aa.fa
+ln -s ../HC_V4_augustus_merge.filtered.gff
+
+cut -f1 -d ' ' HC_V4_augustus_merge.filtered.aa.fa > HC_V4_augustus_merge.filtered.aa.fa2
+
+ ~sd21/bash_scripts/AAResidueFreqCalculator.pl
+ # input file = HC_V4_augustus_merge.filtered.aa.fa
+# output file = HC_V4_augustus_merge.filtered.aa.freq
+
+# Calculations
+# 1	Length of amino acid
+# 2	Percentage of non-polar aliphatic (GAVIL) residues
+# 3	Percentage of non-polar aromatic (FW) residues
+# 4	Percentage of non-polar cyclic (P) residues
+# 5	Percentage of polar sulphur containing (CM) residues
+# 6	Percentage of polar hydroxyl (ST) residues
+# 7	Percentage of polar aromatic (Y) residues
+# 8	Percentage of polar acidic-amide (NQ) residues
+# 9	Percentage of acidic (DE) residues
+# 10	Percentage of basic (RHK) residues
+# 11	Percentage of alanine (A) residues
+# 12	Percentage of cysteine (C) residues
+# 13	Percentage of aspartate (D) residues
+# 14	Percentage of glutamate (E) residues
+# 15	Percentage of phenylalanine (F) residues
+# 16	Percentage of glycine (G) residues
+# 17	Percentage of histidine (H) residues
+# 18	Percentage of isoleucine (I) residues
+# 19	Percentage of lysine (K) residues
+# 20	Percentage of leucine (L) residues
+# 21	Percentage of methionine (M) residues
+# 22	Percentage of asparagine (N) residues
+# 23	Percentage of proline (P) residues
+# 24	Percentage of glutamine (Q) residues
+# 25	Percentage of arginine (R) residues
+# 26	Percentage of serine (S) residues
+# 27	Percentage of threonine (T) residues
+# 28	Percentage of valine (V) residues
+# 29	Percentage of tryptophan (W) residues
+# 30	Percentage of tyrosine (Y) residues
+
+
+
+grep -v "#" HC_V4_augustus_merge.filtered.aa.freq | head -n 31 | cut -f2- > HC_V4_augustus_merge.filtered.aa.freq2
+
+
+R
+a<-read.table("HC_V4_augustus_merge.filtered.aa.freq2",header=T,sep="\t")
+c<-prcomp(na.omit(t(a[1:ncol(a)])))
+d<-as.data.frame(c$x[,1:30])
+
+
+library(ggplot2)
+library(gplots)
+
+
+# Plot pairwise comparisons of PCs - do this iteratively to look for outlier clusters
+ggplot()+geom_point(aes(d$PC2,d$PC3,alpha=0.2),size=0.5)+theme_bw()
+
+# Plot rotations to look for drivers of PC variation - heatmap will short regression of factors with PCs, showing which part of the amino acid composition is driving partiular PCs
+heatmap.2(c$rotation,Rowv=FALSE,Colv=FALSE,trace="none",dendrogram="none")
+
+
+
+# apply filter based on PC distibutions - these need to be manually set based on looking at pairwise distributions of PCs and some blasting
+filter<-d[(d$PC2>=-20 & d$PC2<=15 &
+	d$PC3>=-25 & d$PC3<=30 &  
+	d$PC4>=-20 & d$PC4<=20 &
+	d$PC5>=-20 & d$PC5<=20 &
+	d$PC6>=-15 & d$PC6<=20 &
+	d$PC7>=-15 & d$PC7<=15 &
+	d$PC8>=-12.5 & d$PC8<=15 &
+	d$PC9>=-15 & d$PC9<=15 &
+	d$PC10>=-15 & d$PC10<=15),]
+
+write.table(row.names(filter),file="freq_filtered_transcripts.list",quote=F,row.names=F,col.names=F)
+# exit R
+
+while read id; do grep ${id} HC_V4_augustus_merge.filtered.gff >> filtered.augustus.gff.tmp; done < freq_filtered_transcripts.list
+grep "transcript" filtered.augustus.gff.tmp | cut -f2 -d ';' | sed 's/Parent=//g' | sort -V | uniq > gene_list.tmp
+
+while read gene_id; do grep "ID=${gene_id}$" HC_V4_augustus_merge.filtered.gff; done < gene_list.tmp > genes.filtered.gff.tmp
+
+
+echo "##gff-version 3" > HC_V4_augustus_merge.AAfiltered.gff; cat filtered.augustus.gff.tmp genes.filtered.gff.tmp | sort -k1,1 -k4,4n >> HC_V4_augustus_merge.AAfiltered.gff
+while read name; do samtools-1.3 faidx HC_V4_augustus_merge.filtered.aa.fa2 ${name} >> HC_V4_augustus_merge.AAfiltered.aa; done < freq_filtered_transcripts.list
+
+
+
+
+#--- ALans approach to removing repeats
+# Alans instructions of Hmic
+
+#My working is in /lustre/scratch118/infgen/team133/alt/HMIC/braker2/braker/HMN_v3
+#
+#
+# Here are the steps:
+#
+# /software/pubseq/bin/ncbi_blast+/blastn -outfmt 6 -db HMN_V3-families_mobilome_only.fa -query HMN_v3_raw_cds.fa > HMN_V3-families_mobilome_only.fa_out
+#
+# python3 blast_parser_for_filtering_retrotrans_by_length_of_cds.py HMN_V3-families_mobilome_only.fa_out HMN_v3_raw_cds.fa > HMN_V3-families_mobilome_only.fa_vs_HMN_v3_raw_cds.fa_out
+#
+# #Some sort of filtering - histogram suggested cutoff of 97% blast hit:
+#
+# cat HMN_V3-families_mobilome_only.fa_vs_HMN_v3_raw_cds.fa_out | awk '{if($4 >= 97){print$1}}' | sort > genes_to_remove_hmnv3_rptlib.txt
+#
+# python3 gff3_parser.py augustus.gff3 genes_to_remove_combined_sorted.txt   #I used a combination of repeat libraries generated by 50HGI and by me using RepeatModeller to get the final list of transcripts to remove
+#
+
+
+#- diamond filtered repeatmasker output - from V3, but will be fine
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/V3/REPEATS/REPEATMASKER/consensi.fa.classified_SDfiltered.fa
+
+# make fasta of CDS
+gffread -g ../HAEM_V4_final.chr.fa -x HC_V4_augustus_merge.AAfiltered.CDS.fa HC_V4_augustu_merge.AAfiltered.gff
+
+# make balst database
+makeblastdb -in consensi.fa.classified_SDfiltered.fa -parse_seqids -dbtype nucl
+
+# run blast
+bsub.py --queue yesterday 10 01_blastn_repeats "/software/pubseq/bin/ncbi_blast+/blastn -outfmt 6 -db consensi.fa.classified_SDfiltered.fa  -query HC_V4_augustus_merge.AAfiltered.CDS.fa \> HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out"
+
+python3 ~alt/python/bin/blast_parser_for_filtering_retrotrans_by_length_of_cds.py HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out HC_V4_augustus_merge.AAfiltered.CDS.fa > repeats_vs_cds.out
+
+cat repeats_vs_cds.out |  awk '{if($4 >= 50){print$1}}' | sort > genes_to_remove.txt
+
+python3  /lustre/scratch118/infgen/team133/alt/HMIC/braker2/braker/HMN_v3/gff3_parser.py HC_V4_augustus_merge.AAfiltered.gff genes_to_remove.txt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------------------
+# mapping isoseq data
+#-----------------------------------------------------------------------------------------
+
+# get data
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/ISOSEQ
+
+wget -O sequel_polished_high_qv_consensus_isoforms.fastq https://sf2-farm-srv1.internal.sanger.ac.uk:8243/SMRTLink/1.0.0/secondary-analysis/datastore-files/3e563bad-4a17-47f9-b9e0-f61fe09c5640/download
+fastaq to_fasta sequel_polished_high_qv_consensus_isoforms.fastq sequel_polished_high_qv_consensus_isoforms.fasta
+
+wget -O sequel_polished_low_qv_consensus_isoforms.fastq https://sf2-farm-srv1.internal.sanger.ac.uk:8243/SMRTLink/1.0.0/secondary-analysis/datastore-files/3be12200-50d7-4167-9ba3-def01292c10c/download
+fastaq to_fasta sequel_polished_low_qv_consensus_isoforms.fastq sequel_polished_low_qv_consensus_isoforms.fasta
+
+wget -O RSII_polished_high_qv_consensus_isoforms.fasta http://sf2-farm-srv2.internal.sanger.ac.uk:8080/smrtportal/api/jobs/20636/contents/data/polished_high_qv_consensus_isoforms.fasta
+wget -O RSII_polished_low_qv_consensus_isoforms.fasta http://sf2-farm-srv2.internal.sanger.ac.uk:8080/smrtportal/api/jobs/20636/contents/data/polished_low_qv_consensus_isoforms.fasta
+
+cat *consensus_isoforms.fasta > all_isoseq.fasta
+
+#--- mapping isoseq data
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_MAP
+mkdir ISOSEQ_MAP_ALL
+mkdir ISOSEQ_MAP_CHR
+
+cd ISOSEQ_MAP_ALL
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
+for i in `(cd ../RAW/ISOSEQ/ ; ls -1 *fasta)`; do \
+bsub.py --threads 3 10 01_minimap2_isoseq "~sd21/bash_scripts/run_minimap2_splice ../RAW/ISOSEQ/${i} HAEM_V4_final.all.fa ${i}"; \
+done
+
+cd ../
+cd ISOSEQ_MAP_CHR
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
+for i in `(cd ../RAW/ISOSEQ/ ; ls -1 *fasta)`; do \
+bsub.py --threads 3 10 01_minimap2_isoseq "~sd21/bash_scripts/run_minimap2_splice ../RAW/ISOSEQ/${i} HAEM_V4_final.chr.fa ${i}"; \
+done
+
+
+
+# TO CHECK AND FIX
+#https://github.com/Magdoll/cDNA_Cupcake/wiki/Cupcake-ToFU:-supporting-scripts-for-Iso-Seq-after-clustering-step
+
+#gmap -D /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ -d haem_v3.3.chr -f samse -n 0 -t 12 -z sense_force all.HQ.isoforms.fastq > hq_isoforms.fastq.sam
+#sort -k 3,3 -k 4,4n hq_isoforms.fastq.sam > hq_isoforms.fastq.sorted.sam
+#source activate anaCogent
+#bsub.py 10 03_collapse_isoforms collapse_isoforms_by_sam.py --input all.HQ.isoforms.fastq --fq -s hq_isoforms.fastq.sorted.sam --dun-merge-5-shorter -o test
+#bsub.py 10 04_fusion_isoforms fusion_finder.py --input all.HQ.isoforms.fastq --fq -s hq_isoforms.fastq.sorted.sam -o lq_isoforms.fasta.fusion --cluster_report_csv cluster_report.csv
+
+export PATH="/nfs/users/nfs_s/sd21/lustre118_link/software/anaconda2/bin:$PATH"
+source activate anaCogent
+
+cat sequel_polished_high_qv.sam RSII_polished_high_qv.sam | sort -k 3,3 -k 4,4n > polished_high_qv.sorted.sam
+
+cat ../RAW/ISOSEQ/sequel_polished_high_qv_consensus_isoforms.fasta ../RAW/ISOSEQ/RSII_polished_high_qv_consensus_isoforms.fasta > high_qv_consensus_isoforms.fasta
+bsub.py 1 03_collapse_isoforms collapse_isoforms_by_sam.py --input high_qv_consensus_isoforms.fasta -s polished_high_qv.sorted.sam --dun-merge-5-shorter -o high_qv_consensus
+
+bsub.py 10 04_fusion_isoforms fusion_finder.py --input high_qv_consensus_isoforms.fasta -s polished_high_qv.sorted.sam -o polished_high_qv.fusion --cluster_report_csv polished_high_qv_cluster_report.csv
+
+
+
+
+
+#--- generate intron hints for augustus
+
+# merge bams
+ls -1 *qv.sorted.bam > bams.hq-lq.list
+ls -1 *fasta.sorted.bam > bams.fl-nfl.list
+
+bsub.py 5 bammerge1 "samtools-1.3 merge -b bams.hq-lq.list hq-lq.merged.bam"
+bsub.py 5 bammerge2 "samtools-1.3 merge -b bams.fl-nfl.list fl-nfl.merged.bam"
+
+
+#- make hints files
+bsub.py 10 01_bam2hints_hq-lq \
+"/lustre/scratch118/infgen/archive/ss34/SCHISTO/augustus/augustus-3.2.2//bin/bam2hints --intronsonly --minintronlen=20 --source=PB --in=hq-lq.merged.bam --out=hq-lq.merged.intron-hints.gff"
+
+
+bsub.py 10 01_bam2hints_fl-nfl \
+"/lustre/scratch118/infgen/archive/ss34/SCHISTO/augustus/augustus-3.2.2//bin/bam2hints --intronsonly --minintronlen=20 --source=PB --in=fl-nfl.merged.bam --out=fl-nfl.merged.intron-hints.gff"
+
+samtools-1.3 faidx HAEM_V4_final.chr.fa
+awk '{print $1,$2}' OFS="\t" HAEM_V4_final.chr.fa.fai >chromosome_size.list
+
+samtools-1.3 index -b fl-nfl.merged.bam
+/software/pathogen/external/apps/usr/local/Python-2.7.13/bin//bam2wig.py -i fl-nfl.merged.bam -s chromosome_size.list -o fl-nfl_bam2wig_out
+
+
+
+
+
+
+#-----------------------------------------------------------------------------------------
+# PASA - bringing the isoseq and braker output together
+#-----------------------------------------------------------------------------------------
+
+# connect to mysql server
+/usr/bin/mysql -usd21 -pIgebie5Ahbah --port=3307 -hutlt-db
+# handy sql cheatsheet : https://gist.github.com/hofmannsven/9164408
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/ISOSEQ
+cat RSII_polished_high_qv_consensus_isoforms.fasta sequel_polished_high_qv_consensus_isoforms.fasta > all_HQ_isoseq.fasta
+fastaq enumerate_names --suffix _HQ_isoform all_HQ_isoseq.fasta all_HQ_isoseq.renamed.fasta
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME
+mkdir PASA_CHR
+cd PASA_CHR
+
+ln -s ../BRAKER_CHR/POST_BRAKER/augustus.filtered.gff3
+ln -s ../../REF/HAEM_V4_final.chr.fa
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/ISOSEQ/all_isoseq.fasta
+fastaq enumerate_names --suffix _hc_isoseq all_isoseq.fasta all_isoseq.renamed.fasta
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/ISOSEQ/all_HQ_isoseq.renamed.fasta
+
+grep ">" all_HQ_isoseq.renamed.fasta | sed 's/>//g' > all_HQ_isoseq.renamed.names
+
+# need pasa config files. modify the MySQL database: sd21_pasa_HcV4
+cp ../../V3/TRANSCRIPTOME/PASA/FINAL_V3/alignAssembly.config .
+cp ../../V3/TRANSCRIPTOME/PASA/FINAL_V3/annotCompare.config .
+
+bsub.py --queue yesterday --threads 7 20 01_pasa_isoseq_HcV4_chr \
+"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
+-c alignAssembly.config \
+-C -R \
+-g HAEM_V4_final.chr.fa \
+-t all_HQ_isoseq.renamed.fasta \
+-f all_HQ_isoseq.renamed.names \
+--ALIGNERS blat,gmap --CPU 7"
+
+
+bsub.py --queue yesterday 1 02_pasa_add_evm_annotations \
+"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
+-c alignAssembly.config \
+-g HAEM_V4_final.chr.fa \
+-P augustus.filtered.gff3"
+
+
+
+bsub.py --queue yesterday 1 03_pasa_evm_compare_update \
+"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
+-c annotCompare.config \
+-A -L \
+--annots_gff3 augustus.filtered.gff3 \
+--ALT_SPLICE \
+-g HAEM_V4_final.chr.fa \
+-t all_HQ_isoseq.renamed.fasta \
+-f all_HQ_isoseq.renamed.names"
+
+
+
+bsub.py --queue yesterday 1 02_pasa_add_evm_annotations_round2 \
+"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
+-c alignAssembly.config \
+-g HAEM_V4_final.chr.fa \
+-P sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3"
+
+
+bsub.py --queue yesterday 1 03_pasa_evm_compare_update_round2 \
+"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
+-c annotCompare.config \
+-A -L \
+--annots_gff3 sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3 \
+--ALT_SPLICE \
+-g HAEM_V4_final.chr.fa \
+-t all_HQ_isoseq.renamed.fasta \
+-f all_HQ_isoseq.renamed.names"
+
+#-----------------------------------------------------------------------------------------
+# Exonerate
+#-----------------------------------------------------------------------------------------
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME
+mkdir EXONERATE_CHR
+cd EXONERATE_CHR
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
+mkdir V1_2_V4
+cd V1_2_V4
+
+wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS9/species/haemonchus_contortus/PRJEB506/haemonchus_contortus.PRJEB506.WBPS9.protein.fa.gz
+gunzip haemonchus_contortus.PRJEB506.WBPS9.protein.fa.gz
+
+
+bsub.py --queue yesterday 10 01_exonserate \
+/nfs/users/nfs_s/sd21/bash_scripts/run_exonerate_splitter \
+../HAEM_V4_final.chr.fa \
+haemonchus_contortus.PRJEB506.WBPS9.protein.fa
+
+
+
+
+#-----------------------------------------------------------------------------------------
+# Evidence Modeller
+#-----------------------------------------------------------------------------------------
+# want to merge
+#--- pasa output, braker(filter), transposon filter
+
+mkdir /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EVM_CHR
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EVM_CHR
+
+ln -s ../../REF/HAEM_V4_final.chr.fa
+
+
+
+
+cat exonerate.V1_2_V4.gff | sed '/^$/d' | awk '{$2 = "hcv1_exonerate"; print}' OFS="\t" > exonerate.V1_2_V4.renamed.gff
+cat ce_2_v4.exonerate.gff3 | sed '/^$/d' | awk '{$2 = "ce_exonerate"; print}' OFS="\t" > ce_2_v4.exonerate.renamed.gff3
+cat HC_V4_augustus_merge.AAfiltered.gff | sed '/^$/d' | awk '{$2 = "braker_augustus"; print}' OFS="\t" > braker.renamed.gff3
+cat sd21_pasa_HcV4_2.gene_structures_post_PASA_updates.18752.gff3 | sed '/^$/d' | grep -v "#" | awk '{$2 = "pasa"; print}' OFS="\t" > pasa.renamed.gff3
+
+
+# weights.txt - second column in weights file must match second column in data files
+PROTEIN	hcv1_exonerate	2
+PROTEIN	ce_exonerate	1
+PROTEIN curated_exonerate 2
+TRANSCRIPT	pasa	5
+ABINITIO_PREDICTION	braker_augustus	2
+
+bsub.py 5 01_evm \
+"/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/partition_EVM_inputs.pl \
+--genome HAEM_V4_final.chr.fa \
+--gene_predictions braker.renamed.gff3 \
+--transcript_alignments pasa.renamed.gff3 \
+--protein_alignments exonerate.V1_2_V4.renamed.gff \
+--protein_alignments ce_2_v4.exonerate.renamed.gff3 \
+--protein_alignments AUGUSTUS_JN_CURATED.exonerate.renamed.gff \
+--segmentSize 100000 \
+--overlapSize 10000 \
+--partition_listing partitions_list.out"
+
+
+
+
+bsub.py 5 02_evm_write_commands \
+"/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/write_EVM_commands.pl \
+--weights /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EVM_CHR/weights.txt \
+--genome HAEM_V4_final.chr.fa \
+--gene_predictions braker.renamed.gff3 \
+--transcript_alignments pasa.renamed.gff3 \
+--protein_alignments exonerate.V1_2_V4.renamed.gff \
+--protein_alignments ce_2_v4.exonerate.renamed.gff3 \
+--protein_alignments AUGUSTUS_JN_CURATED.exonerate.renamed.gff \
+--output_file_name evm.out \
+--partitions partitions_list.out \> commands.list"
+
+chmod a+x commands.list
+bsub.py 5 03_evm_run "./commands.list"
+
+bsub.py 5 04_evm_recombine_partitions \
+"/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/recombine_EVM_partial_outputs.pl \
+--partitions partitions_list.out \
+--output_file_name evm.out"
+
+bsub.py 5 05_evm_make_gff3 \
+"/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/convert_EVM_outputs_to_GFF3.pl \
+--partitions partitions_list.out \
+--output evm.out \
+--genome HAEM_V4_final.chr.fa"
+
+
+find . -name "evm.out.gff3" | sort | while read -r line; do cat $line >> HAEM_V4.chr.evm_merge.gff; done
+
+
+
+
+#--------------------------------
+# Transcriptome Summary Stats
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_SUMMARY_STATS
+
+for i in V1 MCMASTER V4 CELEGANS V4_190114; do awk -v name="$i" '$3=="gene" {print name,"gene",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.genelength.txt; awk -v name="$i" '$3=="mRNA" {print name,"mrna",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.mrnalength.txt; awk -v name="$i" '$3=="exon" {print name,"exon",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.exonlength.txt; awk -v name="$i" '$3=="CDS" {print name,"cds",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.cdslength.txt; done
+
+for i in V4_190114; do awk -v name="$i" '$3=="gene" {print name,"gene",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.genelength.txt; awk -v name="$i" '$3=="mRNA" {print name,"mrna",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.mrnalength.txt; awk -v name="$i" '$3=="exon" {print name,"exon",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.exonlength.txt; awk -v name="$i" '$3=="CDS" {print name,"cds",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.cdslength.txt; done
+
+
+
+# get intron lengths
+gt gff3 -addintrons haemonchus_contortus.PRJEB506.WBPS8.annotations.gff3 | awk '$3=="intron" {print "V1","intron",$5-$4}' OFS="\t" > V1.intronlength.txt
+#gt gff3 -tidy -addintrons HCON_V4.renamed.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\t" > V4.intronlength.txt
+gt gff3 -tidy -addintrons wormbase.20240.complete.gff3 | awk '$3=="intron" {print "CELEGANS","intron",$5-$4}' OFS="\t" > celegans.intronlength.txt
+gt gff3 -addintrons haemonchus_contortus.PRJNA205202.WBPS9.annotations.gff3 | awk '$3=="intron" {print "MCMASTER","intron",$5-$4}' OFS="\t" > MCMASTER.intronlength.txt
+gt gff3 -tidy -addintrons HCON_V4_WBP11plus_190114.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\t" > V4_190114.intronlength.txt
+
+# collate data
+cat CELEGANS/CELEGANS.genelength.txt MCMASTER/MCMASTER.genelength.txt V1/V1.genelength.txt V4_190114/V4_190114.genelength.txt > genelength.txt
+cat CELEGANS/CELEGANS.mrnalength.txt MCMASTER/MCMASTER.mrnalength.txt V1/V1.mrnalength.txt V4_190114/V4_190114.mrnalength.txt > mrnalength.txt
+cat CELEGANS/CELEGANS.exonlength.txt MCMASTER/MCMASTER.exonlength.txt V1/V1.exonlength.txt V4_190114/V4_190114.exonlength.txt > exonlength.txt
+cat CELEGANS/CELEGANS.cdslength.txt MCMASTER/MCMASTER.cdslength.txt V1/V1.cdslength.txt V4_190114/V4_190114.cdslength.txt > cdslength.txt
+cat CELEGANS/celegans.intronlength.txt MCMASTER/MCMASTER.intronlength.txt V1/V1.intronlength.txt V4_190114/V4_190114.intronlength.txt > intronlength.txt
+
+
+
+# Summary stats
+R-3.5.0
+library(ggplot2)
+library(patchwork)
+
+gene<-read.table("genelength.txt",header=F)
+mRNA<-read.table("mrnalength.txt",header=F)
+exon<-read.table("exonlength.txt",header=F)
+intron<-read.table("intronlength.txt",header=F)
+
+
+gene_plot <- ggplot()+geom_density(aes(log10(gene$V3),col=gene$V1,fill=gene$V1),alpha = 0.2)+theme_bw()+theme(legend.position="bottom")+labs(title ="Gene length", x = "Length (log10[bp])", y = "Density")
+mRNA_plot <- ggplot()+geom_density(aes(log10(mRNA$V3),col=mRNA$V1,fill=mRNA$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="mRNA length", x = "Length (log10[bp])", y = "Density")
+exon_plot <- ggplot()+geom_density(aes(log10(exon$V3),col=exon$V1,fill=exon$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Exon length", x = "Length (log10[bp])", y = "Density")
+cds_plot <- ggplot()+geom_density(aes(log10(cds$V3),col=cds$V1,fill=cds$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="CDS length", x = "Length (log10[bp])", y = "Density")
+intron_plot <- ggplot()+geom_density(aes(log10(intron$V3),col=intron$V1,fill=intron$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Intron length", x = "Length (log10[bp])", y = "Density")
+
+
+
+
+
+gene_plot + mRNA_plot + exon_plot + intron_plot + plot_layout(ncol = 4)
+ggsave(filename="transcriptome_stats.pdf", width=35,height=10,units="cm")
+
+
+
+
+
+
+
 
 
 
@@ -426,6 +1283,9 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 
 ![Annotation summary stats comparison between Ce HcV1 hcV4 HcMcM](04_analysis/annotation_comparison_4species_scatter.png)
 Fig - Annotation summary stats comparison between Ce HcV1 hcV4 HcMcM
+
+
+
 
 
 
@@ -911,21 +1771,22 @@ hc_so_EGGvL1 <- sleuth_fit(hc_so_EGGvL1, ~name, 'full')
 hc_so_EGGvL1 <- sleuth_fit(hc_so_EGGvL1, ~1, 'reduced')
 hc_so_EGGvL1 <- sleuth_lrt(hc_so_EGGvL1, 'reduced', 'full')
 
-sleuth_table_EGGvL1 <- sleuth_results(hc_so_EGGvL1, 'reduced:full', 'lrt', show_all = FALSE)
+#sleuth_table_EGGvL1 <- sleuth_results(hc_so_EGGvL1, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_EGGvL1 <- dplyr::filter(sleuth_table_EGGvL1, qval <= 0.05)
 #head(sleuth_significant_EGGvL1, 20)
-
-write.table(sleuth_table_EGGvL1,file="sleuth_table_EGGvL1.txt",sep="\t",quote=FALSE, row.names=FALSE)
+#write.table(sleuth_table_EGGvL1,file="sleuth_table_EGGvL1.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 #sleuth_live(hc_so_EGGvL1)
 
 hc_so_EGGvL1_wt<-sleuth_wt(hc_so_EGGvL1,'nameL1',which_model = "full")
 sleuth_table_EGGvL1_wt <- sleuth_results(hc_so_EGGvL1_wt,test="nameL1",which_model = "full",test_type = 'wt')
-#sleuth_significant_EGGvL1_wt <- dplyr::filter(sleuth_table_EGGvL1_wt, qval <= 0.05)
-#head(sleuth_significant_EGGvL1_wt, 100)
 
-
-
+# up
+sleuth_significant_EGGvL1_wt_up <- dplyr::filter(sleuth_table_EGGvL1_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_EGGvL1_wt_up,file="sleuth_table_EGGvL1_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_EGGvL1_wt_down <- dplyr::filter(sleuth_table_EGGvL1_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_EGGvL1_wt_down,file="sleuth_table_EGGvL1_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 
@@ -939,14 +1800,22 @@ hc_so_L1vSHL3 <- sleuth_lrt(hc_so_L1vSHL3, 'reduced', 'full')
 sleuth_table_L1vSHL3 <- sleuth_results(hc_so_L1vSHL3, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_L1vSHL3 <- dplyr::filter(sleuth_table_L1vSHL3, qval <= 0.05)
 #head(sleuth_significant_L1vSHL3, 20)
-
-write.table(sleuth_table_L1vSHL3,file="sleuth_table_L1vSHL3.txt",sep="\t",quote=FALSE, row.names=FALSE)
+#write.table(sleuth_table_L1vSHL3,file="sleuth_table_L1vSHL3.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 hc_so_L1vSHL3_wt<-sleuth_wt(hc_so_L1vSHL3,'nameSHL3',which_model = "full")
 sleuth_table_L1vSHL3_wt <- sleuth_results(hc_so_L1vSHL3_wt,test="nameSHL3",which_model = "full",test_type = 'wt')
-sleuth_significant_L1vSHL3_wt <- dplyr::filter(sleuth_table_L1vSHL3_wt, qval <= 0.05)
-#head(sleuth_significant_L1vSHL3_wt, 100)
+
+# up
+sleuth_significant_L1vSHL3_wt_up <- dplyr::filter(sleuth_table_L1vSHL3_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_L1vSHL3_wt_up,file="sleuth_table_L1vSHL3_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_L1vSHL3_wt_down <- dplyr::filter(sleuth_table_L1vSHL3_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_L1vSHL3_wt_down,file="sleuth_table_L1vSHL3_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
+
+
+
+
 
 
 
@@ -961,13 +1830,19 @@ sleuth_table_SHL3vEXL3 <- sleuth_results(hc_so_SHL3vEXL3, 'reduced:full', 'lrt',
 #sleuth_significant_SHL3vEXL3 <- dplyr::filter(sleuth_table_SHL3vEXL3, qval <= 0.05)
 #head(sleuth_significant_SHL3vEXL3, 20)
 
-write.table(sleuth_table_SHL3vEXL3,file="sleuth_table_SHL3vEXL3.txt",sep="\t",quote=FALSE, row.names=FALSE)
-
 
 hc_so_SHL3vEXL3_wt<-sleuth_wt(hc_so_SHL3vEXL3,'nameSHL3',which_model = "full")
 sleuth_table_SHL3vEXL3_wt <- sleuth_results(hc_so_SHL3vEXL3_wt,test="nameSHL3",which_model = "full",test_type = 'wt')
-sleuth_significant_SHL3vEXL3_wt <- dplyr::filter(sleuth_table_SHL3vEXL3_wt, qval <= 0.05)
-head(sleuth_significant_SHL3vEXL3_wt, 100)
+
+# up
+sleuth_significant_SHL3vEXL3_wt_up <- dplyr::filter(sleuth_table_SHL3vEXL3_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_SHL3vEXL3_wt_up,file="sleuth_table_SHL3vEXL3_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_SHL3vEXL3_wt_down <- dplyr::filter(sleuth_table_SHL3vEXL3_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_SHL3vEXL3_wt_down,file="sleuth_table_SHL3vEXL3_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
+
+
+
 
 
 # EXL3 vs L4
@@ -977,17 +1852,22 @@ hc_so_EXL3vL4 <- sleuth_fit(hc_so_EXL3vL4, ~name, 'full')
 hc_so_EXL3vL4 <- sleuth_fit(hc_so_EXL3vL4, ~1, 'reduced')
 hc_so_EXL3vL4 <- sleuth_lrt(hc_so_EXL3vL4, 'reduced', 'full')
 
-sleuth_table_EXL3vL4 <- sleuth_results(hc_so_EXL3vL4, 'reduced:full', 'lrt', show_all = FALSE)
+#sleuth_table_EXL3vL4 <- sleuth_results(hc_so_EXL3vL4, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_EXL3vL4 <- dplyr::filter(sleuth_table_EXL3vL4, qval <= 0.05)
 #head(sleuth_significant_EXL3vL4, 20)
-
-write.table(sleuth_table_EXL3vL4,file="sleuth_table_EXL3vL4.txt",sep="\t",quote=FALSE, row.names=FALSE)
+#write.table(sleuth_table_EXL3vL4,file="sleuth_table_EXL3vL4.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 hc_so_EXL3vL4_wt<-sleuth_wt(hc_so_EXL3vL4,'nameL4',which_model = "full")
 sleuth_table_EXL3vL4_wt <- sleuth_results(hc_so_EXL3vL4_wt,test="nameL4",which_model = "full",test_type = 'wt')
-sleuth_significant_EXL3vL4_wt <- dplyr::filter(sleuth_table_EXL3vL4_wt, qval <= 0.05)
-head(sleuth_significant_EXL3vL4_wt, 100)
+
+# up
+sleuth_significant_EXL3vL4_wt_up <- dplyr::filter(sleuth_table_EXL3vL4_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_EXL3vL4_wt_up,file="sleuth_table_EXL3vL4_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_EXL3vL4_wt_down <- dplyr::filter(sleuth_table_EXL3vL4_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_EXL3vL4_wt_down,file="sleuth_table_EXL3vL4_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
+
 
 
 
@@ -1000,17 +1880,22 @@ hc_so_L4vADULTM <- sleuth_fit(hc_so_L4vADULTM, ~name, 'full')
 hc_so_L4vADULTM <- sleuth_fit(hc_so_L4vADULTM, ~1, 'reduced')
 hc_so_L4vADULTM <- sleuth_lrt(hc_so_L4vADULTM, 'reduced', 'full')
 
-sleuth_table_L4vADULTM <- sleuth_results(hc_so_L4vADULTM, 'reduced:full', 'lrt', show_all = FALSE)
+#sleuth_table_L4vADULTM <- sleuth_results(hc_so_L4vADULTM, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_L4vADULTM <- dplyr::filter(sleuth_table_L4vADULTM, qval <= 0.05)
 #head(sleuth_significant_L4vADULTM, 20)
-
-write.table(sleuth_table_L4vADULTM,file="sleuth_table_L4vADULTM.txt",sep="\t",quote=FALSE, row.names=FALSE)
+#write.table(sleuth_table_L4vADULTM,file="sleuth_table_L4vADULTM.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 hc_so_L4vADULTM_wt<-sleuth_wt(hc_so_L4vADULTM,'nameL4',which_model = "full")
 sleuth_table_L4vADULTM_wt <- sleuth_results(hc_so_L4vADULTM_wt,test="nameL4",which_model = "full",test_type = 'wt')
-sleuth_significant_L4vADULTM_wt <- dplyr::filter(sleuth_table_L4vADULTM_wt, qval <= 0.05)
-head(sleuth_significant_L4vADULTM_wt, 100)
+
+
+# up
+sleuth_significant_L4vADULTM_wt_up <- dplyr::filter(sleuth_table_L4vADULTM_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_L4vADULTM_wt_up,file="sleuth_table_L4vADULTM_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_L4vADULTM_wt_down <- dplyr::filter(sleuth_table_L4vADULTM_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_L4vADULTM_wt_down,file="sleuth_table_L4vADULTM_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 
@@ -1023,17 +1908,25 @@ hc_so_L4vADULTF <- sleuth_fit(hc_so_L4vADULTF, ~name, 'full')
 hc_so_L4vADULTF <- sleuth_fit(hc_so_L4vADULTF, ~1, 'reduced')
 hc_so_L4vADULTF <- sleuth_lrt(hc_so_L4vADULTF, 'reduced', 'full')
 
-sleuth_table_L4vADULTF <- sleuth_results(hc_so_L4vADULTF, 'reduced:full', 'lrt', show_all = FALSE)
+#sleuth_table_L4vADULTF <- sleuth_results(hc_so_L4vADULTF, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_L4vADULTF <- dplyr::filter(sleuth_table_L4vADULTF, qval <= 0.05)
 #head(sleuth_significant_L4vADULTF, 20)
-
-write.table(sleuth_table_L4vADULTF,file="sleuth_table_L4vADULTF.txt",sep="\t",quote=FALSE, row.names=FALSE)
+#write.table(sleuth_table_L4vADULTF,file="sleuth_table_L4vADULTF.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 hc_so_L4vADULTF_wt<-sleuth_wt(hc_so_L4vADULTF,'nameL4',which_model = "full")
 sleuth_table_L4vADULTF_wt <- sleuth_results(hc_so_L4vADULTF_wt,test="nameL4",which_model = "full",test_type = 'wt')
-sleuth_significant_L4vADULTF_wt <- dplyr::filter(sleuth_table_L4vADULTF_wt, qval <= 0.05)
-head(sleuth_significant_L4vADULTF_wt, 100)
+
+# up
+sleuth_significant_L4vADULTF_wt_up <- dplyr::filter(sleuth_table_L4vADULTF_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_L4vADULTF_wt_up,file="sleuth_table_L4vADULTF_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_L4vADULTF_wt_down <- dplyr::filter(sleuth_table_L4vADULTF_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_L4vADULTF_wt_down,file="sleuth_table_L4vADULTF_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
+
+
+
+
 
 
 
@@ -1045,17 +1938,51 @@ hc_so_ADULTMvADULTF <- sleuth_fit(hc_so_ADULTMvADULTF, ~name, 'full')
 hc_so_ADULTMvADULTF <- sleuth_fit(hc_so_ADULTMvADULTF, ~1, 'reduced')
 hc_so_ADULTMvADULTF <- sleuth_lrt(hc_so_ADULTMvADULTF, 'reduced', 'full')
 
-sleuth_table_ADULTMvADULTF <- sleuth_results(hc_so_ADULTMvADULTF, 'reduced:full', 'lrt', show_all = FALSE)
+#sleuth_table_ADULTMvADULTF <- sleuth_results(hc_so_ADULTMvADULTF, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_ADULTMvADULTF <- dplyr::filter(sleuth_table_ADULTMvADULTF, qval <= 0.05)
 #head(sleuth_significant_ADULTMvADULTF, 20)
-
-write.table(sleuth_table_ADULTMvADULTF,file="sleuth_table_ADULTMvADULTF.txt",sep="\t",quote=FALSE, row.names=FALSE)
+#write.table(sleuth_table_ADULTMvADULTF,file="sleuth_table_ADULTMvADULTF.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 hc_so_ADULTMvADULTF_wt<-sleuth_wt(hc_so_ADULTMvADULTF,'nameADULT_M',which_model = "full")
 sleuth_table_ADULTMvADULTF_wt <- sleuth_results(hc_so_ADULTMvADULTF_wt,test="nameADULT_M",which_model = "full",test_type = 'wt')
-sleuth_significant_ADULTMvADULTF_wt <- dplyr::filter(sleuth_table_ADULTMvADULTF_wt, qval <= 0.05)
-head(sleuth_significant_ADULTMvADULTF_wt, 100)
+
+# up
+sleuth_significant_ADULTMvADULTF_wt_up <- dplyr::filter(sleuth_table_ADULTMvADULTF_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_ADULTMvADULTF_wt_up,file="sleuth_table_ADULTMvADULTF_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_ADULTMvADULTF_wt_down <- dplyr::filter(sleuth_table_ADULTMvADULTF_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_ADULTMvADULTF_wt_down,file="sleuth_table_ADULTMvADULTF_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
+
+
+#####–-------------- TESTING REVERSE, with female first and in model rather than male
+
+hc_so_ADULTMvADULTF	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="ADULT_M" | hc_metadata_L3fixed$name=="ADULT_F"),]
+hc_so_ADULTFvADULTM <- arrange(hc_so_ADULTMvADULTF, rev(rownames(hc_so_ADULTMvADULTF)))
+hc_so_ADULTFvADULTM <- sleuth_prep(hc_so_ADULTFvADULTM, extra_bootstrap_summary = TRUE,num_cores=1)
+hc_so_ADULTFvADULTM <- sleuth_fit(hc_so_ADULTFvADULTM, ~name, 'full')
+hc_so_ADULTFvADULTM <- sleuth_fit(hc_so_ADULTFvADULTM, ~1, 'reduced')
+hc_so_ADULTFvADULTM <- sleuth_lrt(hc_so_ADULTFvADULTM, 'reduced', 'full')
+
+
+hc_so_ADULTFvADULTM_wt<-sleuth_wt(hc_so_ADULTFvADULTM,'nameADULT_F',which_model = "full")
+sleuth_table_ADULTFvADULTM_wt <- sleuth_results(hc_so_ADULTFvADULTM_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
+
+# reverse
+hc_so_ADULTFvADULTM_wt<-sleuth_wt(hc_so_ADULTMvADULTF,'nameADULT_F',which_model = "full")
+sleuth_table_ADULTFvADULTM_wt <- sleuth_results(hc_so_ADULTFvADULTM_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
+
+# up
+sleuth_significant_ADULTFvADULTM_wt_up <- dplyr::filter(sleuth_table_ADULTFvADULTM_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_ADULTFvADULTM_wt_up,file="sleuth_table_ADULTFvADULTM_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_ADULTFvADULTM_wt_down <- dplyr::filter(sleuth_table_ADULTFvADULTM_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_ADULTFvADULTM_wt_down,file="sleuth_table_ADULTFvADULTM_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
+
+#####–-------------- TESTING REVERSE
+
+
+
 
 
 
@@ -1066,17 +1993,23 @@ hc_so_ADULTFvGUT <- sleuth_fit(hc_so_ADULTFvGUT, ~name, 'full')
 hc_so_ADULTFvGUT <- sleuth_fit(hc_so_ADULTFvGUT, ~1, 'reduced')
 hc_so_ADULTFvGUT <- sleuth_lrt(hc_so_ADULTFvGUT, 'reduced', 'full')
 
-sleuth_table_ADULTFvGUT <- sleuth_results(hc_so_ADULTFvGUT, 'reduced:full', 'lrt', show_all = FALSE)
+#sleuth_table_ADULTFvGUT <- sleuth_results(hc_so_ADULTFvGUT, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_ADULTFvGUT <- dplyr::filter(sleuth_table_ADULTFvGUT, qval <= 0.05)
 #head(sleuth_significant_ADULTFvGUT, 20)
+#write.table(sleuth_table_ADULTFvGUT,file="sleuth_table_ADULTFvGUT.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
-write.table(sleuth_table_ADULTFvGUT,file="sleuth_table_ADULTFvGUT.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
-
-#hc_so_ADULTFvGUT_wt<-sleuth_wt(hc_so_ADULTFvGUT,'nameADULT_F',which_model = "full")
-#sleuth_table_ADULTFvGUT_wt <- sleuth_results(hc_so_ADULTFvGUT_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
+hc_so_GUTvADULTF_wt<-sleuth_wt(hc_so_ADULTFvGUT,'nameGUT',which_model = "full")
+sleuth_table_GUTvADULTF_wt <- sleuth_results(hc_so_ADULTFvGUT_wt,test="nameGUT",which_model = "full",test_type = 'wt')
 #sleuth_significant_ADULTFvGUT_wt <- dplyr::filter(sleuth_table_ADULTFvGUT_wt, qval <= 0.05)
 #head(sleuth_significant_ADULTFvGUT_wt, 100)
+
+# up
+sleuth_significant_GUTvADULTF_wt_up <- dplyr::filter(sleuth_table_GUTvADULTF_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_GUTvADULTF_wt_up,file="sleuth_table_GUTvADULTF_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_GUTvADULTF_wt_down <- dplyr::filter(sleuth_table_GUTvADULTF_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_GUTvADULTF_wt_down,file="sleuth_table_GUTvADULTF_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
 
@@ -1089,17 +2022,23 @@ hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~name, 'full')
 hc_so_ADULTFvEGG <- sleuth_fit(hc_so_ADULTFvEGG, ~1, 'reduced')
 hc_so_ADULTFvEGG <- sleuth_lrt(hc_so_ADULTFvEGG, 'reduced', 'full')
 
-sleuth_table_ADULTFvEGG <- sleuth_results(hc_so_ADULTFvEGG, 'reduced:full', 'lrt', show_all = FALSE)
+#sleuth_table_ADULTFvEGG <- sleuth_results(hc_so_ADULTFvEGG, 'reduced:full', 'lrt', show_all = FALSE)
 #sleuth_significant_ADULTFvEGG <- dplyr::filter(sleuth_table_ADULTFvEGG, qval <= 0.05)
 #head(sleuth_significant_ADULTFvEGG, 20)
 
-write.table(sleuth_table_ADULTFvEGG,file="sleuth_table_ADULTFvEGG.txt",sep="\t",quote=FALSE, row.names=FALSE)
+#write.table(sleuth_table_ADULTFvEGG,file="sleuth_table_ADULTFvEGG.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
+hc_so_EGGvADULTF_wt	<-	sleuth_wt(hc_so_ADULTFvEGG,'nameEGG',which_model = "full")
+sleuth_table_EGGvADULTF_wt	<-	sleuth_results(hc_so_EGGvADULTF_wt,test="nameEGG",which_model = "full",test_type = 'wt')
+#sleuth_significant_EGGvADULTF_wt <- dplyr::filter(sleuth_table_EGGvADULTF_wt, qval <= 0.05)
+#head(sleuth_significant_EGGvADULTF_wt, 100)
+# up
+sleuth_significant_EGGvADULTF_wt_up <- dplyr::filter(sleuth_table_EGGvADULTF_wt, qval <= 0.01,b>=2)
+write.table(sleuth_significant_EGGvADULTF_wt_up,file="sleuth_table_EGGvADULTF_up.txt",sep="\t",quote=FALSE, row.names=FALSE)
+# down
+sleuth_significant_EGGvADULTF_wt_down <- dplyr::filter(sleuth_table_EGGvADULTF_wt, qval <= 0.01,b<=-2)
+write.table(sleuth_significant_EGGvADULTF_wt_down,file="sleuth_table_EGGvADULTF_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
-#hc_so_ADULTFvEGG	<-	sleuth_wt(hc_so_ADULTFvEGG,'name',which_model = "full")
-#sleuth_table_ADULTFvEGG_wt	<-	sleuth_results(hc_so_ADULTFvEGG_wt,test="nameADULT_F",which_model = "full",test_type = 'wt')
-#sleuth_significant_ADULTFvEGG_wt <- dplyr::filter(sleuth_table_ADULTFvEGG_wt, qval <= 0.05)
-#head(sleuth_significant_ADULTFvEGG_wt, 100)
 
 
 save.image(file = "hc_genome_kallisto.RData")
@@ -1628,6 +2567,153 @@ Fig - CLust - expression profiles across genome
 
 
 
+##########################################################################################
+# normalised gene expression per chromosome per lifestage
+##########################################################################################
+
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_28_Oct_18_1/Processed_Data
+
+#--- get mRNA sequences from gff
+ln -s ../../../../HCON_V4.renamed.gff3
+awk '$3=="mRNA" {print $1,$4,$5,$7,$9}' HCON_V4.renamed.gff3 > mRNA.coords
+
+#--- extract mRNA ids from normalised expresison dataset, and  pull coordinates
+cut -f1 all.tpm_processed.tsv | while read -r NAME; do grep "ID=${NAME};" mRNA.coords; done > coords
+echo -e "CHR\tSTART\tEND\tSTRAND\tID" > tmp; cat tmp coords > coords.tmp
+
+#--- merge coordinates and normalised expression data
+paste coords.tmp all.tpm_processed.tsv | sort -k1,1 -k2,2n > coords.tmp.txt
+
+#--- extract data per chromosome
+grep "hcontortus_chr1_Celeg_TT_arrow_pilon" coords.tmp.txt > chr1.coords.tmp.txt
+grep "hcontortus_chr2_Celeg_TT_arrow_pilon" coords.tmp.txt > chr2.coords.tmp.txt
+grep "hcontortus_chr3_Celeg_TT_arrow_pilon" coords.tmp.txt > chr3.coords.tmp.txt
+grep "hcontortus_chr4_Celeg_TT_arrow_pilon" coords.tmp.txt > chr4.coords.tmp.txt
+grep "hcontortus_chr5_Celeg_TT_arrow_pilon" coords.tmp.txt > chr5.coords.tmp.txt
+grep "hcontortus_chrX_Celeg_TT_arrow_pilon" coords.tmp.txt > chrX.coords.tmp.txt
+
+
+
+
+
+R-3.5.0
+library(ggplot2)
+library(patchwork)
+
+c1 <- read.table("chr1.coords.tmp.txt",header=F)
+c2 <- read.table("chr2.coords.tmp.txt",header=F)
+c3 <- read.table("chr3.coords.tmp.txt",header=F)
+c4 <- read.table("chr4.coords.tmp.txt",header=F)
+c5 <- read.table("chr5.coords.tmp.txt",header=F)
+cX <- read.table("chrX.coords.tmp.txt",header=F)
+
+
+egg_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V7),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V7),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V7),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V7),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V7),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V7),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("Egg")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+l1_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V8),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V8),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V8),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V8),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V8),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V8),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("L1")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+shl3_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V9),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V9),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V9),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V9),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V9),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V9),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("SHL3")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+exl3_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V10),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V10),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V10),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V10),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V10),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V10),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("EXL3")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+l4_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V11),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V11),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V11),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V11),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V11),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V11),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("L4")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+adultm_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V12),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V12),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V12),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V12),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V12),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V12),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("Adult Male")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+adultf_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V13),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V13),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V13),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V13),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V13),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V13),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("Adult Female")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+gut_plot <- ggplot()+
+		geom_jitter(aes(c1$V2,1,col=c1$V14),size=0.5)+
+		geom_jitter(aes(c2$V2,2,col=c2$V14),size=0.5)+
+		geom_jitter(aes(c3$V2,3,col=c3$V14),size=0.5)+
+		geom_jitter(aes(c4$V2,4,col=c4$V14),size=0.5)+
+		geom_jitter(aes(c5$V2,5,col=c5$V14),size=0.5)+
+		geom_jitter(aes(cX$V2,6,col=cX$V14),size=0.5)+
+		scale_colour_gradient2()+
+		scale_y_continuous(breaks=seq(1,6,1),trans = 'reverse')+
+		ggtitle("Adult Female Gut")+xlab("Genome position (bp)")+ylab("Normalised expression")+
+		theme_bw()
+
+
+#--- make plot
+egg_plot +
+l1_plot +
+shl3_plot +
+exl3_plot +
+l4_plot +
+adultm_plot +
+adultf_plot +
+gut_plot +
+plot_layout(ncol=2)
+
+
+
+
+
 
 # GO term analysis of cluster_stats
 
@@ -1768,6 +2854,31 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ---
 ## 05 - Splice Leader analyses
 
@@ -1818,9 +2929,9 @@ bsub.py --queue yesterday 1 merged_L4_SL2 ~sd21/bash_scripts/run_spliceleader_fi
 bsub.py --queue yesterday 1 merged_SHL3_SL2 ~sd21/bash_scripts/run_spliceleader_finder.sh merged_SHL3_SL2 $PWD/REF.fa $PWD/ANNOTATION.gff3 GGTTTTAACCCAGTATCTCAAG 10 /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R1.fastq.gz /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/merged_SHL3_R2.fastq.gz
 ```
 
-
+```shell
 awk '{if($6=="+" || $6=="-") print $0}' ${PREFIX}_transcript_start_windows.tmp.bed | sed 's/-[0-9][0-9]*/1/' transcript_start_windows.bed
-
+```
 
 
 Run subsequence analyses to collate and summarise data
@@ -1873,10 +2984,20 @@ cut -f1 -d "-" transcript_start_windows.SL2.genelist | sort | uniq | wc -l
 
 
 # #>> 3824 genes
+```
 
+
+# comparion SL counts per gene, to check coverage of genes that have both SL1 and SL2 sequences in reads
+paste SL1_transcript_start_windows.SL.coverage SL2_transcript_start_windows.SL.coverage > test
+awk '{if($7>0 || $17>0) print $7,$17}' OFS="\t" test > SL1v2_comparison.counts
+
+R.3.5.0
+a<-read.table("SL1v2_comparison.counts",header=F,sep="\t")
+ggplot(a,aes(log10(V1),log10(V2)))+geom_hex(bins = 30)+labs(x="Number of SL1 reads [log10(count)]", y="Number of SL2 reads [log10(count)]")
+ggplot(a,aes((V1+0.001),(V2+0.001)))+geom_hex(bins = 30)+labs(x="Number of SL1 reads [log10(count)]", y="Number of SL2 reads [log10(count)]")+scale_y_log10()+scale_x_log10()
 ##########################################################################################
 # distance and density of genes, and their relationship between SL1 and SL2
-
+```shell
 
 
 awk -F '[\t=;]' '{if($3=="mRNA" && $7=="+") print $1,$4,$5,$10,$6,$7}' OFS="\t" ANNOTATION.gff3 | sort -k1,1 -k2,2n > transcripts.pos_strand.bed
@@ -2041,7 +3162,7 @@ ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa RE
 ```
 
 Need to make a gtf of the annotation and curate it for leafcutter
-```
+```shell
 # make gtf from gff
 gffread -T -g REF.fa -o ANNOTATION.gtf ANNOTATION.gff3
 
@@ -2630,3 +3751,44 @@ echo "total significant introns"; \
 awk '{if($6<0.05) print $0}' ${i}/*cov30_cluster_significance.txt | wc -l; \
 echo " "
 done
+
+
+# calculate the number of genes in total impacted by differential splicing
+
+cat LC_*/*cov30_cluster_significance.txt | awk '{if($6<0.05) print }' | cut -f7 | sed 's/,/\n/g' | sort | uniq | wc -l
+1055
+
+
+
+
+
+
+# Motif enrichment in 5' utr
+
+
+dreme -o cluster_10_DREMEOUT -p cluster_10.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_10_DREMEOUT/FIMO cluster_10_DREMEOUT/dreme.txt cluster_10.single_transcript.5UTR.100bp.fa
+dreme -o cluster_11_DREMEOUT -p cluster_11.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_11_DREMEOUT/FIMO cluster_11_DREMEOUT/dreme.txt cluster_11.single_transcript.5UTR.100bp.fa
+dreme -o cluster_12_DREMEOUT -p cluster_12.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_12_DREMEOUT/FIMO cluster_12_DREMEOUT/dreme.txt cluster_12.single_transcript.5UTR.100bp.fa
+dreme -o cluster_13_DREMEOUT -p cluster_13.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_13_DREMEOUT/FIMO cluster_13_DREMEOUT/dreme.txt cluster_13.single_transcript.5UTR.100bp.fa
+dreme -o cluster_14_DREMEOUT -p cluster_14.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_14_DREMEOUT/FIMO cluster_14_DREMEOUT/dreme.txt cluster_14.single_transcript.5UTR.100bp.fa
+dreme -o cluster_15_DREMEOUT -p cluster_15.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_15_DREMEOUT/FIMO cluster_15_DREMEOUT/dreme.txt cluster_15.single_transcript.5UTR.100bp.fa
+dreme -o cluster_16_DREMEOUT -p cluster_16.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_16_DREMEOUT/FIMO cluster_16_DREMEOUT/dreme.txt cluster_16.single_transcript.5UTR.100bp.fa
+dreme -o cluster_17_DREMEOUT -p cluster_17.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_17_DREMEOUT/FIMO cluster_17_DREMEOUT/dreme.txt cluster_17.single_transcript.5UTR.100bp.fa
+dreme -o cluster_18_DREMEOUT -p cluster_18.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_18_DREMEOUT/FIMO cluster_18_DREMEOUT/dreme.txt cluster_18.single_transcript.5UTR.100bp.fa
+dreme -o cluster_19_DREMEOUT -p cluster_19.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_19_DREMEOUT/FIMO cluster_19_DREMEOUT/dreme.txt cluster_19.single_transcript.5UTR.100bp.fa
+dreme -o cluster_1_DREMEOUT -p cluster_1.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_1_DREMEOUT/FIMO cluster_1_DREMEOUT/dreme.txt cluster_1.single_transcript.5UTR.100bp.fa
+dreme -o cluster_2_DREMEOUT -p cluster_2.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_2_DREMEOUT/FIMO cluster_2_DREMEOUT/dreme.txt cluster_2.single_transcript.5UTR.100bp.fa
+dreme -o cluster_3_DREMEOUT -p cluster_3.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_3_DREMEOUT/FIMO cluster_3_DREMEOUT/dreme.txt cluster_3.single_transcript.5UTR.100bp.fa
+dreme -o cluster_4_DREMEOUT -p cluster_4.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_4_DREMEOUT/FIMO cluster_4_DREMEOUT/dreme.txt cluster_4.single_transcript.5UTR.100bp.fa
+dreme -o cluster_5_DREMEOUT -p cluster_5.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_5_DREMEOUT/FIMO cluster_5_DREMEOUT/dreme.txt cluster_5.single_transcript.5UTR.100bp.fa
+dreme -o cluster_6_DREMEOUT -p cluster_6.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_6_DREMEOUT/FIMO cluster_6_DREMEOUT/dreme.txt cluster_6.single_transcript.5UTR.100bp.fa
+dreme -o cluster_7_DREMEOUT -p cluster_7.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_7_DREMEOUT/FIMO cluster_7_DREMEOUT/dreme.txt cluster_7.single_transcript.5UTR.100bp.fa
+dreme -o cluster_8_DREMEOUT -p cluster_8.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_8_DREMEOUT/FIMO cluster_8_DREMEOUT/dreme.txt cluster_8.single_transcript.5UTR.100bp.fa
+dreme -o cluster_9_DREMEOUT -p cluster_9.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_9_DREMEOUT/FIMO cluster_9_DREMEOUT/dreme.txt cluster_9.single_transcript.5UTR.100bp.fa
+
+
+
+
+
+
+for i in *.single_transcript.list ; do for j in $( cut -c-13 ${i} | sort | uniq ); do MOTIF=$( grep "${j}" ${i%.single_transcript.list}_DREMEOUT/FIMO/fimo.tsv | cut -f1 | sort | uniq | awk 'BEGIN { ORS = "," } { print }'); echo -e "${j}\t${MOTIF}" ; done >> ${i%.single_transcript.list}.genes.motifs ; done
