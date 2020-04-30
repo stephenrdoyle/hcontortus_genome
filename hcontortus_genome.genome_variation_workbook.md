@@ -8,6 +8,205 @@
 
 
 
+# Get Raw data
+```shell
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW
+
+for i in 16693_1#1 16693_2#1 16720_1#1 16720_2#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#2 16693_2#2 16720_1#2 16720_2#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#3 16693_2#3 16720_1#3 16720_2#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#4 16693_2#4 16720_1#4 16720_2#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#5 16693_2#5 16720_1#5 16720_2#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#6 16693_2#6 16720_1#6 16720_2#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#7  16693_2#7  16720_1#7  16720_2#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#8  16693_2#8  16720_1#8  16720_2#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#9  16693_2#9  16720_1#9  16720_2#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#10  16693_2#10  16720_1#10  16720_2#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#11  16693_2#11  16720_1#11  16720_2#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#12  16693_2#12  16720_1#12  16720_2#12; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#13  16693_2#13  16720_1#13  16720_2#13; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#14  16693_2#14  16720_1#14  16720_2#14; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#15  16693_2#15  16720_1#15  16720_2#15; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#16  16693_2#16  16720_1#16  16720_2#16; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#17  16693_2#17  16720_1#17  16720_2#17; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#18  16693_2#18  16720_1#18  16720_2#18; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#19  16693_2#19  16720_1#19  16720_2#19; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#20  16693_2#20  16720_1#20  16720_2#20; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#21  16693_2#21  16720_1#21  16720_2#21; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#22  16693_2#22  16720_1#22  16720_2#22; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#23  16693_2#23  16720_1#23  16720_2#23; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 16693_1#24  16693_2#24  16720_1#24  16720_2#24; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 21766_7#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 20601_8#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#34  15150_2#34  16553_1#34  16553_2#34; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#35  15150_2#35  16553_1#35  16553_2#35; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#36  15150_2#36  16553_1#36  16553_2#36; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#19  15150_2#19  16553_1#19  16553_2#19; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#20  15150_2#20  16553_1#20  16553_2#20; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#21  15150_2#21  16553_1#21  16553_2#21; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#22  15150_2#22  16553_1#22  16553_2#22; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#23  15150_2#23  16553_1#23  16553_2#23; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#24  15150_2#24  16553_1#24  16553_2#24; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#25  15150_2#25  16553_1#25  16553_2#25; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#26  15150_2#26  16553_1#26  16553_2#26; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#27  15150_2#27  16553_1#27  16553_2#27; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#28  15150_2#28  16553_1#28  16553_2#28; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#29  15150_2#29  16553_1#29  16553_2#29; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#30  15150_2#30  16553_1#30  16553_2#30; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#31  15150_2#31  16553_1#31  16553_2#31; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#32  15150_2#32  16553_1#32  16553_2#32; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15150_1#33  15150_2#33  16553_1#33  16553_2#33; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#1  15045_2#1  16552_1#1  16552_2#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#2  15045_2#2  16552_1#2  16552_2#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#3  15045_2#3  16552_1#3  16552_2#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#4  15045_2#4  16552_1#4  16552_2#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#5  15045_2#5  16552_1#5  16552_2#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#6  15045_2#6  16552_1#6  16552_2#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#7  15045_2#7  16552_1#7  16552_2#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#8  15045_2#8  16552_1#8  16552_2#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#9  15045_2#9  16552_1#9  16552_2#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#10  15045_2#10  16552_1#10  16552_2#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#11  15045_2#11  16552_1#11  16552_2#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#12  15045_2#12  16552_1#12  16552_2#12; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#13  15045_2#13  16552_1#13  16552_2#13; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#14  15045_2#14  16552_1#14  16552_2#14; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+for i in 15045_1#15  15045_2#15  16552_1#15  16552_2#15; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
+```
+
+
+# mapping
+```shell
+#--- run_bwamem_splitter automatically submits jobs to LSF, so no need to bsub it. Will slowly work though the list when running screen
+#--- samples_lanes.list was curated in excel (See: "Genome_paper_population_diversity_samples.xls"), but is a tab delimited text file containing sample name
+ and sequencing lane ID for all samples to be mapped
+# CH_SWI_001	16693_1#13
+# CH_SWI_001	16693_2#13
+# CH_SWI_001	16720_1#13
+# CH_SWI_001	16720_2#13
+# CH_SWI_002	16693_1#14
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING
+
+echo "while read name lane; do \
+~sd21/bash_scripts/run_bwamem_splitter $"{name}"_$"{lane}" /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW/$"{lane}"_1.fastq.gz \
+/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW/$"{lane}"_2.fastq.gz; \
+done < /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/samples_lanes.list" > run_mapping
+chmod a+x run_mapping
+screen
+./run_mapping &
+
+
+
+GB_IRE_002_20601_8_5_bwasplitter_out
+PK_PAK_011_15045_1_11_bwasplitter_out
+PK_PAK_011_15045_2_11_bwasplitter_out
+PK_PAK_011_16552_1_11_bwasplitter_out
+
+
+
+
+
+# merge bams
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING
+
+echo "while read name lane; do ls -1 $"{name}"_*_out/$"{name}"*merged.sorted.marked.bam > $"{name}".bamlist ; \
+samtools-1.3 merge -c -b $"{name}".bamlist $"{name}".merge.bam; done < ../samples_lanes.list" > run_merge
+
+chmod a+x run_merge
+
+bsub.py --queue yesterday 5 merge_bams ./run_merge
+
+
+# cleanup
+mkdir BAM_STATS
+mv *out/*stat* BAM_STATS/
+rm -r *out
+
+
+
+# getting reads from guillumes global data
+cd /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223
+
+cat /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223/*.list > /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/samples.bamlist
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/
+
+while read list; do name=$( echo ${list} | cut -f 2 -d "." ); samtools view -ub --threads 4 ${list} | samtools sort -n - | samtools fastq -1 ${name}.R1.fast
+q.gz -2 ${name}.R2.fastq.gz - ; done < samples.bamlist  &
+
+
+
+# extracting name and lane IDs from Guillaumes BAM files
+while read file; do
+name=$( echo ${file} | cut -f 2 -d "." )
+lane=$( samtools view -H $file | grep map_splitter | cut -f3 | awk -F " " '{print $NF}' | awk -F "/" '{print $NF}' | sed -e 's/_2.fastq.gz//g' )
+echo -e "$name\t$lane" >> sample_lanes.list;
+done < samples.bamlist
+
+
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW
+while read sample lane; do pathfind -t lane -i $lane --symlink ./ --rename --filetype fastq ; done < ../sample_lanes.list
+
+
+cd ..
+
+sort sample_lanes.list | uniq -c | awk '{print $2,$3}' OFS="\t" | sed -e "s/\#/_/g" > sample_lanes.list2
+
+mkdir MAPPING
+cd MAPPING
+
+echo "while read name lane; do \
+~sd21/bash_scripts/run_bwamem_splitter $"{name}"_$"{lane}" /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
+/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW/$"{lane}"_1.fastq.gz \
+/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW/$"{lane}"_2.fastq.gz; \
+done < /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/sample_lanes.list2" > run_mapping
+
+chmod a+x run_mapping
+./run_mapping
+
+
+# looks like some samples failed to map properly, which I think is due to hitting a memory limit. To check and print the suspect dirs, will check to see if 
+the flagstat file is made
+# in this case, 870 samples were ok, 170 failed
+
+for i in *out; do if [ ! -f ${i}/*flag* ]; then echo ${i} ; fi; done | wc -l
+
+#--- once happy those samples are no good, remove them with a modification to the above script, and then restart mapping
+
+for i in *out; do if [ ! -f ${i}/*flag* ]; then rm -r ${i} ; fi; done
+
+# merge bams
+cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/MAPPING
+
+echo "while read name lane; do ls -1 $"{name}"_*_out/$"{name}"*merged.sorted.marked.bam > $"{name}".bamlist ; \
+samtools merge --threads 7 -c -b $"{name}".bamlist $"{name}".merge.bam; done < ../sample_lanes.list2" > run_merge
+
+chmod a+x run_merge
+
+bsub.py --queue yesterday 1 --threads 7 merge_bams ./run_merge
+
+# cleanup
+mkdir BAM_STATS
+mv *out/*stat* BAM_STATS/
+rm -r *out
+```
+
+
 
 
 ```shell
@@ -1119,7 +1318,7 @@ hcontortus_chrX_Celeg_TT_arrow_pilon	0.000517191	0.000393264	0.000722199
 
 
 
-
+```
 # R-3.4.0
 # library(ggplot2)
 # library(patchwork)		
@@ -1144,7 +1343,7 @@ hcontortus_chrX_Celeg_TT_arrow_pilon	0.000517191	0.000393264	0.000722199
 #
 #
 # div_plot + fst_plot + bz_plot + plot_layout(ncol = 1)
-
+```
 
 ```shell
 cd /nfs/users/nfs_s/sd21/lustre118_link/play
