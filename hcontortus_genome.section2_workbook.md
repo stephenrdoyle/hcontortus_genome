@@ -3,7 +3,7 @@
 
 1. [Genome graph of chromosomes and haplotypes](#genomegraph)
 2. [Haplotype density and distribution](#haplotypes)
-3. [Haplotype swithcing between individuals](#haploswitching)
+3. [Haplotype switching between individuals](#haploswitching)
 3. [Repeat analyses](#repeats)
 4. []()
 5. []()
@@ -12,7 +12,7 @@
 8.
 
 
-
+## 1. 
 
 
 

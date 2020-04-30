@@ -4,16 +4,17 @@
 1. [Genome assembly](#genome)
 2. [Completion of X chromosome](#xchromosome)
 3. [Genome polishing](#polishing)
-3. [Circos plot - Figure 1A](#circos)
-4. [Orthology conservation and order per chromosome - Figure 1B top and bottom](#orthology)
-5. [Microsynteny](#microsynteny)
-6. [Genome stats](#genomestats)
-7. [Genome completeness - CEGMA & BUSCO](#cegmabusco)
-8. [Comparative analysis of the NZ Haemonchus genome](#nzgenome)
+4. [Circos plot - Figure 1A](#circos)
+5. [Orthology conservation and order per chromosome - Figure 1B top and bottom](#orthology)
+6. [Microsynteny](#microsynteny)
+7. [Genome stats](#genomestats)
+8. [Genome completeness - CEGMA & BUSCO](#cegmabusco)
+9. [Comparative analysis of the NZ Haemonchus genome](#nzgenome)
 
 
 
-## Genome assembly
+******
+## Genome assembly <a name="genome"></a>
 From the paper:
 
 Initial manual improvement on the V1 genome focused on iterative scaffolding with SSPACE (Boetzer et al., 2011) and gap-filling with IMAGE (Tsai et al., 2010) using Illumina 500 bp and 3 kbp libraries, with additional low coverage data from 3, 8 and 20 kbp libraries generated using Roche 454 sequencing. These improvements were performed alongside breaking of discordant joins using Reapr (Hunt et al., 2013), and visual inspection using Gap5 (Bonfield and Whitwham, 2010). Substantial genetic variation was present in the sequence data due to the sequencing of DNA derived from a pool of individuals, resulting in a high frequency of haplotypes that assembled separately and therefore present as multiple copies of unique regions in the assembly. We surmised that much of the assembly fragmentation was due to the scaffolding tools not being able to deal with the changing rates of haplotypic variation so we attempted to solve this manually in gap5. We were aware that we did not have sufficient information to correctly phase these haplotypes, so instead, we chose the longest scaffold paths available, accepting that our scaffolds would not represent single haplotypes but would rather be an amalgamation of haplotypes representing single chromosomal regions. This approach was initially difficult and time-consuming, and was further confounded by a large number of repetitive sequences present in each haplotype.
@@ -25,8 +26,9 @@ Subsequent integration of PacBio long-read data alongside the optical mapping da
 The increase in contiguity and resolution of shorter repetitive regions using PacBio began to reveal chromosome-specific repetitive units. Although these repeats were highly collapsed in the assembly and were typically not spanned by optical molecules, we were able to iteratively identify and join contigs/scaffolds flanking large tandem repeats that had clear read-pair evidence that they only occurred in a single location in the genome (i.e. read pairs were all mapped locally once the join was made). These were further supported by local assemblies of subsets of PacBio reads that contained copies of the repeat regions followed by de novo assembly using canu (Koren et al., 2017) to reconstruct the flanking unique regions surrounding a repeat. This iterative process resulted in the production of chromosome-scale scaffolds, each terminating with a 6 bp repeat consistent with being a telomeric sequence (sequence motif: TTAGGC).
 
 
-
-## Completion of the X chromosome
+[↥ **Back to top**](#top)
+******
+## Completion of the X chromosome <a name="xchromosome"></a>
 The V3 version of the genome consisted of assembled autosomes, however, the X chromosome was still in pieces that to date were not resolved, althoguh we had a good idea of what pieces were left in the assembly that belonged in the X chromosome based on male vs female coverage.
 
 >hcontortus_6_chrX_Celeg_Ta  
@@ -77,20 +79,57 @@ LINKS -f xchr_TaTb_plus_bits.sized.renamed.fa -s empty.fof -k 15 -b xchr_TaTb_pl
 
 
 
-### Chromosome Colours to be used throughout the paper
+[↥ **Back to top**](#top)
+******
+## 3. Polishing <a name="polishing"></a>
+### Arrow
+Used Shane McCarthy's run-arrow
+```shell
+# run Arrow
+prepend_path PERL5LIB /software/vertres/runner/modules
+prepend_path PATH /software/vertres/runner/scripts
+
+run-arrow +loop 60 +mail sd21 +maxjobs 1000 +retries 4 -a HAEM_V4.fa -f /nfs/users/nfs_s/sd21/lustre118_link/hc/raw/pacbio/bams.fofn -o ./POLISH_ARROW_HcV4
 ```
-c1 = 178,24,43  #b2182b
-c2 = 252,141,89   #fc8d59
-c3 = 254,224,144  #fee090
-c4 = 209,229,240  #d1e5f0
-c5 = 103,169,207  #67a9cf
-c6 = 69,117,180  #4575b4
+
+### Pilon
+Used the output of arrow as input for pilon 
+```shell
+# map reads from single worm to reference
+~sd21/bash_scripts/run_bwamem_splitter Pilon_prep_singlefemale2HaemV4 $PWD/HAEM_V4_arrow.fa $PWD/single_adult_female_19220_merge_R1.fq $PWD/single_adult_female_19220_merge_R2.fq
+
+# run Pilon
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POLISH/POLISH_ARROW_HcV4_haplo_contam
+
+java -Xmx200G -jar /nfs/users/nfs_s/sd21/lustre118_link/software/GENOME_IMPROVEMENT/pilon-1.22/pilon-1.22.jar --genome HAEM_V4_arrow.fa --bam Pilon_prep_singlefemale2HaemV4.merged.sorted.marked.bam --fix all --verbose --diploid --changes --chunksize 1000000 --nostrays --threads 30
 ```
 
 
 
+ [↥ **Back to top**](#top)
+ ******
+## 4. Circos plot - Figure 1A <a name="circos"></a>
+```shell   
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/CIRCOS
+
+# get data
+ln -s ../REF/HAEM_V4_final.chr.fa
+ln -s ../../../REFERENCE_SEQUENCES/caenorhabditis_elegans/caenorhabditis_elegans.PRJNA13758.WBPS9.genomic_softmasked.fa
+
+# run promer
+promer --mum --prefix Ce_V_HcV4 caenorhabditis_elegans.PRJNA13758.WBPS9.genomic_softmasked.fa HAEM_V4_final.chr.fa
+
+# run James' nucmer to circos params script
+perl /nfs/users/nfs_j/jc17/bin/Nucmer.2.circos.pl --promer --ref_order=relw --debug --ribbons --coord-file Ce_V_HcV4.coords --flipquery --no_ref_labels --no_query_labels --colour_links_by_query --min_chr_len=20000 --min_hit_len=10000
+
+# run circos
+perl /nfs/users/nfs_j/jc17/software/circos-0.67-pre5/bin/circos
+```
 
 
+
+[↥ **Back to top**](#top)
+******
 ## 5. Microsynteny
 
 ### comparing runs of syntenic orthologs between c. elegans and h. contortus  
