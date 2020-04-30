@@ -135,3 +135,34 @@ ggsave("chr_v_haplo_dotter_chr5_5k.pdf",height=3,width=3,useDingbats = FALSE)
 ### save image
 save.image(file="hcontortus_genome.workbook.Rdata")
 ```
+
+
+
+
+
+
+
+# synteny
+
+# --- comparing runs of syntenic orthologs between c. elegans and h. contortus  
+./run_jc_syntenychecker.sh rerun
+
+for i in `ls rerun* | sort -V `; do grep --with-filename "SC" ${i}; done | sed -e 's/:/\t/g' -e 's/rerun_//g' -e 's/_genes_detailed_table//g' > colinear_genes.data
+
+library(ggplot2)
+a<-read.table("colinear_genes.data",header=F)
+b<-a[a$V1>=5,]
+
+chr.labels <- c("1","2","3","4","5", "X")
+names(chr.labels) <- c("hcontortus_chr1_Celeg_TT_arrow_pilon","hcontortus_chr2_Celeg_TT_arrow_pilon","hcontortus_chr3_Celeg_TT_arrow_pilon","hcontortus_chr4_Celeg_TT_arrow_pilon","hcontortus_chr5_Celeg_TT_arrow_pilon","hcontortus_chrX_Celeg_TT_arrow_pilon")
+
+ggplot(b)+
+     geom_rect(aes(xmin=V3/10E5,ymin=0,xmax=V4/10E5,ymax=1,fill=factor(V1)))+
+     facet_grid(V2~.,switch="y",labeller = labeller(V2 = chr.labels))+
+     scale_fill_brewer(palette="Reds")+
+     labs(x="Genomic position (Mb)",fill="Colinear genes (n)") +
+     theme_classic()+
+     theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+ggsave("colinear_genes_per_chromosome.pdf")
