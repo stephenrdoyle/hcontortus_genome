@@ -43,8 +43,17 @@ The V3 version of the genome consisted of assembled autosomes, however, the X ch
 
 
 #
+
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/FIX_XCHR
+
+
+
+# get barcodes 10X reads
+
 barcoded.fastq.gz -> /lustre/scratch118/infgen/team133/sd21/hc/10X_genomics/chromium/hc_inbred/hc_inbred/outs/barcoded.fastq.gz
 
+# note - to get the barcoded.fastq.gz, needed to run 10X longranger , eg.
+bsub.py --queue yesterday --threads 4 10 hc_fq /nfs/users/nfs_s/sd21/lustre118_link/software/10X_GENOMICS/longranger-2.1.2/longranger basic --id=hc_inbred --fastqs=/nfs/users/nfs_s/sd21/lustre118_link/hc/10X_genomics/chromium/hc_inbred --readgroup=hc_inbred --localcores=4
 
 # map reads
 bwa mem \
@@ -54,7 +63,7 @@ samtools-1.3 view -Sb - |\
 samtools-1.3 sort -n -o ./CHROMIUM-sorted.bam -
 
 
-
+# make a bam list from the mapped reads
 ls -1 CHROMIUM-sorted.bam > bam.list
 
 # run ARCS
