@@ -1,26 +1,23 @@
+# Haemonchus genome paper
+## Section 2: Resolving haplotypic diversity and repeat distribution within the chromosomes
+
+1. [Genome graph of chromosomes and haplotypes](#genomegraph)
+2. [Haplotype density and distribution](#haplotypes)
+3. [Haplotype swithcing between individuals](#haploswitching)
+3. [Repeat analyses](#repeats)
+4. []()
+5. []()
+6. []()
+7. []()
+8.
 
 
 
 
-# Section 1 - Chromosome diversity
 
 
+## 2. Haplotype density and distribution <a name="haplotypes"></a>
 
-
-### Chromosome Colours to be used throughout the paper
-```
-c1 = 178,24,43  #b2182b
-c2 = 252,141,89   #fc8d59
-c3 = 254,224,144  #fee090
-c4 = 209,229,240  #d1e5f0
-c5 = 103,169,207  #67a9cf
-c6 = 69,117,180  #4575b4
-```
-
-
-
-
-### R commands for generating the circos plot
 ```R
 R
 load(file = "hcontortus_genome.workbook.Rdata")
@@ -94,75 +91,3 @@ dev.off()
 ```
 
 ![Figure 1 - circos plot](04_analysis/figure1_circos.png)
-
-Figure 1 - circos plot
-
-
-
-
-## Haplotypes - dotplots of chromosomes vs haplotypes
-```R
-#
-R
-# R-3.5.0
-load(file = "hcontortus_genome.workbook.Rdata")
-setwd("02_data/")
-
-library(ggplot2)
-
-
-
-chr1_dotter<-read.table("hcontortus_chr1_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
-chr2_dotter<-read.table("hcontortus_chr2_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
-chr3_dotter<-read.table("hcontortus_chr3_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
-chr4_dotter<-read.table("hcontortus_chr4_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
-chr5_dotter<-read.table("hcontortus_chr5_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
-chrX_dotter<-read.table("hcontortus_chrX_Celeg_TT_arrow_pilon_vs_HAEM_V4_final.haplocomtam_only_renamed.layout.txt")
-
-dat<-chr5_dotter
-dat<-dat[dat$V17 > 5000, ]
-tdat<-dat[dat$V17 > 5000,  ]
-
-vdat<-aggregate(dat$V5, by=list(dat$V4), max)
-
-ggplot()+
-  geom_point(data=dat,aes(y=V2/1e6, x=V5/1e6, colour=V7),size=0.5)+
-  theme_bw()+theme(legend.position="none")+xlim(0,50)
-ggsave("chr_v_haplo_dotter_chr5_5k.pdf",height=3,width=3,useDingbats = FALSE)
-
-
-
-### save image
-save.image(file="hcontortus_genome.workbook.Rdata")
-```
-
-
-
-
-
-
-
-# synteny
-
-# --- comparing runs of syntenic orthologs between c. elegans and h. contortus  
-./run_jc_syntenychecker.sh rerun
-
-for i in `ls rerun* | sort -V `; do grep --with-filename "SC" ${i}; done | sed -e 's/:/\t/g' -e 's/rerun_//g' -e 's/_genes_detailed_table//g' > colinear_genes.data
-
-library(ggplot2)
-a<-read.table("colinear_genes.data",header=F)
-b<-a[a$V1>=5,]
-
-chr.labels <- c("1","2","3","4","5", "X")
-names(chr.labels) <- c("hcontortus_chr1_Celeg_TT_arrow_pilon","hcontortus_chr2_Celeg_TT_arrow_pilon","hcontortus_chr3_Celeg_TT_arrow_pilon","hcontortus_chr4_Celeg_TT_arrow_pilon","hcontortus_chr5_Celeg_TT_arrow_pilon","hcontortus_chrX_Celeg_TT_arrow_pilon")
-
-ggplot(b)+
-     geom_rect(aes(xmin=V3/10E5,ymin=0,xmax=V4/10E5,ymax=1,fill=factor(V1)))+
-     facet_grid(V2~.,switch="y",labeller = labeller(V2 = chr.labels))+
-     scale_fill_brewer(palette="Reds")+
-     labs(x="Genomic position (Mb)",fill="Colinear genes (n)") +
-     theme_classic()+
-     theme(axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank())
-ggsave("colinear_genes_per_chromosome.pdf")

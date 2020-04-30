@@ -29,21 +29,22 @@ The increase in contiguity and resolution of shorter repetitive regions using Pa
 ## Completion of the X chromosome
 The V3 version of the genome consisted of assembled autosomes, however, the X chromosome was still in pieces that to date were not resolved, althoguh we had a good idea of what pieces were left in the assembly that belonged in the X chromosome based on male vs female coverage.
 
->hcontortus_6_chrX_Celeg_Ta
->hcontortus_7_chrX_Celeg_Tb
+>hcontortus_6_chrX_Celeg_Ta  
+>hcontortus_7_chrX_Celeg_Tb  
 
->CONTAM_scf7180000021165
->CONTAM_scf7180000022481
->CONTAM_scf7180000025901#1
->U_alt_001073
->U_Celeg_1_Poss_join_XTb
->U_Contig4229_quiver
->U_Contig986_quiver
->U_contig_no_celeg_promer_poss_join_XTa
+>CONTAM_scf7180000021165  
+>CONTAM_scf7180000022481  
+>CONTAM_scf7180000025901#1  
+>U_alt_001073  
+>U_Celeg_1_Poss_join_XTb  
+>U_Contig4229_quiver  
+>U_Contig986_quiver  
+>U_contig_no_celeg_promer_poss_join_XTa  
+
+
 
 ```shell
 #
-
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/FIX_XCHR
 
 
@@ -53,7 +54,7 @@ working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/FIX_XCHR
 barcoded.fastq.gz -> /lustre/scratch118/infgen/team133/sd21/hc/10X_genomics/chromium/hc_inbred/hc_inbred/outs/barcoded.fastq.gz
 
 # note - to get the barcoded.fastq.gz, needed to run 10X longranger , eg.
-bsub.py --queue yesterday --threads 4 10 hc_fq /nfs/users/nfs_s/sd21/lustre118_link/software/10X_GENOMICS/longranger-2.1.2/longranger basic --id=hc_inbred --fastqs=/nfs/users/nfs_s/sd21/lustre118_link/hc/10X_genomics/chromium/hc_inbred --readgroup=hc_inbred --localcores=4
+/nfs/users/nfs_s/sd21/lustre118_link/software/10X_GENOMICS/longranger-2.1.2/longranger basic --id=hc_inbred --fastqs=/nfs/users/nfs_s/sd21/lustre118_link/hc/10X_genomics/chromium/hc_inbred --readgroup=hc_inbred --localcores=4
 
 # map reads
 bwa mem \
@@ -72,4 +73,59 @@ ls -1 CHROMIUM-sorted.bam > bam.list
 
 # run LINKS
 LINKS -f xchr_TaTb_plus_bits.sized.renamed.fa -s empty.fof -k 15 -b xchr_TaTb_plus_bits.sized.renamed.fa.scaff_s95_c3_l0_d0_e50000_r0.05_original -l 1 -t 2 -a 0.9 -v 1
+```
+
+
+
+### Chromosome Colours to be used throughout the paper
+```
+c1 = 178,24,43  #b2182b
+c2 = 252,141,89   #fc8d59
+c3 = 254,224,144  #fee090
+c4 = 209,229,240  #d1e5f0
+c5 = 103,169,207  #67a9cf
+c6 = 69,117,180  #4575b4
+```
+
+
+
+
+
+## 5. Microsynteny
+
+### comparing runs of syntenic orthologs between c. elegans and h. contortus  
+```shell
+working dir:
+
+# run James' synteny checker script
+./run_jc_syntenychecker.sh rerun
+
+for i in `ls rerun* | sort -V `; do grep --with-filename "SC" ${i}; done | sed -e 's/:/\t/g' -e 's/rerun_//g' -e 's/_genes_detailed_table//g' > colinear_genes.data
+```
+
+```R
+# load libraries
+library(ggplot2)
+
+# import data
+data<-read.table("colinear_genes.data",header=F)
+
+# extract colinear genesets with 5 or more genes
+data2<-data[data$V1>=5,]
+
+# fix labels for facet grid
+chr.labels <- c("1","2","3","4","5", "X")
+names(chr.labels) <- c("hcontortus_chr1_Celeg_TT_arrow_pilon","hcontortus_chr2_Celeg_TT_arrow_pilon","hcontortus_chr3_Celeg_TT_arrow_pilon","hcontortus_chr4_Celeg_TT_arrow_pilon","hcontortus_chr5_Celeg_TT_arrow_pilon","hcontortus_chrX_Celeg_TT_arrow_pilon")
+
+# make plot
+ggplot(data2)+
+     geom_rect(aes(xmin=V3/10E5,ymin=0,xmax=V4/10E5,ymax=1,fill=factor(V1)))+
+     facet_grid(V2~.,switch="y",labeller = labeller(V2 = chr.labels))+
+     scale_fill_brewer(palette="Reds")+
+     labs(x="Genomic position (Mb)",fill="Colinear genes (n)") +
+     theme_classic()+
+     theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+ggsave("colinear_genes_per_chromosome.pdf")
 ```
