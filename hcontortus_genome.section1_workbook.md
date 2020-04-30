@@ -41,7 +41,7 @@ The V3 version of the genome consisted of assembled autosomes, however, the X ch
 >U_Contig986_quiver
 >U_contig_no_celeg_promer_poss_join_XTa
 
-
+```shell
 #
 
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/FIX_XCHR
@@ -72,3 +72,4 @@ ls -1 CHROMIUM-sorted.bam > bam.list
 
 # run LINKS
 LINKS -f xchr_TaTb_plus_bits.sized.renamed.fa -s empty.fof -k 15 -b xchr_TaTb_plus_bits.sized.renamed.fa.scaff_s95_c3_l0_d0_e50000_r0.05_original -l 1 -t 2 -a 0.9 -v 1
+```
