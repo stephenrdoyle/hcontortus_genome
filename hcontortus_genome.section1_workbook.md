@@ -81,7 +81,7 @@ LINKS -f xchr_TaTb_plus_bits.sized.renamed.fa -s empty.fof -k 15 -b xchr_TaTb_pl
 
 [↥ **Back to top**](#top)
 ******
-## 3. Polishing <a name="polishing"></a>
+## Polishing <a name="polishing"></a>
 ### Arrow
 Used Shane McCarthy's run-arrow
 ```shell
@@ -93,7 +93,7 @@ run-arrow +loop 60 +mail sd21 +maxjobs 1000 +retries 4 -a HAEM_V4.fa -f /nfs/use
 ```
 
 ### Pilon
-Used the output of arrow as input for pilon 
+Used the output of arrow as input for pilon
 ```shell
 # map reads from single worm to reference
 ~sd21/bash_scripts/run_bwamem_splitter Pilon_prep_singlefemale2HaemV4 $PWD/HAEM_V4_arrow.fa $PWD/single_adult_female_19220_merge_R1.fq $PWD/single_adult_female_19220_merge_R2.fq
@@ -108,7 +108,8 @@ java -Xmx200G -jar /nfs/users/nfs_s/sd21/lustre118_link/software/GENOME_IMPROVEM
 
  [↥ **Back to top**](#top)
  ******
-## 4. Circos plot - Figure 1A <a name="circos"></a>
+## Circos plot - Figure 1A <a name="circos"></a>
+Using circos to highlight broad chromosomal similarities between Haemonchus and Celegans
 ```shell   
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/CIRCOS
 
@@ -130,11 +131,11 @@ perl /nfs/users/nfs_j/jc17/software/circos-0.67-pre5/bin/circos
 
 [↥ **Back to top**](#top)
 ******
-## 5. Microsynteny
+## Microsynteny <a name="microsynteny"></a>
 
-### comparing runs of syntenic orthologs between c. elegans and h. contortus  
+### Comparing runs of syntenic orthologs between C. elegans and H. contortus  
 ```shell
-working dir:
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/ORTHOLOGY/SYNTENY
 
 # run James' synteny checker script
 ./run_jc_syntenychecker.sh rerun
@@ -142,15 +143,16 @@ working dir:
 for i in `ls rerun* | sort -V `; do grep --with-filename "SC" ${i}; done | sed -e 's/:/\t/g' -e 's/rerun_//g' -e 's/_genes_detailed_table//g' > colinear_genes.data
 ```
 
+Load R
 ```R
 # load libraries
 library(ggplot2)
 
 # import data
-data<-read.table("colinear_genes.data",header=F)
+data <- read.table("colinear_genes.data",header=F)
 
 # extract colinear genesets with 5 or more genes
-data2<-data[data$V1>=5,]
+data2 <- data[data$V1>=5,]
 
 # fix labels for facet grid
 chr.labels <- c("1","2","3","4","5", "X")
@@ -166,5 +168,6 @@ ggplot(data2)+
      theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
+        
 ggsave("colinear_genes_per_chromosome.pdf")
 ```

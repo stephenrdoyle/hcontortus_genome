@@ -12,7 +12,32 @@
 8.
 
 
-## 1. 
+## 1. Genome graph of chromosomes and haplotypes <a name="genomegraph"></a>
+
+```shell
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GRAPH/MINIGRAPH
+
+# get genomes
+ln -s ../../REF/HAEM_V4_final.chr.fa
+ln -s ../../REF/HAEM_V4_final.haplocomtam_only.fa
+
+
+# run minigraph
+/nfs/users/nfs_s/sd21/lustre118_link/software/GENOME_GRAPH/minigraph/minigraph -xggs -t16 HAEM_V4_final.chr.fa HAEM_V4_final.haplocomtam_only.fa > out.gfa
+
+# The GFA can be visualised using bandage
+
+# want to show an example of haplotypic diversity. Extracted a random haplotype on chromosome X and saved it as "test_X_other.fa"
+
+# run Nucmer
+nucmer --maxmatch --coords -p other HAEM_V4_final.chr.fa test_X_other.fa
+show-coords -lTH other.delta | grep "chrX" | awk '{if($1>=7300000 && $2<=7500000) print }' > nucmer_other_GR.out
+
+# get genome annotation for visualisation in genome ribbons
+awk '{if($1=="hcontortus_chrX_Celeg_TT_arrow_pilon" && $3=="exon" && $4>=7300000 && $5<7400000) print $1,$4,$5,$9,".",$7,$3}' OFS="\t" haemonchus_contortus.PRJEB506.WBPS13.annotations.gff3 > chrX.exons.bed
+
+# used "nucmer_other_GR.out" and "chrX.exons.bed" as input to genome ribbon
+
 
 
 
