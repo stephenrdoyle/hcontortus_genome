@@ -1172,7 +1172,7 @@ colnames(chromosome)<-c("chromosome_ID")
 
 data <- gff[grep(mrna_id$mrna_data.unique_ID, gff$info), ]
 
-# filter by feature type
+# filter by feature type 
 cds <- data[data$feature=="CDS",]
 mrna <- data[data$feature=="mRNA",]
 #gene <- data[data$feature=="gene",]
