@@ -3,11 +3,13 @@
 This repository contains data and the analysis workflow for the manuscript "Extensive genomic and transcriptomic variation defines
 the chromosome-scale assembly of *Haemonchus contortus*, a model gastrointestinal worm" (in review).
 
-Preprint available here: https://www.biorxiv.org/content/10.1101/616672v3
+Preprint available here: https://doi.org/10.1101/2020.02.18.945246
 
 Final paper available here: (when it is published...)
 
 Code for the analysis is here:
+
+Any reuse of data or code is encouraged with due acknowledgement, either via citation of the published manuscript (when available) and/or GitHub repository. Comments, suggestions, and discussion are welcome.
 
 ## Abstract
 ### Background
@@ -18,3 +20,10 @@ Here, we report using PacBio long read and OpGen and 10X Genomics long-molecule 
 
 ### Conclusions
 The *H. contortus* MHco3(ISE).N1 genome assembly presented here represents one of the most contiguous and resolved nematode assemblies outside of the Caenorhabditis genus to date, together with one of the highest-quality set of predicted gene features. These data provide a high-quality comparison for understanding the evolution and genomics of Caenorhabditis and other nematodes and extends the experimental tractability of this model parasitic nematode in understanding pathogen biology, drug discovery and vaccine development, as well as important adaptive traits such as drug resistance.
+
+
+
+
+******
+## License
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons Licence" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
