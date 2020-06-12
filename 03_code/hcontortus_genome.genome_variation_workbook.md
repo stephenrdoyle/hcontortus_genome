@@ -180,7 +180,7 @@ chmod a+x run_mapping
 ./run_mapping
 
 
-# looks like some samples failed to map properly, which I think is due to hitting a memory limit. To check and print the suspect dirs, will check to see if 
+# looks like some samples failed to map properly, which I think is due to hitting a memory limit. To check and print the suspect dirs, will check to see if
 the flagstat file is made
 # in this case, 870 samples were ok, 170 failed
 
@@ -1686,18 +1686,19 @@ coverage_plot <- ggplot(data,aes(V4,V8))+
      labs(x="Log10(median) coverage of 100,000 bp window of Chr 1",y="Log10(median) coverage of 100,000 bp window of Chr X")+
      theme_bw()
 
-
-
-
 variance_plot <- ggplot(data,aes(x=reorder(V2,(V10-V9)/(V6-V5),FUN = median),y=(V10-V9)/(V6-V5)))+
      geom_boxplot()+
      geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
      geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
-     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX[Q3 - Q1] / chr1[Q3 - Q1])")+
+     labs(x="Country",y="Coverage variance between chr X and chr1")+
      theme_bw()
 
 
 coverage_plot + variance_plot + plot_layout(ncol=2)
+ggsave("X-to_autosome_coverage_ratio.pdf", useDingbats=F)
+
+
+
 
 
 
@@ -1705,7 +1706,7 @@ a_plot <-ggplot(data,aes(x=reorder(V2,(V6-V5),FUN = median),y=(V6-V5)))+
      geom_boxplot()+
      geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
      geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
-     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX[Q3 - Q1] / chr1[Q3 - Q1])")+
+     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX / chr1)")+
      theme_bw()
 
 
