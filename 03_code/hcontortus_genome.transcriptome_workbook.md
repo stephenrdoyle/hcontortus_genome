@@ -361,11 +361,6 @@ cat repeats_vs_cds.out |  awk '{if($4 >= 95){print$1}}' | sort > genes_to_remove
 
 
 
-
-
-
-
-
 cat freq_filtered_transcripts.list genes_to_remove.txt | sort -V | uniq -c | awk '{if($1=="1") print $2}' > filtered_transcripts_to_keep.list
 
 
@@ -637,6 +632,45 @@ awk '{print $1,$2}' OFS="\t" HAEM_V4_final.chr.fa.fai >chromosome_size.list
 samtools-1.3 index -b fl-nfl.merged.bam
 /software/pathogen/external/apps/usr/local/Python-2.7.13/bin//bam2wig.py -i fl-nfl.merged.bam -s chromosome_size.list -o fl-nfl_bam2wig_out
 
+
+
+
+#-----------------------------------------------------------------------------------------
+# Running IsoSeq3 pipeline
+#-----------------------------------------------------------------------------------------
+
+# Step 1: run ccs
+# --- rawdata
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/RAW
+
+ls -1 *.subreads.bam > bams.list
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/POOLED
+
+samtools merge -b bams.list merged_subreads.bam
+
+bsub.py --queue long --threads 10 3 01_ccs_pool "ccs merged_subreads.bam merged_subreads.ccs.bam  --noPolish --minPasses 1 --numThreads 10"
+
+
+# Step 2. run lima
+bsub.py --threads 7 1 02_lima_pool "lima merged_subreads.ccs.bam primers.fa merged_subreads.demux.bam --isoseq --no-pbi --num-threads 7";
+
+
+# Step 3. run isoseq3 cluster
+for i in *.demux.primer_5p--primer_3p.bam; do
+bsub.py --threads 7 2 03_isoseq3_cluster "isoseq3 cluster ${i} ${i%.demux.primer_5p--primer_3p.bam}.isoseq3_unpolished.bam --verbose --num-threads 7";
+done
+
+
+# Step4. run isoseq3 polish
+for i in *isoseq3_unpolished.bam; do
+bsub.py --threads 7 10 04_isoseq3_polish "isoseq3 polish ${i} ${i%.isoseq3_unpolished.bam}*subreads.bam ${i%.isoseq3_unpolished.bam}.isoseq3_polished.bam --verbose --num-threads 7";
+done
+
+
+# Step 5 . summarise data
+for i in *.isoseq3_polished.bam; do
+isoseq3 summarize $i $(i}.summary.csv; done
 
 
 
@@ -1172,7 +1206,7 @@ colnames(chromosome)<-c("chromosome_ID")
 
 data <- gff[grep(mrna_id$mrna_data.unique_ID, gff$info), ]
 
-# filter by feature type 
+# filter by feature type
 cds <- data[data$feature=="CDS",]
 mrna <- data[data$feature=="mRNA",]
 #gene <- data[data$feature=="gene",]
