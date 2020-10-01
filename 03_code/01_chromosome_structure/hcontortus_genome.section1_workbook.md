@@ -49,28 +49,25 @@ The V3 version of the genome consisted of assembled autosomes, however, the X ch
 #
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/FIX_XCHR
 
-
-
 # get barcodes 10X reads
-
 barcoded.fastq.gz -> /lustre/scratch118/infgen/team133/sd21/hc/10X_genomics/chromium/hc_inbred/hc_inbred/outs/barcoded.fastq.gz
 
 # note - to get the barcoded.fastq.gz, needed to run 10X longranger , eg.
-/nfs/users/nfs_s/sd21/lustre118_link/software/10X_GENOMICS/longranger-2.1.2/longranger basic --id=hc_inbred --fastqs=/nfs/users/nfs_s/sd21/lustre118_link/hc/10X_genomics/chromium/hc_inbred --readgroup=hc_inbred --localcores=4
+longranger-2.1.2/longranger basic --id=hc_inbred --fastqs=/nfs/users/nfs_s/sd21/lustre118_link/hc/10X_genomics/chromium/hc_inbred --readgroup=hc_inbred --localcores=4
 
 # map reads
 bwa mem \
--t 30 xchr_TaTb_plus_bits.sized.renamed.fa \
--p CHROMIUM_interleaved.fastq |\
-samtools-1.3 view -Sb - |\
-samtools-1.3 sort -n -o ./CHROMIUM-sorted.bam -
+     -t 30 xchr_TaTb_plus_bits.sized.renamed.fa \
+     -p CHROMIUM_interleaved.fastq |\
+     samtools-1.3 view -Sb - |\
+     samtools-1.3 sort -n -o ./CHROMIUM-sorted.bam -
 
 
 # make a bam list from the mapped reads
 ls -1 CHROMIUM-sorted.bam > bam.list
 
 # run ARCS
-~sd21/lustre118_link/software/10X_GENOMICS/arcs/Arcs/arcs -f xchr_TaTb_plus_bits.sized.renamed.fa -a bam.list -s 95 -c 3 -l 0 -z 500 -m 5-10000 -d 0 -e 50000 -r 0.05 -i 16 -v 1
+arcs -f xchr_TaTb_plus_bits.sized.renamed.fa -a bam.list -s 95 -c 3 -l 0 -z 500 -m 5-10000 -d 0 -e 50000 -r 0.05 -i 16 -v 1
 
 
 # run LINKS
@@ -84,6 +81,7 @@ LINKS -f xchr_TaTb_plus_bits.sized.renamed.fa -s empty.fof -k 15 -b xchr_TaTb_pl
 ## Polishing <a name="polishing"></a>
 ### Arrow
 Used Shane McCarthy's run-arrow
+
 ```shell
 # run Arrow
 prepend_path PERL5LIB /software/vertres/runner/modules
@@ -96,12 +94,23 @@ run-arrow +loop 60 +mail sd21 +maxjobs 1000 +retries 4 -a HAEM_V4.fa -f /nfs/use
 Used the output of arrow as input for pilon
 ```shell
 # map reads from single worm to reference
+
 ~sd21/bash_scripts/run_bwamem_splitter Pilon_prep_singlefemale2HaemV4 $PWD/HAEM_V4_arrow.fa $PWD/single_adult_female_19220_merge_R1.fq $PWD/single_adult_female_19220_merge_R2.fq
 
 # run Pilon
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POLISH/POLISH_ARROW_HcV4_haplo_contam
 
-java -Xmx200G -jar /nfs/users/nfs_s/sd21/lustre118_link/software/GENOME_IMPROVEMENT/pilon-1.22/pilon-1.22.jar --genome HAEM_V4_arrow.fa --bam Pilon_prep_singlefemale2HaemV4.merged.sorted.marked.bam --fix all --verbose --diploid --changes --chunksize 1000000 --nostrays --threads 30
+
+java -Xmx200G -jar pilon-1.22/pilon-1.22.jar \   
+     --genome HAEM_V4_arrow.fa \
+     --bam Pilon_prep_singlefemale2HaemV4.merged.sorted.marked.bam \
+     --fix all \
+     --verbose \
+     --diploid \
+     --changes \
+     --chunksize 1000000 \
+     --nostrays \
+     --threads 30
 ```
 
 
@@ -125,57 +134,19 @@ perl /nfs/users/nfs_j/jc17/bin/Nucmer.2.circos.pl --promer --ref_order=relw --de
 
 # run circos
 perl /nfs/users/nfs_j/jc17/software/circos-0.67-pre5/bin/circos
+
+# this generated the circos plot used in Figure 1a. Note that I modified in conf file manually to include the correct chromosome colours as shown in the manuscript
 ```
 
 
 
 [↥ **Back to top**](#top)
+
+
 ******
 ## Microsynteny <a name="microsynteny"></a>
 
-### Comparing runs of syntenic orthologs between C. elegans and H. contortus  
-```shell
-working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/ORTHOLOGY/SYNTENY
-
-# run James' synteny checker script
-./run_jc_syntenychecker.sh rerun
-
-for i in `ls rerun* | sort -V `; do grep --with-filename "SC" ${i}; done | sed -e 's/:/\t/g' -e 's/rerun_//g' -e 's/_genes_detailed_table//g' > colinear_genes.data
-```
-
-Load R
-```R
-# load libraries
-library(ggplot2)
-
-# import data
-data <- read.table("colinear_genes.data",header=F)
-
-# extract colinear genesets with 5 or more genes
-data2 <- data[data$V1>=5,]
-
-# fix labels for facet grid
-chr.labels <- c("1","2","3","4","5", "X")
-names(chr.labels) <- c("hcontortus_chr1_Celeg_TT_arrow_pilon","hcontortus_chr2_Celeg_TT_arrow_pilon","hcontortus_chr3_Celeg_TT_arrow_pilon","hcontortus_chr4_Celeg_TT_arrow_pilon","hcontortus_chr5_Celeg_TT_arrow_pilon","hcontortus_chrX_Celeg_TT_arrow_pilon")
-
-# make plot
-ggplot(data2)+
-     geom_rect(aes(xmin=V3/10E5,ymin=0,xmax=V4/10E5,ymax=1,fill=factor(V1)))+
-     facet_grid(V2~.,switch="y",labeller = labeller(V2 = chr.labels))+
-     scale_fill_brewer(palette="Reds")+
-     labs(x="Genomic position (Mb)",fill="Colinear genes (n)") +
-     theme_classic()+
-     theme(axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank())
-
-ggsave("colinear_genes_per_chromosome.pdf")
-```
-
-
-
-#
-
+### Compare conservation of orthologs between Ce and Hc chromosomes
 ```bash
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/ORTHOLOGY/SYNTENY
 
@@ -201,27 +172,24 @@ awk -F '[\t;]' '$3=="mRNA" {print $1,$4,$5,$7,$9}' OFS="\t" hc.gff3 | sed 's/ID=
 while read HC_ID CE_ID; do COORDS1=$( grep ${HC_ID} hc.gff.coords); COORDS2=$( grep ${CE_ID} ce.gff.coords); echo -e "${COORDS1}\t${COORDS2}"; done <hc_ce_1to1.list > hc_ce_1to1.hccoords
 sort -k1,1 -k2,2n hc_ce_1to1.hccoords | awk '{if($2+0==$2 && $7+0==$7) print $0}' > hc_ce_1to1.coords.chrsorted
 
-
-
 # count the number of concordant vs non concordant chromosomal orthologs
 cut -f1,6 hc_ce_1to1.coords.chrsorted | sort | uniq -c | awk '{print $2,$3,$1}' OFS="\t" > hc_ce_orthologcount_perchr.txt
 ```
 
 
 
-# Make the plot - Figure 1 b
+### Make the plot - Figure 1 b
 ```R
-# load
-R-3.5.0
+# load libraries
 library(ggplot2)
 library(patchwork)
 library(dplyr)
 
+# load data
+data <- read.table("hc_ce_orthologcount_perchr.txt",header=F)
+data.1 <- data %>% group_by(V1) %>%  mutate(per=paste0(round(V3/sum(V3)*100, 2), "%")) %>% ungroup
+
 # plot number of genes per chromosome
-data<-read.table("hc_ce_orthologcount_perchr.txt",header=F)
-data.1<- data %>% group_by(V1) %>%  mutate(per=paste0(round(V3/sum(V3)*100, 2), "%")) %>% ungroup
-
-
 plot1<- ggplot(data,aes(data$V2,data$V3,group=data$V1))+
 	geom_bar(aes(fill=data$V2), stat = "identity", position = "dodge")+
 	theme_bw()+
@@ -314,7 +282,7 @@ paste <(echo "$distHc") <(echo "$dirHc") <(echo "$distCe") <(echo "$dirCe")  <(e
 
 
 
-#––––––– PLAY
+#
 for i in *.offset; do \
 distSP1=$( awk '{print ($12+($13-$12))-($2+($3-$2))}' ${i} )
 dirSP1=$(awk '{print $4"_"$14}' ${i})
@@ -334,22 +302,27 @@ paste <(echo "$distSP1") <(echo "$dirSP1") <(echo "$distSP2") <(echo "$dirSP2") 
 
 ```
 
-# plot pairwise distance between orthologs comparing position on Ce with position on Hc chromosomes
+
+### make plot - Supplementary Figure 3b
 ```R
+# plot pairwise distance between orthologs comparing position on Ce with position on Hc chromosomes
+
+# # load libraries
 library(ggplot2)
 library(patchwork)
 library(ggExtra)
 
-
+# included this to as example of loading individual chromosomes. Did not use this in the paper, but explored the data
 #data_1<-read.table("hc_ce_1to1.coords.chr1.sorted.plotdata_V2", header=F)
 #data_1<-read.table("hc_ce_1to1.coords.chr2.sorted.plotdata_V2", header=F)
 #data_1<-read.table("hc_ce_1to1.coords.chr3.sorted.plotdata_V2", header=F)
 #data_1<-read.table("hc_ce_1to1.coords.chr4.sorted.plotdata_V2", header=F)
 #data_1<-read.table("hc_ce_1to1.coords.chr5.sorted.plotdata_V2", header=F)
+
+# load data
 data <-read.table("all.plotdata_V2", header=F)
 
 # correlations
-
 small <- data[abs(data$V3) < 100000 & abs(data$V1) < 100000,]
 large <- data[abs(data$V3) > 100000 & abs(data$V1) > 100000,]
 
@@ -364,36 +337,43 @@ cor.test((abs(large$V1)),(abs(large$V3)),method=c("spearman"))
 
 small_lm<-lm(abs(small$V3)~abs(small$V1))
 
-
-plot<-ggplot(data,aes((abs(V1)),(abs(V3)),colour = factor(V5)))+
+#plot
+plot <- ggplot(data,aes((abs(V1)),(abs(V3)),colour = factor(V5)))+
 			geom_point(alpha=0.5)+
 			scale_x_log10(limits=c(1E2,5E7))+scale_y_log10(limits=c(1E2,5E7))+
 			theme_bw()+theme(legend.position = "bottom")+
 			labs(x="Distance between H. contortus orthologs (Log10[bp])", y="Distance between C. elegans orthologs (Log10[bp])")
 
-plot2<-ggMarginal(plot,groupFill = TRUE, groupColour = TRUE,type = "histogram",binwidth = 0.05)
+plot2 <- ggMarginal(plot,groupFill = TRUE, groupColour = TRUE,type = "histogram",binwidth = 0.05)
 plot2
+
 ggsave(plot=plot2,"Hc_Ce_pairwise_ortholog_distance.pdf",useDingbats=FALSE)
 
-# used as Supplementary Figure 3b
 ```
 
 
 
 
-
-### plot proportion of gene arrangements for distances less than 100kbp vs all
+### make plot - Supplementary Figure 3c
 ```R
+# plot proportion of gene arrangements for distances less than 100kbp vs all
+
+# load libraries
+library(reshape2)
+library(ggplot2)
+
+# proportions determined - just reformat for plotting
 hc_100 <- c(0.434196891,0.428497409,0.137305699)
-hc_all<-c(0.306791955,0.311407847,0.381800198)
+hc_all <- c(0.306791955,0.311407847,0.381800198)
 data<-rbind(hc_100,hc_all)
 colnames(data)<-c("Conserved","Reorientated","Recombined")
 
-library(reshape2)
+
 data<- melt(data)
 
 col<-c("#2600FF","#FF0000","#00FF00")
 
+#plot
 ggplot(data,aes(x=Var1,y=value,fill=Var2))+
 	geom_bar(stat="identity",position=position_dodge())+
 	labs(x="Pairwise ortholog order between H. contortus and C. elegans",y="Proportion of total")+
@@ -402,8 +382,6 @@ ggplot(data,aes(x=Var1,y=value,fill=Var2))+
 	theme(legend.position = "")+
 	theme_bw()
 ggsave("hc_ce_ortholog_summary_proportions.pdf")
-
-# used as Supplementary Figure 3c
 ```
 
 
@@ -418,17 +396,20 @@ perl /nfs/users/nfs_j/jc17/bin/SyntenyChecker.pl --A_chr_col=0 --A_pos_col=1 --B
 done
 ```
 
-### in R
+### make plot - Supplementary Figure 3d
 ```R
+# load libraries
 library(reshape2)
 library(ggplot2)
 library(ggrepel)
 
+# manually made the table, using the data from the synteny counter output.
 colinear <- c(3040,1405,652,303,131,53,22,9,1)
 mixed <- c(3020,4649,5396,5739,5905,5977,6002,6009,6011)
 gene_window <-c(2,3,4,5,6,7,8,9,10)
 data<-data.frame(cbind(gene_window,colinear,mixed))
 
+# plot
 ggplot(data,aes(gene_window,((colinear/(colinear+mixed))*100),label=colinear))+
 	geom_line()+
 	geom_point()+
@@ -439,7 +420,6 @@ ggplot(data,aes(gene_window,((colinear/(colinear+mixed))*100),label=colinear))+
 
 ggsave("hc_ce_ortholog_colinear_counts.pdf")
 
-# used as Supplementary Figure 3d
 ```
 
 ### determine distribution of pairwise distances across Hc and Ce genomes
@@ -456,9 +436,11 @@ cat *ceonly > ceonly_increment_pairs
 
 #in R
 ```R
+# load libraries
 library(ggplot2)
 library(patchwork)
 
+# load data
 ce <- read.table("ceonly_increment_pairs",header=F)
 ce$species <- "ce"
 
@@ -467,7 +449,7 @@ hc$species <- "hc"
 
 data <- rbind(hc,ce)
 
-# distribution of ortholog distances
+# plot distributions on chromosomes by species
 a<-ggplot(data,aes((V5-V2),col=species))+geom_density()
 b<-ggplot(data,aes(log10(V5-V2),col=species))+geom_density()
 a+b+plot_layout(ncol=2)
@@ -477,4 +459,47 @@ a+b+plot_layout(ncol=2)
 ggplot(data,aes(V2,log10(V5-V2),col=species))+geom_point()+facet_grid(V1~.)
 
 # didnt use this in the paper in the end
+```
+
+
+
+
+
+### Comparing the length of runs of syntenic orthologs between C. elegans and H. contortus  
+```shell
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/ORTHOLOGY/SYNTENY
+
+# run James' synteny checker script
+./run_jc_syntenychecker.sh rerun
+
+for i in `ls rerun* | sort -V `; do grep --with-filename "SC" ${i}; done | sed -e 's/:/\t/g' -e 's/rerun_//g' -e 's/_genes_detailed_table//g' > colinear_genes.data
+```
+
+### Make plot - Supplementary Figure 3e
+```R
+# load libraries
+library(ggplot2)
+
+# import data
+data <- read.table("colinear_genes.data",header=F)
+
+# extract colinear genesets with 5 or more genes
+data2 <- data[data$V1>=5,]
+
+# fix labels for facet grid
+chr.labels <- c("1","2","3","4","5", "X")
+names(chr.labels) <- c("hcontortus_chr1_Celeg_TT_arrow_pilon","hcontortus_chr2_Celeg_TT_arrow_pilon","hcontortus_chr3_Celeg_TT_arrow_pilon","hcontortus_chr4_Celeg_TT_arrow_pilon","hcontortus_chr5_Celeg_TT_arrow_pilon","hcontortus_chrX_Celeg_TT_arrow_pilon")
+
+# make plot
+ggplot(data2)+
+     geom_rect(aes(xmin=V3/10E5,ymin=0,xmax=V4/10E5,ymax=1,fill=factor(V1)))+
+     facet_grid(V2~.,switch="y",labeller = labeller(V2 = chr.labels))+
+     scale_fill_brewer(palette="Reds")+
+     labs(x="Genomic position (Mb)",fill="Colinear genes (n)") +
+     theme_classic()+
+     theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+ggsave("colinear_genes_per_chromosome.pdf")
 ```
