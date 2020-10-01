@@ -503,3 +503,67 @@ ggplot(data2)+
 
 ggsave("colinear_genes_per_chromosome.pdf")
 ```
+
+
+## BUSCO and CEGMA
+
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENOME_QC
+
+I have some scripts I use to run BUSCO and CEGMA shown below. Both tools were run on
+- V4 genome
+- V4 haplotype genome
+- V1 genome
+- McMaster genome
+- NZ genome 
+
+
+run_busco_nematode.sh
+```bash
+
+#!/usr/local/bin/bash
+
+# run nematode busco
+
+export AUGUSTUS_CONFIG_PATH=/nfs/users/nfs_s/sd21/software/augustus-3.2.1/config
+
+PREFIX=$1
+REF=$2
+
+
+/nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/busco_v3/scripts/run_BUSCO.py \
+--in ${REF} \
+--out ${PREFIX} \
+--mode genome \
+--lineage_path /nfs/users/nfs_s/sd21/databases/busco/nematoda_odb9 \
+--species caenorhabditis \
+--cpu 8 --force --restart --long --blast_single_core \
+--tmp_path ${REF}.tmp
+```
+
+run_cegma.sh
+```bash
+#!/usr/local/bin/bash
+
+# run cegma
+
+export CEGMA=/nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/CEGMA_v2.5
+export CEGMATMP=$PWD/tmp
+export PERL5LIB=$PERL5LIB:$CEGMA/lib
+
+
+PREFIX=$1
+REF=$2
+
+
+# Step 1: fix fasta
+
+#fastaq enumerate_names --suffix ${PREFIX} ${REF} REF.fa.tmp
+#fastaq acgtn_only REF.fa.tmp REF.fa
+#rm REF.fa.tmp
+#cp $REF REF.fa
+awk '/^>/{print ">sequence" ++i; next}{print}' < ${REF} > REF.fa
+
+# Step 2: run cegma
+/nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/CEGMA_v2.5/bin/cegma --genome REF.fa --output ${PREFIX} --verbose --threads 1
+
+```
