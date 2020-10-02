@@ -4,16 +4,15 @@
 1. [Genome assembly](#genome)
 2. [Completion of X chromosome](#xchromosome)
 3. [Genome polishing](#polishing)
-4. [Synteny]()
-     * [Chromosomal]()
-          * [Figure 1a](figure1a)
-          * [Supplementary Figure 3b](#figureS2b)
-     * [Microsynteny](#microsynteny)
-          * [Figure 1b](#figure1b)
-          * [Supplementary Figure 3b](#figureS3b)
-          * [Supplementary Figure 3c](#figureS3c)
-          * [Supplementary Figure 3d](#figureS3d)
-          * [Supplementary Figure 3e](#figureS3e)
+4. [Chromosomal](#chromosomesynteny)
+     * [Figure 1a](#figure1a)
+     * [Supplementary Figure 3b](#figureS2b)
+5. [Microsynteny](#microsynteny)
+     * [Figure 1b](#figure1b)
+     * [Supplementary Figure 3b](#figureS3b)
+     * [Supplementary Figure 3c](#figureS3c)
+     * [Supplementary Figure 3d](#figureS3d)
+     * [Supplementary Figure 3e](#figureS3e)
 8. [Genome completeness - CEGMA & BUSCO](#cegmabusco)
      * [Supplementary Figure 4](#figureS4)
 7. [Repeats](#repeats)
@@ -87,7 +86,7 @@ LINKS -f xchr_TaTb_plus_bits.sized.renamed.fa -s empty.fof -k 15 -b xchr_TaTb_pl
 
 [↥ **Back to top**](#top)
 ******
-## Polishing <a name="polishing"></a>
+## Genome Polishing <a name="polishing"></a>
 ### Arrow
 Used Shane McCarthy's run-arrow
 
@@ -126,8 +125,8 @@ java -Xmx200G -jar pilon-1.22/pilon-1.22.jar \
 
  [↥ **Back to top**](#top)
  ******
-## Chromosomal synteny using CIRCOS <a name="figure1a"></a>
-## <a name="circos"></a>
+## Chromosomal synteny <a name="chromosomesynteny"></a>
+### CIRCOS <a name="figure1a"></a>
 Using circos to highlight broad chromosomal similarities between Haemonchus and Celegans
 ```shell   
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/CIRCOS
