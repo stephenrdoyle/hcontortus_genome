@@ -8,7 +8,7 @@ Preprint available here: https://doi.org/10.1101/2020.02.18.945246
 Final paper available here: (when it is published...)
 
 Code for the analysis is here:
-- Section 1: Chromosome structure of *Haemonchus contortus*
+- [Section 1: Chromosome structure of *Haemonchus contortus*](03_code/hcontortus_genome.section1_workbook.md)
 - Section 2: Resolving haplotypic diversity and repeat distribution within the chromosomes
 - Section 3: Generation of a high-quality transcriptome annotation incorporating short and long reads
 - Section 4: Transcriptional dynamics throughout development and between sexes
@@ -18,14 +18,7 @@ Code for the analysis is here:
 Any reuse of data or code is encouraged with due acknowledgement, either via citation of the published manuscript (when available) and/or GitHub repository. Comments, suggestions, and discussion are welcome.
 
 ## Abstract
-### Background
-*Haemonchus contortus* is a globally distributed and economically important gastrointestinal pathogen of small ruminants and has become the key nematode model for studying anthelmintic resistance and other parasite-specific traits among a wider group of parasites including major human pathogens. Two draft genome assemblies for *H. contortus* were reported in 2013; however, both were highly fragmented, incomplete, and differed from one another in important respects. While the introduction of long-read sequencing has significantly increased the rate of production and contiguity of de novo genome assemblies broadly, achieving high-quality genome assemblies for small, genetically diverse, outcrossing eukaryotic organisms such as *H. contortus* remains a significant challenge.
-
-### Results
-Here, we report using PacBio long read and OpGen and 10X Genomics long-molecule methods to generate a highly contiguous 283.4 Mbp chromosome-scale genome assembly including a resolved sex chromosome. We show a remarkable pattern of almost complete conservation of chromosome content with *Caenorhabditis elegans*, but almost no conservation of gene order. Short and long-read transcriptome sequence data has allowed us to define coordinated transcriptional regulation throughout the life cycle of the parasite, and refine our understanding of *cis-* and *trans-* splicing relative to that observed in *C. elegans*. Finally, we use this assembly to give a comprehensive picture of chromosome-wide genetic diversity both within a single isolate and globally.
-
-### Conclusions
-The *H. contortus* MHco3(ISE).N1 genome assembly presented here represents one of the most contiguous and resolved nematode assemblies outside of the Caenorhabditis genus to date, together with one of the highest-quality set of predicted gene features. These data provide a high-quality comparison for understanding the evolution and genomics of Caenorhabditis and other nematodes and extends the experimental tractability of this model parasitic nematode in understanding pathogen biology, drug discovery and vaccine development, as well as important adaptive traits such as drug resistance.
+*Haemonchus contortus* is a globally distributed and economically important gastrointestinal pathogen of small ruminants and has become a key nematode model for studying anthelmintic resistance and other parasite-specific traits among a wider group of parasites including major human pathogens. Here, we report using PacBio long-read and OpGen and 10X Genomics long-molecule methods to generate a highly contiguous 283.4 Mbp chromosome-scale genome assembly including a resolved sex chromosome for the MHco3(ISE).N1 isolate. We show a remarkable pattern of conservation of chromosome content with *Caenorhabditis elegans*, but almost no conservation of gene order. Short and long-read transcriptome sequencing allowed us to define coordinated transcriptional regulation throughout the parasite’s life cycle and refine our understanding of cis- and trans-splicing. Finally, we provide a comprehensive picture of chromosome-wide genetic diversity both within a single isolate and globally. These data provide a high-quality comparison for understanding the evolution and genomics of Caenorhabditis and other nematodes and extend the experimental tractability of this model parasitic nematode in understanding helminth biology, drug discovery and vaccine development, as well as important adaptive traits such as drug resistance.
 
 
 
