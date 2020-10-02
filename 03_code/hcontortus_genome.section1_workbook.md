@@ -741,10 +741,11 @@ busco_data <- busco_data %>% remove_rownames %>% column_to_rownames(var="BUSCO")
 heatmap.2(as.matrix(busco_data), scale = "none",
           trace = "none", density.info = "none")
 ```
-****
+
+[↥ **Back to top**](#top)
 
 
-
+******
 ## Repeats <a name="repeats"></a>
 - repeat masker was run on:
      - Haem V4
@@ -907,3 +908,5 @@ ggplot(data2,aes(V2,V7,fill=V8))+
 	guides(fill=guide_legend(ncol=1))+
 	ylim(0,1)
 ```
+[↥ **Back to top**](#top)
+******
