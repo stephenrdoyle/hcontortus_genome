@@ -732,3 +732,163 @@ heatmap.2(as.matrix(busco_data), scale = "none",
           trace = "none", density.info = "none")
 ```
 ****
+
+
+
+## Repeats
+```bash
+# RepeatMasker
+/nfs/users/nfs_s/sd21/lustre118_link/software/REPEATMASKER/RepeatModeler-open-1.0.11/BuildDatabase -name HAEM_V4 -engine ncbi HAEM_V4_final.chr.fa
+
+/nfs/users/nfs_s/sd21/lustre118_link/software/REPEATMASKER/RepeatModeler-open-1.0.11/RepeatModeler -pa 20 -engine ncbi -database HAEM_V4
+
+/nfs/users/nfs_s/sd21/lustre118_link/software/REPEATMASKER/RepeatMasker/RepeatMasker -e ncbi -pa 7 -s -dir ./RM_V4_OUT -small -gff -lib RM_43484.TueMar271017292018/consensi.fa.classified HAEM_V4_final.chr.fa
+
+
+# LTRfinder
+
+# Pipeline to run LTRharvest and LTRdigest
+# largely based on Avrils notes on Avrilomics: http://avrilomics.blogspot.com/2015/09/ltrharvest.html
+
+
+# Step 1 : create a suffix array index for the genome assembly
+
+bsub.py 5 01_ltr_suffixerator gt suffixerator -db HAEM_V4_final.chr.fa -indexname HAEM_V4_final.chr -tis -suf -lcp -des -ssp -sds -dna
+
+
+
+# Step 2: run LTRharvest and sort the output
+
+bsub.py 5 02_ltr_harvest gt ltrharvest -index HAEM_V4_final.chr -gff3 HAEM_V4_final.chr.ltr.gff -out HAEM_V4_final.chr.ltr.fa -seqids yes
+
+bsub.py 1 03_sort_ltrs "gt gff3 -sort  HAEM_V4_final.chr.ltr.gff \> HAEM_V4_final.chr.ltr.sorted.gff"
+
+
+# Step 3: run LTRdigest and filter output
+
+bsub.py 5 04_ltrdigest gt ltrdigest -hmms hmm/*hmm -aaout -outfileprefix HAEM_V4_final.chr -seqfile HAEM_V4_final.chr.fa -matchdescstart \< HAEM_V4_final.chr.ltr.sorted.gff \> HAEM_V4_final
+.chr.ltrdigest.gff
+
+#--- remove all LTR retrotransposon candidates that don't have any domain hit at all (to help get rid of things that might not be LTR retrotransposon insertions)
+gt select -rule_files ~sd21/bin/filter_protein_match.lua -- <  HAEM_V4_final.chr.ltrdigest.gff > HAEM_V4_final.chr.ltrdigest.gff.2
+
+#--- Extra the DNA sequences for the remaining full-length elements
+gt extractfeat -type LTR_retrotransposon -matchdescstart -retainids -encseq HAEM_V4_final.chr.fa HAEM_V4_final.chr.ltrdigest.gff.2 > HAEM_V4_final.chr.ltrdigest.gff.2.fa
+```
+
+
+
+
+
+
+### Make some plots of genome wide repeat distribution - Supplementary Figure 5
+```
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REPEATS/CHR/RM_V4_OUT/FIGURE
+
+# get data
+ln -s ../HAEM_V4_final.chr.fa.out
+
+ln -s ../../../../REF/HAEM_V4_final.chr.fa
+
+# get repeat types
+awk '{print $11}'  HAEM_V4_final.chr.fa.out | sort | uniq -c
+
+    138 DNA
+   3055 DNA/CMC-EnSpm
+    412 DNA/hAT-Ac
+    112 DNA/hAT-Tag1
+     59 DNA/Kolobok-T2
+    169 DNA/Merlin
+    195 DNA/MuLE-MuDR
+    640 DNA/MULE-MuDR
+    169 DNA/PIF-Harbinger
+   1629 DNA/PiggyBac
+    218 DNA/TcMar-ISRm11
+  16968 DNA/TcMar-Mariner
+  11527 DNA/TcMar-Tc1
+   2800 DNA/TcMar-Tc4
+   5354 LINE/CR1
+    343 LINE/CR1-Zenon
+     18 LINE/Dong-R4
+   2537 LINE/L1
+     49 LINE/L1-Tx1
+   2264 LINE/L2
+  10652 LINE/Penelope
+      1 LINE/R1-LOA
+     27 LINE/R2
+   7270 LINE/RTE-BovB
+  16844 LINE/RTE-RTE
+   4575 Low_complexity
+    217 LTR
+    330 LTR/Copia
+    109 LTR/DIRS
+   1231 LTR/ERV1
+    125 LTR/ERV4
+   1915 LTR/ERVK
+   5313 LTR/Gypsy
+     64 LTR/Ngaro
+   5178 LTR/Pao
+      1 position
+   3411 RC/Helitron
+    118 rRNA
+    359 Satellite
+  30629 Simple_repeat
+   1523 SINE?
+  10474 SINE/tRNA
+ 205593 Unknown
+
+
+
+# get coordinates of repeat types, output as a bed file
+
+awk '{print $11}'  HAEM_V4_final.chr.fa.out | sort | uniq | while read RPT; do OUT="$( echo $RPT | sed 's/\//_/g' )" ; grep  "$RPT" HAEM_V4_final.chr.fa.out | awk '{print $5,$6,$7}' OFS="\t" > $OUT.repeats.bed ; done
+
+
+# make some windows in the genome - 100kb
+samtools faidx  HAEM_V4_final.chr.fa
+cut -f1,2 HAEM_V4_final.chr.fa.fai > HAEM_V4.genome
+bedtools-2 makewindows -g HAEM_V4.genome -w 200000 > HAEM_V4.200kb_windows.bed
+
+
+# calculate coverage of repeats
+for i in *repeats.bed; do
+	NAME="$( echo $i | sed 's/.repeats.bed//g' )" ;
+	COUNT="$( cat ${i} | wc -l )";
+	bedtools-2 coverage -a HAEM_V4.200kb_windows.bed -b ${i} | awk -v NAME=$NAME -v COUNT=$COUNT '{print $0,NAME" n="COUNT}' OFS="\t";
+	done > genome_repeat_coverage.200k.data
+```
+
+# make some plots
+```R
+library(ggplot2)
+
+data <- read.table("genome_repeat_coverage.200k.data",header=F,sep="\t")
+#--- remove mtDNA
+data <- data[data$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+
+chromosome.labels <- c("I","II","III","IV","V", "X" )
+names(chromosome.labels) <- c("hcontortus_chr1_Celeg_TT_arrow_pilon",
+	"hcontortus_chr2_Celeg_TT_arrow_pilon",
+	"hcontortus_chr3_Celeg_TT_arrow_pilon",
+	"hcontortus_chr4_Celeg_TT_arrow_pilon",
+	"hcontortus_chr5_Celeg_TT_arrow_pilon",
+	"hcontortus_chrX_Celeg_TT_arrow_pilon")
+
+
+
+
+ggplot(data,aes(V2,V7,fill=V8))+geom_area()+facet_grid(V1~.)
+
+#--- remove the "Unknown" class, as they are abundant, but dont add much
+
+data2<-data[data$V8!="Unknown n=205593",]
+ggplot(data2,aes(V2,V7,fill=V8))+
+	geom_area()+
+	facet_grid(V1~.,labeller = labeller(V1 = chromosome.labels))+
+	theme_bw()+
+	labs(x="Genomic position (bp)",
+       	y="Fraction of 200 kb window containing repeat type",
+       	fill="Repeat type")+
+	guides(fill=guide_legend(ncol=1))+
+	ylim(0,1)
+```
