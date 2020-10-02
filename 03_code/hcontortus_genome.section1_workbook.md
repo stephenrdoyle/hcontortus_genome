@@ -4,10 +4,11 @@
 1. [Genome assembly](#genome)
 2. [Completion of X chromosome](#xchromosome)
 3. [Genome polishing](#polishing)
-4. Synteny
-4.1 Chromosomal
-4.1.1. Figure 1a
-4.2 Microsynteny
+4. [Synteny]()
+4.1. [Chromosomal]()
+4.1.1. [Figure 1a]()
+4.2. [Microsynteny]()
+4.2.1 [Figure 1b]()
 4. [Circos plot - Figure 1A](#circos)
 6. [Microsynteny](#microsynteny)
 7. [Genome stats](#genomestats)
