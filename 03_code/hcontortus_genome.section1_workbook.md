@@ -634,6 +634,7 @@ for i in *data; do mv ${i} ${i%.data}.txt; done
 for i in *.txt; do sed -i -e 's/Complete/1/g' -e 's/Duplicated/2/g' -e 's/Fragmented/0.5/g' -e 's/Missing/0/g' ${i}; done
 ```
 
+### Make some plots <a name="figureS4"></a>
 ```R
 # read libraries
 library(ggplot2)
@@ -874,7 +875,7 @@ for i in *repeats.bed; do
 	done > genome_repeat_coverage.200k.data
 ```
 
-# make some plots
+### make some plots
 ```R
 library(ggplot2)
 
