@@ -15,9 +15,10 @@
           * [Supplementary Figure 3d](#figureS3d)
           * [Supplementary Figure 3e](#figureS3e)
 8. [Genome completeness - CEGMA & BUSCO](#cegmabusco)
-7. [Genome stats](#genomestats)
+     * [Supplementary Figure 4](#figureS4)
+7. [Repeats](#repeats)
+     * [Supplementary Figure 5](#figureS5)
 
-9. [Comparative analysis of the NZ Haemonchus genome](#nzgenome)
 
 
 <a name="figure1b"></a>
@@ -745,7 +746,7 @@ heatmap.2(as.matrix(busco_data), scale = "none",
 
 
 
-## Repeats
+## Repeats <a name="repeats"></a>
 - repeat masker was run on:
      - Haem V4
      - Haem V4 HAPLOTYPES
@@ -796,7 +797,7 @@ gt extractfeat -type LTR_retrotransposon -matchdescstart -retainids -encseq HAEM
 
 
 
-### Make some plots of genome wide repeat distribution - Supplementary Figure 5
+### Make some plots of genome wide repeat distribution - Supplementary Figure 5 <a name="figureS5"></a>
 ```
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REPEATS/CHR/RM_V4_OUT/FIGURE
 
