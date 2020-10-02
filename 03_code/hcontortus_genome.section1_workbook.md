@@ -736,6 +736,11 @@ heatmap.2(as.matrix(busco_data), scale = "none",
 
 
 ## Repeats
+- repeat masker was run on:
+     - Haem V4
+     - Haem V4 HAPLOTYPES
+     - Haem V1
+- below is example command used.
 ```bash
 # RepeatMasker
 /nfs/users/nfs_s/sd21/lustre118_link/software/REPEATMASKER/RepeatModeler-open-1.0.11/BuildDatabase -name HAEM_V4 -engine ncbi HAEM_V4_final.chr.fa
