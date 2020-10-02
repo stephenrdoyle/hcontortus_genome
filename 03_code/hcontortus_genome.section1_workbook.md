@@ -6,17 +6,21 @@
 3. [Genome polishing](#polishing)
 4. [Synteny]()
      * [Chromosomal]()
-          * [Figure 1a]()
-     * [Microsynteny]()
-          * [Figure 1b]()
-4. [Circos plot - Figure 1A](#circos)
-6. [Microsynteny](#microsynteny)
-7. [Genome stats](#genomestats)
+          * [Figure 1a](figure1a)
+          * [Supplementary Figure 3b](#figureS2b)
+     * [Microsynteny](#microsynteny)
+          * [Figure 1b](#figure1b)
+          * [Supplementary Figure 3b](#figureS3b)
+          * [Supplementary Figure 3c](#figureS3c)
+          * [Supplementary Figure 3d](#figureS3d)
+          * [Supplementary Figure 3e](#figureS3e)
 8. [Genome completeness - CEGMA & BUSCO](#cegmabusco)
+7. [Genome stats](#genomestats)
+
 9. [Comparative analysis of the NZ Haemonchus genome](#nzgenome)
 
 
-
+<a name="figure1b"></a>
 ******
 ## Genome assembly <a name="genome"></a>
 From the paper:
@@ -121,7 +125,8 @@ java -Xmx200G -jar pilon-1.22/pilon-1.22.jar \
 
  [↥ **Back to top**](#top)
  ******
-## Circos plot - Figure 1A <a name="circos"></a>
+## Chromosomal synteny using CIRCOS <a name="figure1a"></a>
+## <a name="circos"></a>
 Using circos to highlight broad chromosomal similarities between Haemonchus and Celegans
 ```shell   
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/CIRCOS
@@ -140,6 +145,46 @@ perl /nfs/users/nfs_j/jc17/bin/Nucmer.2.circos.pl --promer --ref_order=relw --de
 perl /nfs/users/nfs_j/jc17/software/circos-0.67-pre5/bin/circos
 
 # this generated the circos plot used in Figure 1a. Note that I modified in conf file manually to include the correct chromosome colours as shown in the manuscript
+```
+
+### male and female genome coverage_plot - used in Supplementary Figure 2b <a name="figureS2b"></a>
+cd ~/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/GENOME_COVERAGE
+
+```R
+# load libraries
+library(ggplot2)
+library(patchwork)
+
+# load data
+male<-read.table("GB_ISEN1_001.merged.100000_window.cov",header=F)
+male<-male[male$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+female<-read.table("GB_ISEN1_006.merged.100000_window.cov",header=F)
+female<-female[female$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+
+# set colours
+chr_colours<-c("#b2182b","#fc8d59","#fee090","#d1e5f0","#67a9cf","#4575b4")
+
+# plot
+plot_female<-ggplot(female,aes(V2/10^6,log10(V5),col=V1))+
+	geom_point(alpha=0.8)+
+	scale_colour_manual(values=chr_colours, guide = FALSE)+
+	facet_grid(.~V1)+
+	labs(title="Sample: MHco3(ISE).N1_006 - female XX",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
+	theme_bw()+
+	ylim(0.5,2.25)
+
+plot_male<-ggplot(male,aes(V2/10^6,log10(V5),col=V1))+
+	geom_point(alpha=0.8)+
+	scale_colour_manual(values=chr_colours, guide = FALSE)+
+	facet_grid(.~V1)+
+	labs(title="Sample: MHco3(ISE).N1_001 - male XO",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
+	theme_bw()+
+	ylim(0.5,3)
+
+# put it together
+plot_female + plot_male + plot_layout(ncol=1)
+
+ggsave("male_v_female_genomecoverage.pdf", useDingbats = FALSE)
 ```
 
 
@@ -182,7 +227,7 @@ cut -f1,6 hc_ce_1to1.coords.chrsorted | sort | uniq -c | awk '{print $2,$3,$1}' 
 
 
 
-### Make the plot - Figure 1 b
+### Make the plot - Figure 1 b <a name="figure1b"></a>
 ```R
 # load libraries
 library(ggplot2)
@@ -303,7 +348,7 @@ paste <(echo "$distSP1") <(echo "$dirSP1") <(echo "$distSP2") <(echo "$dirSP2") 
 ```
 
 
-### make plot - Supplementary Figure 3b
+### make plot - Supplementary Figure 3b <a name="figureS3b"></a>
 ```R
 # plot pairwise distance between orthologs comparing position on Ce with position on Hc chromosomes
 
@@ -354,7 +399,7 @@ ggsave(plot=plot2,"Hc_Ce_pairwise_ortholog_distance.pdf",useDingbats=FALSE)
 
 
 
-### make plot - Supplementary Figure 3c
+### make plot - Supplementary Figure 3c <a name="figureS3c"></a>
 ```R
 # plot proportion of gene arrangements for distances less than 100kbp vs all
 
@@ -396,7 +441,7 @@ perl /nfs/users/nfs_j/jc17/bin/SyntenyChecker.pl --A_chr_col=0 --A_pos_col=1 --B
 done
 ```
 
-### make plot - Supplementary Figure 3d
+### make plot - Supplementary Figure 3d <a name="figureS3d"></a>
 ```R
 # load libraries
 library(reshape2)
@@ -472,7 +517,7 @@ working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/ORTHOLOGY/SYNTENY
 for i in `ls rerun* | sort -V `; do grep --with-filename "SC" ${i}; done | sed -e 's/:/\t/g' -e 's/rerun_//g' -e 's/_genes_detailed_table//g' > colinear_genes.data
 ```
 
-### Make plot - Supplementary Figure 3e
+### Make plot - Supplementary Figure 3e <a name="figureS3e"></a>
 ```R
 # load libraries
 library(ggplot2)
@@ -569,45 +614,6 @@ awk '/^>/{print ">sequence" ++i; next}{print}' < ${REF} > REF.fa
 ```
 
 
-### male and female genome coverage_plot - used in Supplementary Figure 2b
-cd ~/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/GENOME_COVERAGE
-
-```R
-# load libraries
-library(ggplot2)
-library(patchwork)
-
-# load data
-male<-read.table("GB_ISEN1_001.merged.100000_window.cov",header=F)
-male<-male[male$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
-female<-read.table("GB_ISEN1_006.merged.100000_window.cov",header=F)
-female<-female[female$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
-
-# set colours
-chr_colours<-c("#b2182b","#fc8d59","#fee090","#d1e5f0","#67a9cf","#4575b4")
-
-# plot
-plot_female<-ggplot(female,aes(V2/10^6,log10(V5),col=V1))+
-	geom_point(alpha=0.8)+
-	scale_colour_manual(values=chr_colours, guide = FALSE)+
-	facet_grid(.~V1)+
-	labs(title="Sample: MHco3(ISE).N1_006 - female XX",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
-	theme_bw()+
-	ylim(0.5,2.25)
-
-plot_male<-ggplot(male,aes(V2/10^6,log10(V5),col=V1))+
-	geom_point(alpha=0.8)+
-	scale_colour_manual(values=chr_colours, guide = FALSE)+
-	facet_grid(.~V1)+
-	labs(title="Sample: MHco3(ISE).N1_001 - male XO",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
-	theme_bw()+
-	ylim(0.5,3)
-
-# put it together
-plot_female + plot_male + plot_layout(ncol=1)
-
-ggsave("male_v_female_genomecoverage.pdf", useDingbats = FALSE)
-```
 
 
 ## make a heatmap of BUSCO data to compare missingness across clade 5 nematodes
