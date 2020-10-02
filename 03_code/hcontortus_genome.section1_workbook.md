@@ -296,10 +296,6 @@ elif [ "$dirSP1" == '-_-' ] && [ "$dirSP2" == '+_+' ]; then echo NO_large_rearra
 elif [ "$dirSP1" == '+_+' ] && [ "$dirSP2" == '-_-' ]; then echo NO_large_rearrangement ; \
 else echo NO_recombined ; fi ;  done )
 paste <(echo "$distSP1") <(echo "$dirSP1") <(echo "$distSP2") <(echo "$dirSP2")  <(echo "$dir") > "${i%.offset}".plotdata_V2;  done
-
-
-
-
 ```
 
 
@@ -434,7 +430,7 @@ for i in hc_ce_1to1.coords.chr*.sorted; do paste <( cut -f6,7,8 ${i}  | sort -k1
 cat *ceonly > ceonly_increment_pairs
 ```
 
-#in R
+### make plot
 ```R
 # load libraries
 library(ggplot2)
@@ -460,9 +456,6 @@ ggplot(data,aes(V2,log10(V5-V2),col=species))+geom_point()+facet_grid(V1~.)
 
 # didnt use this in the paper in the end
 ```
-
-
-
 
 
 ### Comparing the length of runs of syntenic orthologs between C. elegans and H. contortus  
@@ -505,7 +498,10 @@ ggsave("colinear_genes_per_chromosome.pdf")
 ```
 
 
-## BUSCO and CEGMA
+[↥ **Back to top**](#top)
+
+****
+## BUSCO and CEGMA <a name="cegmabusco"></a>
 
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GENOME_QC
 
@@ -514,7 +510,7 @@ I have some scripts I use to run BUSCO and CEGMA shown below. Both tools were ru
 - V4 haplotype genome
 - V1 genome
 - McMaster genome
-- NZ genome 
+- NZ genome
 
 
 run_busco_nematode.sh
@@ -567,3 +563,172 @@ awk '/^>/{print ">sequence" ++i; next}{print}' < ${REF} > REF.fa
 /nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/CEGMA_v2.5/bin/cegma --genome REF.fa --output ${PREFIX} --verbose --threads 1
 
 ```
+
+
+### male and female genome coverage_plot - used in Supplementary Figure 2b
+cd ~/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/GENOME_COVERAGE
+
+```R
+# load libraries
+library(ggplot2)
+library(patchwork)
+
+# load data
+male<-read.table("GB_ISEN1_001.merged.100000_window.cov",header=F)
+male<-male[male$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+female<-read.table("GB_ISEN1_006.merged.100000_window.cov",header=F)
+female<-female[female$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+
+# set colours
+chr_colours<-c("#b2182b","#fc8d59","#fee090","#d1e5f0","#67a9cf","#4575b4")
+
+# plot
+plot_female<-ggplot(female,aes(V2/10^6,log10(V5),col=V1))+
+	geom_point(alpha=0.8)+
+	scale_colour_manual(values=chr_colours, guide = FALSE)+
+	facet_grid(.~V1)+
+	labs(title="Sample: MHco3(ISE).N1_006 - female XX",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
+	theme_bw()+
+	ylim(0.5,2.25)
+
+plot_male<-ggplot(male,aes(V2/10^6,log10(V5),col=V1))+
+	geom_point(alpha=0.8)+
+	scale_colour_manual(values=chr_colours, guide = FALSE)+
+	facet_grid(.~V1)+
+	labs(title="Sample: MHco3(ISE).N1_001 - male XO",x="Genomic coordinate (Mbp)",y="Coverage per 100 kbp window (log10)")+
+	theme_bw()+
+	ylim(0.5,3)
+
+# put it together
+plot_female + plot_male + plot_layout(ncol=1)
+
+ggsave("male_v_female_genomecoverage.pdf", useDingbats = FALSE)
+```
+
+
+## make a heatmap of BUSCO data to compare missingness across clade 5 nematodes
+- this is used in Supplementary Figure 4 of the Supplementary INformation
+- the data comes from running BUSCO on all of the nematodes in WBP
+
+```bash
+working dir: /nfs/users/nfs_s/sd21/lustre118_link/WBP/WBP_GENOMES/BUSCO_ANALYSIS
+mkdir CLADE_V
+
+#get the full output from busco
+while read NAME; do cp ../BUSCO_COMPLETE/run_${NAME}*/full* CLADE_V/ ; done < clade5.list
+
+while read NAME; do cut -f1,2 CLADE_V/full_table_${NAME}* | grep -v "#" > CLADE_V/${NAME}.busco.data; done < clade5.list
+
+for i in *data; do mv ${i} ${i%.data}.txt; done
+
+for i in *.txt; do sed -i -e 's/Complete/1/g' -e 's/Duplicated/2/g' -e 's/Fragmented/0.5/g' -e 's/Missing/0/g' ${i}; done
+```
+
+```R
+# read libraries
+library(ggplot2)
+library(dplyr)
+library(gplots)
+library(tidyverse)
+
+
+filenames <- gsub("\\.txt$","", list.files(pattern="\\.txt$"))
+
+for(i in filenames){
+  assign(paste("busco_",i,sep=""), read.delim(paste(i, ".txt", sep=""), header=F))
+}
+
+
+inner_join(c(busco_ancylostoma_caninum.PRJNA72585.busco, busco_ancylostoma_ceylanicum.PRJNA231479.busco,busco_ancylostoma_ceylanicum.PRJNA72583.busco), by="V1") %>% distinct()
+
+join_all(c(busco_ancylostoma_caninum.PRJNA72585.busco, busco_ancylostoma_ceylanicum.PRJNA231479.busco,busco_ancylostoma_ceylanicum.PRJNA72583.busco), by='V1', type='left')
+
+
+busco_data <- left_join(busco_ancylostoma_caninum.PRJNA72585.busco, busco_ancylostoma_ceylanicum.PRJNA231479.busco, by='V1') %>%
+                left_join(.,  busco_ancylostoma_ceylanicum.PRJNA72583.busco, by='V1') %>%
+                left_join(.,  busco_ancylostoma_duodenale.PRJNA72581.busco, by='V1') %>%
+                left_join(.,  busco_angiostrongylus_cantonensis.PRJEB493.busco, by='V1') %>%
+                left_join(.,  busco_angiostrongylus_costaricensis.PRJEB494.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_angaria.PRJNA51225.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_brenneri.PRJNA20035.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_briggsae.PRJNA10731.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_elegans.PRJNA13758.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_japonica.PRJNA12591.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_latens.PRJNA248912.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_nigoni.PRJNA384657.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_remanei.PRJNA248909.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_remanei.PRJNA248911.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_remanei.PRJNA53967.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_sinica.PRJNA194557.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_sp34.PRJDB5687.busco, by='V1') %>%
+                left_join(.,  busco_caenorhabditis_tropicalis.PRJNA53597.busco, by='V1') %>%
+                left_join(.,  busco_cylicostephanus_goldi.PRJEB498.busco, by='V1') %>%
+                left_join(.,  busco_dictyocaulus_viviparus.PRJEB5116.busco, by='V1') %>%
+                left_join(.,  busco_dictyocaulus_viviparus.PRJNA72587.busco, by='V1') %>%
+                left_join(.,  busco_diploscapter_coronatus.PRJDB3143.busco, by='V1') %>%
+                left_join(.,  busco_diploscapter_pachys.PRJNA280107.busco, by='V1') %>%
+                left_join(.,  busco_haemonchus_contortus.PRJEB506.busco, by='V1') %>%
+                left_join(.,  busco_haemonchus_contortus.PRJNA205202.busco, by='V1') %>%
+                left_join(.,  busco_haemonchus_placei.PRJEB509.busco, by='V1') %>%
+                left_join(.,  busco_heligmosomoides_polygyrus.PRJEB1203.busco, by='V1') %>%
+                left_join(.,  busco_heligmosomoides_polygyrus.PRJEB15396.busco, by='V1') %>%
+                left_join(.,  busco_heterorhabditis_bacteriophora.PRJNA13977.busco, by='V1') %>%
+                left_join(.,  busco_necator_americanus.PRJNA72135.busco, by='V1') %>%
+                left_join(.,  busco_nippostrongylus_brasiliensis.PRJEB511.busco, by='V1') %>%
+                left_join(.,  busco_oesophagostomum_dentatum.PRJNA72579.busco, by='V1') %>%
+                left_join(.,  busco_oschieus_tipulae.PRJEB15512.busco, by='V1') %>%
+                left_join(.,  busco_pristionchus_exspectatus.PRJEB6009.busco, by='V1') %>%
+                left_join(.,  busco_pristionchus_pacificus.PRJNA12644.busco, by='V1') %>%
+                left_join(.,  busco_strongylus_vulgaris.PRJEB531.busco, by='V1') %>%
+                left_join(.,  busco_teladorsagia_circumcincta.PRJNA72569.busco, by='V1') %>% distinct()
+
+
+colnames(busco_data) <- c("BUSCO",
+"ancylostoma_caninum.PRJNA72585",
+"ancylostoma_ceylanicum.PRJNA231479",
+"ancylostoma_ceylanicum.PRJNA72583",
+"ancylostoma_duodenale.PRJNA72581",
+"angiostrongylus_cantonensis.PRJEB493",
+"angiostrongylus_costaricensis.PRJEB494",
+"caenorhabditis_angaria.PRJNA51225",
+"caenorhabditis_brenneri.PRJNA20035",
+"caenorhabditis_briggsae.PRJNA10731",
+"caenorhabditis_elegans.PRJNA13758",
+"caenorhabditis_japonica.PRJNA12591",
+"caenorhabditis_latens.PRJNA248912",
+"caenorhabditis_nigoni.PRJNA384657",
+"caenorhabditis_remanei.PRJNA248909",
+"caenorhabditis_remanei.PRJNA248911",
+"caenorhabditis_remanei.PRJNA53967",
+"caenorhabditis_sinica.PRJNA194557",
+"caenorhabditis_sp34.PRJDB5687",
+"caenorhabditis_tropicalis.PRJNA53597",
+"cylicostephanus_goldi.PRJEB498",
+"dictyocaulus_viviparus.PRJEB5116",
+"dictyocaulus_viviparus.PRJNA72587",
+"diploscapter_coronatus.PRJDB3143",
+"diploscapter_pachys.PRJNA280107",
+"haemonchus_contortus.PRJEB506",
+"haemonchus_contortus.PRJNA205202",
+"haemonchus_placei.PRJEB509",
+"heligmosomoides_polygyrus.PRJEB1203",
+"heligmosomoides_polygyrus.PRJEB15396",
+"heterorhabditis_bacteriophora.PRJNA13977",
+"necator_americanus.PRJNA72135",
+"nippostrongylus_brasiliensis.PRJEB511",
+"oesophagostomum_dentatum.PRJNA72579",
+"oschieus_tipulae.PRJEB15512",
+"pristionchus_exspectatus.PRJEB6009",
+"pristionchus_pacificus.PRJNA12644",
+"strongylus_vulgaris.PRJEB531",
+"teladorsagia_circumcincta.PRJNA72569")
+
+busco_data <- busco_data %>% remove_rownames %>% column_to_rownames(var="BUSCO")
+
+
+
+
+heatmap.2(as.matrix(busco_data), scale = "none",
+          trace = "none", density.info = "none")
+```
+****
