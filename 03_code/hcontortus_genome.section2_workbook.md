@@ -332,16 +332,17 @@ gt extractfeat -type LTR_retrotransposon -matchdescstart -retainids -encseq HAEM
 ```
 
 ### Make some plots of genome wide repeat distribution - Supplementary Figure 5 <a name="figureS5"></a>
+```
+# working dir:
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REPEATS/CHR/RM_V4_OUT/FIGURE
 
-    cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REPEATS/CHR/RM_V4_OUT/FIGURE
+# get data
+ln -s ../HAEM_V4_final.chr.fa.out
 
-    # get data
-    ln -s ../HAEM_V4_final.chr.fa.out
+ln -s ../../../../REF/HAEM_V4_final.chr.fa
 
-    ln -s ../../../../REF/HAEM_V4_final.chr.fa
-
-    # get repeat types
-    awk '{print $11}'  HAEM_V4_final.chr.fa.out | sort | uniq -c
+# get repeat types
+awk '{print $11}'  HAEM_V4_final.chr.fa.out | sort | uniq -c
 
         138 DNA
        3055 DNA/CMC-EnSpm
@@ -389,8 +390,7 @@ gt extractfeat -type LTR_retrotransposon -matchdescstart -retainids -encseq HAEM
 
 
 
- # get coordinates of repeat types,  output as a bed file
-
+# get coordinates of repeat types,  output as a bed file
 awk '{print $11}'  HAEM_V4_final.chr.fa.out | sort | uniq | while read RPT; do OUT="$( echo $RPT | sed 's/\//_/g' )" ; grep  "$RPT" HAEM_V4_final.chr.fa.out | awk '{print $5, $6, $7}' OFS="\t" > $OUT.repeats.bed ; done
 
 
@@ -406,6 +406,7 @@ for i in *repeats.bed; do
 	COUNT="$( cat ${i} | wc -l )";
 	bedtools-2 coverage -a HAEM_V4.200kb_windows.bed -b ${i} | awk -v NAME=$NAME -v COUNT=$COUNT '{print $0, NAME" n="COUNT}' OFS="\t";
 	done > genome_repeat_coverage.200k.data
+```
 
 ### make the figure in R
 ```R
