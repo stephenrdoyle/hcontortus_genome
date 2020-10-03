@@ -12,7 +12,7 @@
 4.  [Repeat analyses](#repeats)
     -   [Supplementary Figure 5](#figureS5)
 
-## 1. Genome graph of chromosomes and haplotypes <a name="genomegraph"></a>
+## Genome graph of chromosomes and haplotypes <a name="genomegraph"></a>
 
 -   Note: some non commandline tools were used to create the figures
     -   Figure 2a was visualised using bandage <a name="figureS2a"></a>
@@ -144,13 +144,11 @@ MHco3(ISE).N1_9	21766_7_9
 
 
 
-# get reference,  whcih contains chromosomes AND haplotypes
+# get reference, which contains chromosomes AND haplotypes
 cp ../../REF/HAEM_V4_final.all.fa .
 
 
-
 # set off mapping
-
 echo "while read name lane; do \
 ~sd21/bash_scripts/run_bwamem_splitter $"{name}"_$"{lane}" $PWD/HAEM_V4_final.all.fa \
 $PWD/$"{lane}"_1.fastq.gz \
@@ -195,53 +193,51 @@ paste *.tmp > coverage_stats.summary
 rm *.tmp
 ```
 
-# make the plot <a name="figure2d"></a>
+### make the plot <a name="figure2d"></a>
 ```R
-### make the plot
+# load libraries
+require(gtools)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
 
-    require(gtools)
-    library(ggplot2)
-    library(reshape2)
-    library(dplyr)
+# load data
+filenames  <-  gsub("\\.cov.2$", "",  list.files(pattern="\\.cov.2$"))
 
+#--- note to self - mixed sorts will sort them numerically
+filenames  <-  mixedsort(filenames)
 
-    filenames  <-  gsub("\\.cov.2$", "",  list.files(pattern="\\.cov.2$"))
-
-    # mixed sorts will sort them numerically
-    filenames  <-  mixedsort(filenames)
-
-    for(i in filenames){
+for(i in filenames){
       assign(paste(i, sep=""),  read.delim(paste(i,  ".cov.2",  sep=""),  header=F))
-    }
+}
 
+# select the columns needed from the raw data - chromosome, position, and coverage in window
+MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
 
-     MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
-     MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr  <-  select(MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr,  c(V1, V2, V5))
+#normalise per sample to 95% quantile
+MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5, 0.95) MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5, 0.95)
+MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5, 0.95)
 
-    #normalise per sample to 95% quantile
-    MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5, 0.95)
-    MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5  <-  MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5, 0.95)
-
-
-     data  <-  MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr %>%
+# bring all of the individual datasets together, and some sensible column names
+data  <-  MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr %>%
       left_join(.,  MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr,  by=c('V1', 'V2')) %>%
       left_join(.,  MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr,  by=c('V1', 'V2')) %>%
       left_join(.,  MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr,  by=c('V1', 'V2')) %>%
@@ -254,24 +250,24 @@ rm *.tmp
       left_join(.,  MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr,  by=c('V1', 'V2')) %>%
       distinct()
 
-    chr_colours <- c("#b2182b", "#fc8d59", "#fee090", "#d1e5f0", "#67a9cf", "#4575b4")
+colnames(data)  <-  c("CHR", "START", "MHco3_ISE.N1_1", "MHco3_ISE.N1_2", "MHco3_ISE.N1_3", "MHco3_ISE.N1_4", "MHco3_ISE.N1_5", "MHco3_ISE.N1_6", "MHco3_ISE.N1_7", "MHco3_ISE.N1_8", "MHco3_ISE.N1_9", "MHco3_ISE.N1_10", "MHco3_ISE.N1_11")
 
-    colnames(data)  <-  c("CHR", "START", "MHco3_ISE.N1_1", "MHco3_ISE.N1_2", "MHco3_ISE.N1_3", "MHco3_ISE.N1_4", "MHco3_ISE.N1_5", "MHco3_ISE.N1_6", "MHco3_ISE.N1_7", "MHco3_ISE.N1_8", "MHco3_ISE.N1_9", "MHco3_ISE.N1_10", "MHco3_ISE.N1_11")
+# reformat the data
+data2  <-  melt(data, id.vars = c("CHR", "START"))
+data2  <-  data2[data2$CHR!="hcontortus_7_chr_mtDNA_arrow_pilon", ]
 
-    data2  <-  melt(data, id.vars = c("CHR", "START"))
-    data2  <-  data2[data2$CHR!="hcontortus_7_chr_mtDNA_arrow_pilon", ]
+# remove high coverage regions by settign any window higher than 1 to 1
+data2$value  <-  ifelse(data2$value > 1,  1,  data2$value)
 
-    data2$value  <-  ifelse(data2$value > 1,  1,  data2$value)
+ggplot(data2, aes(START/10^6, variable, fill=value)) +
+     geom_tile() +
+     labs(x="Genomic position in chromosome (Mbp)",  y="",  fill="Relative\ncoverage") +
+     scale_y_discrete(limits=rev) +
+     facet_grid(.~CHR) +
+     scale_fill_gradient2(low="#b2182b", mid="#fee090", high="#4575b4", midpoint=0.5) +
+     theme_bw() + theme(legend.position="bottom")
 
-    ggplot(data2, aes(START/10^6, variable, fill=value)) +
-         geom_tile() +
-         labs(x="Genomic position in chromosome (Mbp)",  y="",  fill="Relative\ncoverage") +
-         scale_y_discrete(limits=rev) +
-         facet_grid(.~CHR) +
-         scale_fill_gradient2(low="#b2182b", mid="#fee090", high="#4575b4", midpoint=0.5) +
-         theme_bw() + theme(legend.position="bottom")
-
-    ggsave("MHco3_ISE.N1_haplotype_coverage_plot_by_chromosome.pdf")
+ggsave("MHco3_ISE.N1_haplotype_coverage_plot_by_chromosome.pdf")
 ```
 
 
@@ -389,27 +385,28 @@ gt extractfeat -type LTR_retrotransposon -matchdescstart -retainids -encseq HAEM
 
 
     # make some windows in the genome - 100kb
-    samtools faidx  HAEM_V4_final.chr.fa
-    cut -f1, 2 HAEM_V4_final.chr.fa.fai > HAEM_V4.genome
-    bedtools-2 makewindows -g HAEM_V4.genome -w 200000 > HAEM_V4.200kb_windows.bed
+samtools faidx  HAEM_V4_final.chr.fa
+cut -f1, 2 HAEM_V4_final.chr.fa.fai > HAEM_V4.genome
+bedtools-2 makewindows -g HAEM_V4.genome -w 200000 > HAEM_V4.200kb_windows.bed
 
 
     # calculate coverage of repeats
-    for i in *repeats.bed; do
-    	NAME="$( echo $i | sed 's/.repeats.bed//g' )" ;
-    	COUNT="$( cat ${i} | wc -l )";
-    	bedtools-2 coverage -a HAEM_V4.200kb_windows.bed -b ${i} | awk -v NAME=$NAME -v COUNT=$COUNT '{print $0, NAME" n="COUNT}' OFS="\t";
-    	done > genome_repeat_coverage.200k.data
+for i in *repeats.bed; do
+	NAME="$( echo $i | sed 's/.repeats.bed//g' )" ;
+	COUNT="$( cat ${i} | wc -l )";
+	bedtools-2 coverage -a HAEM_V4.200kb_windows.bed -b ${i} | awk -v NAME=$NAME -v COUNT=$COUNT '{print $0, NAME" n="COUNT}' OFS="\t";
+	done > genome_repeat_coverage.200k.data
 
-### make some plots
-
+### make the figure in R
 ```R
+# load libraries
 library(ggplot2)
 
+# read data and remove mtDNA
 data  <-  read.table("genome_repeat_coverage.200k.data", header=F, sep="\t")
-#--- remove mtDNA
 data  <-  data[data$V1!="hcontortus_chr_mtDNA_arrow_pilon", ]
 
+# fix the chromosome labels
 chromosome.labels  <-  c("I", "II", "III", "IV", "V",  "X" )
 names(chromosome.labels)  <-  c("hcontortus_chr1_Celeg_TT_arrow_pilon",
 	"hcontortus_chr2_Celeg_TT_arrow_pilon",
@@ -419,13 +416,12 @@ names(chromosome.labels)  <-  c("hcontortus_chr1_Celeg_TT_arrow_pilon",
 	"hcontortus_chrX_Celeg_TT_arrow_pilon")
 
 
-
-
 ggplot(data, aes(V2, V7, fill=V8)) + geom_area() + facet_grid(V1~.)
 
 #--- remove the "Unknown" class,  as they are abundant,  but dont add much
-
 data2 <- data[data$V8!="Unknown n=205593", ]
+
+# make the plot
 ggplot(data2, aes(V2, V7, fill=V8)) +
 	geom_area() +
 	facet_grid(V1~., labeller = labeller(V1 = chromosome.labels)) +
