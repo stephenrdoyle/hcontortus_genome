@@ -29,7 +29,7 @@ ln -s ../../REF/HAEM_V4_final.haplocomtam_only.fa
 # run minigraph
 /nfs/users/nfs_s/sd21/lustre118_link/software/GENOME_GRAPH/minigraph/minigraph -xggs -t16 HAEM_V4_final.chr.fa HAEM_V4_final.haplocomtam_only.fa > out.gfa
 
-# The GFA can be visualised using bandage - this was used to make FIgure 2a and the top part of Figure 2b which is zoomed in
+# The GFA can be visualised using bandage - this was used to make Figure 2a and the top part of Figure 2b which is zoomed in
 
 # want to show an example of haplotypic diversity. Extracted a random haplotype on chromosome X and saved it as "test_X_other.fa"
 
@@ -42,7 +42,11 @@ awk '{if($1=="hcontortus_chrX_Celeg_TT_arrow_pilon" && $3=="exon" && $4>=7300000
 
 # used "nucmer_other_GR.out" and "chrX.exons.bed" as input to genome ribbon - this was used to make the bottom part of Figure 2b
 ```
+[↥ **Back to top**](#top)
 
+
+
+******
 ## 2. Haplotype density and distribution <a name="haplotypes"></a>
 
 ### make plot <a name="figure2c"></a>
@@ -119,7 +123,11 @@ circos.yaxis(labels.cex=0.4, side = 'left', tick = T, sector.index = 'hcontortus
 circos.clear()
 dev.off()
 ```
+[↥ **Back to top**](#top)
 
+
+
+******
 ## Haplotype switching <a name="haploswitching"></a>
 
 working dir: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/HAPLOTYPES/HAPLO_SWITCHING
@@ -270,9 +278,11 @@ ggplot(data2, aes(START/10^6, variable, fill=value)) +
 ggsave("MHco3_ISE.N1_haplotype_coverage_plot_by_chromosome.pdf")
 ```
 
+[↥ **Back to top**](#top)
 
-* * *
 
+
+******
 ## Repeats <a name="repeats"></a>
 
 -   repeat masker was run on:
@@ -379,18 +389,18 @@ gt extractfeat -type LTR_retrotransposon -matchdescstart -retainids -encseq HAEM
 
 
 
-    # get coordinates of repeat types,  output as a bed file
+ # get coordinates of repeat types,  output as a bed file
 
-    awk '{print $11}'  HAEM_V4_final.chr.fa.out | sort | uniq | while read RPT; do OUT="$( echo $RPT | sed 's/\//_/g' )" ; grep  "$RPT" HAEM_V4_final.chr.fa.out | awk '{print $5, $6, $7}' OFS="\t" > $OUT.repeats.bed ; done
+awk '{print $11}'  HAEM_V4_final.chr.fa.out | sort | uniq | while read RPT; do OUT="$( echo $RPT | sed 's/\//_/g' )" ; grep  "$RPT" HAEM_V4_final.chr.fa.out | awk '{print $5, $6, $7}' OFS="\t" > $OUT.repeats.bed ; done
 
 
-    # make some windows in the genome - 100kb
+# make some windows in the genome - 100kb
 samtools faidx  HAEM_V4_final.chr.fa
 cut -f1, 2 HAEM_V4_final.chr.fa.fai > HAEM_V4.genome
 bedtools-2 makewindows -g HAEM_V4.genome -w 200000 > HAEM_V4.200kb_windows.bed
 
 
-    # calculate coverage of repeats
+# calculate coverage of repeats
 for i in *repeats.bed; do
 	NAME="$( echo $i | sed 's/.repeats.bed//g' )" ;
 	COUNT="$( cat ${i} | wc -l )";
