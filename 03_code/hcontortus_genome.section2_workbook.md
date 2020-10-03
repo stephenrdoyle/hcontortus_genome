@@ -229,6 +229,20 @@ for(i in filenames){
  MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr <- select(MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr, c(V1,V2,V5))
  MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr <- select(MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr, c(V1,V2,V5))
 
+#normalise per sample to 95% quantile
+MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_4_21766_7_4.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_5_21766_7_5.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_6_21766_7_6.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_7_21766_7_7.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_8_21766_7_8.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_9_21766_7_9.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_10_21766_7_10.merged.sorted.marked.100000_window.chr$V5,0.95)
+MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5 <- MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5/quantile(MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr$V5,0.95)
+
+
  data <- MHco3_ISE.N1_1_21766_7_1.merged.sorted.marked.100000_window.chr %>%
   left_join(., MHco3_ISE.N1_2_21766_7_2.merged.sorted.marked.100000_window.chr, by=c('V1','V2')) %>%
   left_join(., MHco3_ISE.N1_3_21766_7_3.merged.sorted.marked.100000_window.chr, by=c('V1','V2')) %>%
@@ -242,12 +256,22 @@ for(i in filenames){
   left_join(., MHco3_ISE.N1_11_21766_7_11.merged.sorted.marked.100000_window.chr, by=c('V1','V2')) %>%
   distinct()
 
+chr_colours<-c("#b2182b","#fc8d59","#fee090","#d1e5f0","#67a9cf","#4575b4")
+
 colnames(data) <- c("CHR","START","MHco3_ISE.N1_1","MHco3_ISE.N1_2","MHco3_ISE.N1_3","MHco3_ISE.N1_4","MHco3_ISE.N1_5","MHco3_ISE.N1_6","MHco3_ISE.N1_7","MHco3_ISE.N1_8","MHco3_ISE.N1_9","MHco3_ISE.N1_10","MHco3_ISE.N1_11")
 
 data2 <- melt(data,id.vars = c("CHR","START"))
 data2 <- data2[data2$CHR!="hcontortus_7_chr_mtDNA_arrow_pilon",]
 
-ggplot(data2,aes(START,variable,fill=value))+geom_tile()+facet_grid(.~CHR)
+data2$value <- ifelse(data2$value > 1, 1, data2$value)
+
+ggplot(data2,aes(START/10^6,variable,fill=value))+
+     geom_tile()+
+     labs(x="Genomic position in chromosome (Mbp)")+
+     scale_y_discrete(limits=rev)+
+     facet_grid(.~CHR)+
+     scale_fill_gradient2(low="#b2182b",mid="#fee090",high="#4575b4",midpoint=0.5)+
+     theme_bw()
 ```
 
 ******
