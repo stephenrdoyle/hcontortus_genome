@@ -756,8 +756,6 @@ colnames(busco_data) <- c("BUSCO",
 busco_data <- busco_data %>% remove_rownames %>% column_to_rownames(var="BUSCO")
 
 
-
-
 heatmap.2(as.matrix(busco_data), scale = "none",
           trace = "none", density.info = "none")
 ```
