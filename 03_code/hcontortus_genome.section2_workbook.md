@@ -1,4 +1,4 @@
-# Haemonchus genome paper
+# Haemonchus contortus genome paper
 
 ## Section 2: Resolving haplotypic diversity and repeat distribution within the chromosomes
 

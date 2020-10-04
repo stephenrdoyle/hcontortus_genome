@@ -1,4 +1,4 @@
-# Haemonchus genome paper
+# Haemonchus contortus genome paper
 ## Section 1: Chromosome structure of Haemonchus contortus
 
 1. [Genome assembly](#genome)
