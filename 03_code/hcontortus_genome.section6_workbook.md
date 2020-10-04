@@ -1,12 +1,9 @@
-# Haemonchus genome - genome variation analyses
-
-## Table of contents
+# Haemonchus contortus genome paper
+## Section 6: Distribution of global genetic diversity throughout the chromosomes
 
 1. [mtDNA analysis](#mtdna_analysis)
 2. [World map of sampling sites](#global_sampling_map)
 3. [Genome wide nucleotide diversity analysis](#nuc_div)
-
-
 
 # Get Raw data
 ```shell

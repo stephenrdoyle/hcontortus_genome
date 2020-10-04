@@ -17,9 +17,9 @@
 ******
 ## Short-read RNAseq <a name="srRNAseq"></a>
 ```bash
-# --- RNAseq data - info
+#
 cat /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/lanes.list
-
+#> contents of "lanes.list"
 eggs1_236476_3881079	7059_6#1
 eggs2_236476_3881080	7059_6#2
 eggs3_236476_3881081	7059_6#3
@@ -52,11 +52,7 @@ gut2_236476_1589_3914316	7062_6#14
 gut3_236476_635J_3914317	7062_6#15
 
 
-
-#-----------------------------------------------------------------------------------------
-
 mkdir STAR_MAP_ALL
-
 cd STAR_MAP_ALL
 
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
@@ -73,7 +69,6 @@ bsub.py --threads 8 20 01_star_index \
 
 
 #--- map reads
-
 for i in ` cd ../RAW/ && ls -1d */ | sed -e 's/\///g' `; do \
 bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/STAR/bin/Linux_x86_64/STAR \
 --runThreadN 8 \
@@ -87,25 +82,18 @@ bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/softwar
 ; done
 
 
-
 # merge bams into a single bam for braker
-
 ls -1 *bam > bams.list
 bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
-
 
 cd ../
 
 
 #--- repeat for chromosome only
-
 mkdir STAR_MAP_CHR
-
 cd STAR_MAP_CHR
-
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
-
- mkdir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4chr_rnaseq_star_index
+mkdir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4chr_rnaseq_star_index
 
 #--- make reference index
 bsub.py --threads 8 20 01_star_index_chr \
@@ -117,7 +105,6 @@ bsub.py --threads 8 20 01_star_index_chr \
 
 
 #--- map reads
-
 for i in ` cd ../RAW/ && ls -1d */ | sed -e 's/\///g' `; do \
 bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/STAR/bin/Linux_x86_64/STAR \
 --runThreadN 8 \
@@ -133,35 +120,27 @@ bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/softwar
 
 
 # merge bams into a single bam for braker
-
 ls -1 *bam > bams.list
 bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
-
 
 cd ../
 
 
-# make intro hints from RNAseq
-
-#- make hints files
-bsub.py 10 01_bam2hints_RNAseq \
-"/lustre/scratch118/infgen/archive/ss34/SCHISTO/augustus/augustus-3.2.2//bin/bam2hints --intronsonly --minintronlen=20 --source=E --in=starmap_merge.chr.bam --out=starmap_merge.chr.intron-hints.gff"
-
-
-samtools-1.3 faidx HAEM_V4_final.chr.fa
-awk '{print $1,$2}' OFS="\t" HAEM_V4_final.chr.fa.fai >chromosome_size.list
-
-samtools-1.3 index -b starmap_merge.chr.bam
-/software/pathogen/external/apps/usr/local/Python-2.7.13/bin//bam2wig.py -i starmap_merge.chr.bam -s chromosome_size.list -o starmap_merge.chr_bam2wig_out; \
-cat starmap_merge.chr_bam2wig_out | \
-/software/pathogen/external/apps/usr/bin/wig2hints.pl --width=10 --margin=10 --minthresh=2 --minscore=4 --prune=0.1 --src=W --type=ep --radius=4.5 --pri=4 --strand="." > RNAseq.merge.exon-parts.gff
+# make intro hints from RNAseq - not this was not sued in the end
+# bsub.py 10 01_bam2hints_RNAseq \
+# "/lustre/scratch118/infgen/archive/ss34/SCHISTO/augustus/augustus-3.2.2//bin/bam2hints --intronsonly --minintronlen=20 --source=E --in=starmap_merge.chr.bam --out=starmap_merge.chr.intron-hints.gff"
+#
+# samtools-1.3 faidx HAEM_V4_final.chr.fa
+# awk '{print $1,$2}' OFS="\t" HAEM_V4_final.chr.fa.fai >chromosome_size.list
+#
+# samtools-1.3 index -b starmap_merge.chr.bam
+# /software/pathogen/external/apps/usr/local/Python-2.7.13/bin//bam2wig.py -i starmap_merge.chr.bam -s chromosome_size.list -o starmap_merge.chr_bam2wig_out; \
+# cat starmap_merge.chr_bam2wig_out | \
+# /software/pathogen/external/apps/usr/bin/wig2hints.pl --width=10 --margin=10 --minthresh=2 --minscore=4 --prune=0.1 --src=W --type=ep --radius=4.5 --pri=4 --strand="." > RNAseq.merge.exon-parts.gff
 ```
 
-
+### Run Braker using RNAseq data
 ```bash
-#-----------------------------------------------------------------------------------------
-# Braker
-#-----------------------------------------------------------------------------------------
 
 mkdir BRAKER_ALL
 mkdir BRAKER_CHR
@@ -172,8 +151,7 @@ ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
 
 # paper: http://www.ncbi.nlm.nih.gov/pubmed/26559507
 
-
-
+# load required paths for braker to work
 export AUGUSTUS_CONFIG_PATH=/nfs/users/nfs_s/sd21/software/augustus-3.2.1/config
 export AUGUSTUS_SCRIPTS_PATH=/nfs/users/nfs_s/sd21/software/augustus-3.2.1/scripts
 export BAMTOOLS_PATH=/nfs/users/nfs_s/sd21/lustre118_link/software/bamtools/bin
@@ -216,33 +194,23 @@ bsub.py --queue long --threads 30 30 01_braker_chr \
 --useexisting
 ```
 
-
-
-
-
-
-
-
-
-
-
 [↥ **Back to top**](#top)
 
 
 
 ******
 ## Long-read RNAseq <a name="lrRNAseq"></a>
-```bash
-#-----------------------------------------------------------------------------------------
-# Running IsoSeq3 pipeline
-#-----------------------------------------------------------------------------------------
 
+
+### IsoSeq3 pipeline
+```bash
 # Step 1: run ccs
 # --- rawdata
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/RAW
 
 ls -1 *.subreads.bam > bams.list
 
+# working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/POOLED
 
 samtools merge -b bams.list merged_subreads.bam
@@ -270,9 +238,6 @@ done
 for i in *.isoseq3_polished.bam; do
 isoseq3 summarize $i $(i}.summary.csv; done
 ```
-
-
-
 
 [↥ **Back to top**](#top)
 
