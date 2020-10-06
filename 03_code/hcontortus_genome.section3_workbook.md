@@ -1,22 +1,23 @@
 # Haemonchus contortus genome paper
+
 ## Section 3: Generation of a high-quality transcriptome annotation incorporating short and long reads
 
-1. [Short-read RNAseq](#srRNAseq)
-2. [Long-read RNAseq](#lrRNAseq)
-3. [PASA round 1](#pasa1)
-4. [Exonerate](#exonerate)
-5. [EvidenceModeller](#evidencemodeller)
-6. [PASA round 2](#pasa2)
-7. [Annotation QC - Sensitivity and specificity](#qc_ss)
-8. [Transcriptome Summary Stats](#summarystats)
-9. [Gene model plotter](#gene_model_plotter)
+1.  [Short-read RNAseq](#srRNAseq)
+2.  [Long-read RNAseq](#lrRNAseq)
+3.  [PASA round 1](#pasa1)
+4.  [Exonerate](#exonerate)
+5.  [EvidenceModeller](#evidencemodeller)
+6.  [PASA round 2](#pasa2)
+7.  [Annotation QC - Sensitivity and specificity](#qc_ss)
+8.  [Transcriptome Summary Stats](#summarystats)
+9.  [Gene model plotter](#gene_model_plotter)
 10. [Orthology](#orthology)
 11. [Other](#other)
 
+* * *
 
-
-******
 ## Short-read RNAseq <a name="srRNAseq"></a>
+
 ```bash
 # made a sample_name lanes file for mapping, eg.
 cat /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/lanes.list
@@ -140,8 +141,8 @@ cd ../
 ```
 
 ### Run Braker using RNAseq data
-```bash
 
+```bash
 #mkdir BRAKER_ALL
 mkdir BRAKER_CHR
 
@@ -182,27 +183,26 @@ ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/STAR_MAP_CHR/starmap_merge.chr.bam
 
 bsub.py --queue long --threads 30 30 01_braker_chr \
-/lustre/scratch118/infgen/team133/sd21/software/TRANSCRIPTOME/BRAKER_v2.0/braker.pl \
---genome=HAEM_V4_final.chr.fa \
---bam=starmap_merge.chr.bam \
---cores 30 \
---gff3 \
---species=Hc_V4_chr \
---UTR=off \
---overwrite \
---workingdir=$PWD \
---useexisting
+     /lustre/scratch118/infgen/team133/sd21/software/TRANSCRIPTOME/BRAKER_v2.0/braker.pl \
+     --genome=HAEM_V4_final.chr.fa \
+     --bam=starmap_merge.chr.bam \
+     --cores 30 \
+     --gff3 \
+     --species=Hc_V4_chr \
+     --UTR=off \
+     --overwrite \
+     --workingdir=$PWD \
+     --useexisting
 ```
 
 [↥ **Back to top**](#top)
 
+* * *
 
-
-******
 ## Long-read RNAseq <a name="lrRNAseq"></a>
 
-
 ### IsoSeq3 pipeline
+
 ```bash
 # Step 1: run ccs
 # --- rawdata
@@ -224,31 +224,28 @@ bsub.py --threads 7 1 02_lima_pool "lima merged_subreads.ccs.bam primers.fa merg
 
 # Step 3. run isoseq3 cluster
 for i in *.demux.primer_5p--primer_3p.bam; do
-bsub.py --threads 7 2 03_isoseq3_cluster "isoseq3 cluster ${i} ${i%.demux.primer_5p--primer_3p.bam}.isoseq3_unpolished.bam --verbose --num-threads 7";
+     bsub.py --threads 7 2 03_isoseq3_cluster "isoseq3 cluster ${i} ${i%.demux.primer_5p--primer_3p.bam}.isoseq3_unpolished.bam --verbose --num-threads 7";
 done
 
 
 # Step4. run isoseq3 polish
 for i in *isoseq3_unpolished.bam; do
-bsub.py --threads 7 10 04_isoseq3_polish "isoseq3 polish ${i} ${i%.isoseq3_unpolished.bam}*subreads.bam ${i%.isoseq3_unpolished.bam}.isoseq3_polished.bam --verbose --num-threads 7";
+     bsub.py --threads 7 10 04_isoseq3_polish "isoseq3 polish ${i} ${i%.isoseq3_unpolished.bam}*subreads.bam ${i%.isoseq3_unpolished.bam}.isoseq3_polished.bam --verbose --num-threads 7";
 done
 
 
 # Step 5 . summarise data
 for i in *.isoseq3_polished.bam; do
-isoseq3 summarize $i $(i}.summary.csv; done
+     isoseq3 summarize $i $(i}.summary.csv; done
 ```
 
 [↥ **Back to top**](#top)
 
+* * *
 
-
-
-
-******
 ## PASA <a name="pasa"></a>
-```bash
 
+```bash
 # connect to mysql server
 /usr/bin/mysql -usd21 -pIgebie5Ahbah --port=3307 -hutlt-db
 # handy sql cheatsheet : https://gist.github.com/hofmannsven/9164408
@@ -274,62 +271,57 @@ cp ../../V3/TRANSCRIPTOME/PASA/FINAL_V3/alignAssembly.config .
 cp ../../V3/TRANSCRIPTOME/PASA/FINAL_V3/annotCompare.config .
 
 bsub.py --queue yesterday --threads 7 20 01_pasa_isoseq_HcV4_chr \
-"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
--c alignAssembly.config \
--C -R \
--g HAEM_V4_final.chr.fa \
--t all_HQ_isoseq.renamed.fasta \
--f all_HQ_isoseq.renamed.names \
---ALIGNERS blat,gmap --CPU 7"
+     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
+     -c alignAssembly.config \
+     -C -R \
+     -g HAEM_V4_final.chr.fa \
+     -t all_HQ_isoseq.renamed.fasta \
+     -f all_HQ_isoseq.renamed.names \
+     --ALIGNERS blat,gmap --CPU 7"
 
 
 bsub.py --queue yesterday 1 02_pasa_add_evm_annotations \
-"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
--c alignAssembly.config \
--g HAEM_V4_final.chr.fa \
--P augustus.filtered.gff3"
+     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
+     -c alignAssembly.config \
+     -g HAEM_V4_final.chr.fa \
+     -P augustus.filtered.gff3"
 
 
 
 bsub.py --queue yesterday 1 03_pasa_evm_compare_update \
-"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
--c annotCompare.config \
--A -L \
---annots_gff3 augustus.filtered.gff3 \
---ALT_SPLICE \
--g HAEM_V4_final.chr.fa \
--t all_HQ_isoseq.renamed.fasta \
--f all_HQ_isoseq.renamed.names"
+     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
+     -c annotCompare.config \
+     -A -L \
+     --annots_gff3 augustus.filtered.gff3 \
+     --ALT_SPLICE \
+     -g HAEM_V4_final.chr.fa \
+     -t all_HQ_isoseq.renamed.fasta \
+     -f all_HQ_isoseq.renamed.names"
 
 
 
 bsub.py --queue yesterday 1 02_pasa_add_evm_annotations_round2 \
-"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
--c alignAssembly.config \
--g HAEM_V4_final.chr.fa \
--P sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3"
+     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
+     -c alignAssembly.config \
+     -g HAEM_V4_final.chr.fa \
+     -P sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3"
 
 
 bsub.py --queue yesterday 1 03_pasa_evm_compare_update_round2 \
-"/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
--c annotCompare.config \
--A -L \
---annots_gff3 sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3 \
---ALT_SPLICE \
--g HAEM_V4_final.chr.fa \
--t all_HQ_isoseq.renamed.fasta \
--f all_HQ_isoseq.renamed.names"
+     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
+     -c annotCompare.config \
+     -A -L \
+     --annots_gff3 sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3 \
+     --ALT_SPLICE \
+     -g HAEM_V4_final.chr.fa \
+     -t all_HQ_isoseq.renamed.fasta \
+     -f all_HQ_isoseq.renamed.names"
 ```
-
-
-
-
 
 [↥ **Back to top**](#top)
 
+* * *
 
-
-******
 ## Exonerate <a name="exonerate"></a>
 
 ```bash
@@ -348,15 +340,14 @@ gunzip haemonchus_contortus.PRJEB506.WBPS9.protein.fa.gz
 
 # run job
 bsub.py --queue yesterday 10 01_exonserate \
-/nfs/users/nfs_s/sd21/bash_scripts/run_exonerate_splitter \
-../HAEM_V4_final.chr.fa \
-haemonchus_contortus.PRJEB506.WBPS9.protein.fa
+     /nfs/users/nfs_s/sd21/bash_scripts/run_exonerate_splitter \
+     ../HAEM_V4_final.chr.fa \
+     haemonchus_contortus.PRJEB506.WBPS9.protein.fa
+```
 
+where "run_exonerate_splitter" contains:
 
-
-
-# run_exonerate_splitter
-#!/usr/bin/env bash
+```bash
 # exonerate splitter
 
 reference=$1
@@ -378,20 +369,14 @@ echo -e "exonerate --model protein2genome --percent 50 ${i} ref.fa --showtargetg
 chmod a+x run_split_exonerate_*
 bsub -q normal -n1 -R'span[hosts=1] select[mem>2500] rusage[mem=2500]' -M2500 -J "split_exonerate[1-$n]" -e split_exonerate[1-$n].e -o split_exonerate[1-$n].o ./run_split_exonerate_\$LSB_JOBINDEX
 bsub -q normal -n1 -R'span[hosts=1] select[mem>100] rusage[mem=100]' -M100 -w split_exonerate -J "split_exonerate_FIN" "touch FINISHED"
-
-
 ```
-
-
 
 [↥ **Back to top**](#top)
 
+***
 
-
-
-
-******
 ## EvidenceModeller <a name="evidencemodeller"></a>
+
 ```bash
 #-----------------------------------------------------------------------------------------
 # Evidence Modeller
@@ -422,58 +407,55 @@ ABINITIO_PREDICTION	braker_augustus	2
 
 bsub.py 5 01_evm \
 "/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/partition_EVM_inputs.pl \
---genome HAEM_V4_final.chr.fa \
---gene_predictions braker.renamed.gff3 \
---transcript_alignments pasa.renamed.gff3 \
---protein_alignments exonerate.V1_2_V4.renamed.gff \
---protein_alignments ce_2_v4.exonerate.renamed.gff3 \
---protein_alignments AUGUSTUS_JN_CURATED.exonerate.renamed.gff \
---segmentSize 100000 \
---overlapSize 10000 \
---partition_listing partitions_list.out"
+     --genome HAEM_V4_final.chr.fa \
+     --gene_predictions braker.renamed.gff3 \
+     --transcript_alignments pasa.renamed.gff3 \
+     --protein_alignments exonerate.V1_2_V4.renamed.gff \
+     --protein_alignments ce_2_v4.exonerate.renamed.gff3 \
+     --protein_alignments AUGUSTUS_JN_CURATED.exonerate.renamed.gff \
+     --segmentSize 100000 \
+     --overlapSize 10000 \
+     --partition_listing partitions_list.out"
 
 
 
 
 bsub.py 5 02_evm_write_commands \
 "/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/write_EVM_commands.pl \
---weights /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EVM_CHR/weights.txt \
---genome HAEM_V4_final.chr.fa \
---gene_predictions braker.renamed.gff3 \
---transcript_alignments pasa.renamed.gff3 \
---protein_alignments exonerate.V1_2_V4.renamed.gff \
---protein_alignments ce_2_v4.exonerate.renamed.gff3 \
---protein_alignments AUGUSTUS_JN_CURATED.exonerate.renamed.gff \
---output_file_name evm.out \
---partitions partitions_list.out \> commands.list"
+     --weights /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EVM_CHR/weights.txt \
+     --genome HAEM_V4_final.chr.fa \
+     --gene_predictions braker.renamed.gff3 \
+     --transcript_alignments pasa.renamed.gff3 \
+     --protein_alignments exonerate.V1_2_V4.renamed.gff \
+     --protein_alignments ce_2_v4.exonerate.renamed.gff3 \
+     --protein_alignments AUGUSTUS_JN_CURATED.exonerate.renamed.gff \
+     --output_file_name evm.out \
+     --partitions partitions_list.out \> commands.list"
 
 chmod a+x commands.list
 bsub.py 5 03_evm_run "./commands.list"
 
 bsub.py 5 04_evm_recombine_partitions \
 "/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/recombine_EVM_partial_outputs.pl \
---partitions partitions_list.out \
---output_file_name evm.out"
+     --partitions partitions_list.out \
+     --output_file_name evm.out"
 
 bsub.py 5 05_evm_make_gff3 \
-"/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/convert_EVM_outputs_to_GFF3.pl \
---partitions partitions_list.out \
---output evm.out \
---genome HAEM_V4_final.chr.fa"
+     "/nfs/users/nfs_s/sd21//lustre118_link/software/TRANSCRIPTOME/EVidenceModeler-1.1.1/EvmUtils/convert_EVM_outputs_to_GFF3.pl \
+     --partitions partitions_list.out \
+     --output evm.out \
+     --genome HAEM_V4_final.chr.fa"
 
 
 find . -name "evm.out.gff3" | sort | while read -r line; do cat $line >> HAEM_V4.chr.evm_merge.gff; done
-
 ```
+
 [↥ **Back to top**](#top)
 
-
-
-
-
-******
+* * *
 
 ## PASA round 2 <a name="pasa2"></a>
+
 ```bash
 # working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/PASA_CHR_R2
@@ -508,38 +490,33 @@ bsub.py --queue yesterday --threads 7 5 05_pasa_compare_2_reloaded_annotations "
 
 # reformat final GFF
 echo "##gff-version 3" > HCON_V4.renamed.gff3; cat sd21_pasa_HcV4_2.gene_structures_post_PASA_updates.31804.renamed.tmp | grep -v "#" | sed '/^$/d' | awk '{$2="WSI_SD21"; print}' OFS="\t" | sort -k1,1 -k4,4n >> HCON_V4.renamed.gff3
-
 ```
-
 
 [↥ **Back to top**](#top)
 
+* * *
 
-
-
-
-******
 ## Annotation QC - Sensitivity and specificity <a name="qc_ss"></a>
 
-```bash
-Want to compare the final annotation to steps along the way. These include
-- V1 genome vs manually curated V1 genes
-_ V4 final vs AUGUSTUS
-- V4 final vs BRAKER
-- V4 final vs PASA w Isoseq R1
-- V4 final vs EVM w Isoseq R2
+````bash
+    Want to compare the final annotation to steps along the way. These include
+    - V1 genome vs manually curated V1 genes
+    _ V4 final vs AUGUSTUS
+    - V4 final vs BRAKER
+    - V4 final vs PASA w Isoseq R1
+    - V4 final vs EVM w Isoseq R2
 
-Need to do this with the 110 manually curated genes, and the whole V4 final.
+    Need to do this with the 110 manually curated genes, and the whole V4 final.
 
-### Working environment
-```shell
-cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME
-mkdir TRANSCRIPTOME_QC
-cd TRANSCRIPTOME_QC
-```
-
+    ### Working environment
+    ```shell
+    cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME
+    mkdir TRANSCRIPTOME_QC
+    cd TRANSCRIPTOME_QC
+````
 
 ### Get some data
+
 ```shell
 # V1 curated genes
 cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/V3/TRANSCRIPTOME/V1_MANUAL_CURATION/ABC_LGic.2.gff ABC_LGic.2.gff
@@ -567,9 +544,8 @@ cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/PASA_CHR/sd21_pa
 cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/PASA_CHR_R2/HCON_V4.renamed.gff3 HCON_V4_EVM.gff3
 ```
 
-
-
 ### Transcriptome comparisons
+
 ```shell
 # V1 vs curated V1 genes
 gffcompare -Q -r ABC_LGic.2.gff -o V1cutated_vs_V1annotation Hc_rztk_1+2+8+9.augustus.gff3
@@ -623,72 +599,65 @@ gffcompare -R -r HCON_V4_FINAL.gff3 -o V4_FINAL_vs_EVM HCON_V4_EVM.gff3
 Don't think it is worth including the V1 comparison, as these curated genes would have been incorporated into the final annotation. Not really a good comparison. V1 precision is low due to only a subset of genes being used.
 
 Results suggest:
-- no increase in sensitivity, but big increase in precision from BRAKER to PASA
-- increase in Sensitivity and Precision from PASA to EVM
-```
 
-[↥ **Back to top**](#top)
+-   no increase in sensitivity, but big increase in precision from BRAKER to PASA
+-   increase in Sensitivity and Precision from PASA to EVM
 
 
-
-
-
-## Annotation QC - BUSCO <a name="qc_busco"></a>
-```bash
-# working dir:
-cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_QC
-
-# make protein fasta from GFF
-gffread HCON_V1.annotation.gff3 -g HCON_V1.fa -y HCON_V1_proteins.fa
-gffread HCON_V4_BRAKER.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_BRAKER_proteins.fa
-gffread HCON_V4_PASA.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_PASA_proteins.fa
-gffread HCON_V4_EVM.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_EVM_proteins.fa
-gffread HCON_V4_FINAL.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_proteins.fa
-
-# run busco proteins
-for reference in *proteins.fa; do
-/nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/busco_v3/scripts/run_BUSCO.py \
-     --in ${reference} \
-     --out ${reference}_busco3.02.metazoa.proteins \
-     --mode proteins \
-     --lineage_path /nfs/users/nfs_s/sd21/databases/busco/metazoa_odb9 \
-     --species caenorhabditis \
-     --cpu 15 --tarzip --force --long --blast_single_core \
-     --tmp_path ${reference}.tmp;
-done
-
-# output
-#--- haemonchus_contortus.PRJNA205202.WBPS14.protein.fa
-#    66.0%[S:58.2%,D:7.8%],F:12.1%,M:21.9%,n:978
-
-#--- HCON_V1_proteins.fa
-#	C:82.9%[S:54.6%,D:28.3%],F:4.0%,M:13.1%,n:978
-
-#--- HCON_V4_BRAKER_proteins.fa
-#    86.5%[S:78.8%,D:7.7%],F:3.8%,M:9.7%,n:978
-
-#--- HCON_V4_PASA_proteins.fa
-#    74.9%[S:64.6%,D:10.3%],F:6.0%,M:19.1%,n:978
-
-#--- HCON_V4_EVM_proteins.fa
-#    87.3%[S:80.3%,D:7.0%],F:3.2%,M:9.5%,n:978
-
-#--- HCON_V4_proteins.fa
-#    88.4%[S:80.6%,D:7.8%],F:2.6%,M:9.0%,n:978
-```
+    [↥ **Back to top**](#top)
 
 
 
 
 
+    ## Annotation QC - BUSCO <a name="qc_busco"></a>
+    ```bash
+    # working dir:
+    cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_QC
 
+    # make protein fasta from GFF
+    gffread HCON_V1.annotation.gff3 -g HCON_V1.fa -y HCON_V1_proteins.fa
+    gffread HCON_V4_BRAKER.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_BRAKER_proteins.fa
+    gffread HCON_V4_PASA.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_PASA_proteins.fa
+    gffread HCON_V4_EVM.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_EVM_proteins.fa
+    gffread HCON_V4_FINAL.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_proteins.fa
 
+    # run busco proteins
+    for reference in *proteins.fa; do
+    /nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/busco_v3/scripts/run_BUSCO.py \
+         --in ${reference} \
+         --out ${reference}_busco3.02.metazoa.proteins \
+         --mode proteins \
+         --lineage_path /nfs/users/nfs_s/sd21/databases/busco/metazoa_odb9 \
+         --species caenorhabditis \
+         --cpu 15 --tarzip --force --long --blast_single_core \
+         --tmp_path ${reference}.tmp;
+    done
 
-******
+    # output
+    #--- haemonchus_contortus.PRJNA205202.WBPS14.protein.fa
+    #    66.0%[S:58.2%,D:7.8%],F:12.1%,M:21.9%,n:978
+
+    #--- HCON_V1_proteins.fa
+    #	C:82.9%[S:54.6%,D:28.3%],F:4.0%,M:13.1%,n:978
+
+    #--- HCON_V4_BRAKER_proteins.fa
+    #    86.5%[S:78.8%,D:7.7%],F:3.8%,M:9.7%,n:978
+
+    #--- HCON_V4_PASA_proteins.fa
+    #    74.9%[S:64.6%,D:10.3%],F:6.0%,M:19.1%,n:978
+
+    #--- HCON_V4_EVM_proteins.fa
+    #    87.3%[S:80.3%,D:7.0%],F:3.2%,M:9.5%,n:978
+
+    #--- HCON_V4_proteins.fa
+    #    88.4%[S:80.6%,D:7.8%],F:2.6%,M:9.0%,n:978
+
+* * *
+
 ## Transcriptome summary stats <a name="summarystats"></a>
 
 ```bash
-
 ## Annotation quantitative quantitative data
 cd ~/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
 mkdir HCON_V4_WBP11plus_190125_ANALYSIS
@@ -698,75 +667,66 @@ ln -sf ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_
 gag.py -f ../HAEM_V4_final.chr.fa -g HCON_V4_WBP11plus_190125.ips.gff3
 ```
 
+\#--------------------------------
 
-
-
-#--------------------------------
 # Transcriptome Summary Stats summary stats
 
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_SUMMARY_STATS
 
-for i in V1 MCMASTER V4 CELEGANS V4_190114; do awk -v name="$i" '$3=="gene" {print name,"gene",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.genelength.txt; awk -v name="$i" '$3=="mRNA" {print name,"mrna",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.mrnalength.txt; awk -v name="$i" '$3=="exon" {print name,"exon",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.exonlength.txt; awk -v name="$i" '$3=="CDS" {print name,"cds",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.cdslength.txt; done
+for i in V1 MCMASTER V4 CELEGANS V4_190114; do awk -v name="$i" '$3=="gene" {print name,"gene",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.genelength.txt; awk -v name="$i" '$3=="mRNA" {print name,"mrna",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.mrnalength.txt; awk -v name="$i" '$3=="exon" {print name,"exon",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.exonlength.txt; awk -v name="$i" '$3=="CDS" {print name,"cds",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.cdslength.txt; done
 
-for i in V4_190114; do awk -v name="$i" '$3=="gene" {print name,"gene",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.genelength.txt; awk -v name="$i" '$3=="mRNA" {print name,"mrna",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.mrnalength.txt; awk -v name="$i" '$3=="exon" {print name,"exon",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.exonlength.txt; awk -v name="$i" '$3=="CDS" {print name,"cds",$5-$4}' OFS="\t" ${i}/*.gff* > ${i}/${i}.cdslength.txt; done
-
-
+for i in V4_190114; do awk -v name="$i" '$3=="gene" {print name,"gene",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.genelength.txt; awk -v name="$i" '$3=="mRNA" {print name,"mrna",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.mrnalength.txt; awk -v name="$i" '$3=="exon" {print name,"exon",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.exonlength.txt; awk -v name="$i" '$3=="CDS" {print name,"cds",$5-$4}' OFS="\\t" ${i}/_.gff_ > ${i}/${i}.cdslength.txt; done
 
 # get intron lengths
-gt gff3 -addintrons haemonchus_contortus.PRJEB506.WBPS8.annotations.gff3 | awk '$3=="intron" {print "V1","intron",$5-$4}' OFS="\t" > V1.intronlength.txt
-#gt gff3 -tidy -addintrons HCON_V4.renamed.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\t" > V4.intronlength.txt
-gt gff3 -tidy -addintrons wormbase.20240.complete.gff3 | awk '$3=="intron" {print "CELEGANS","intron",$5-$4}' OFS="\t" > celegans.intronlength.txt
-gt gff3 -addintrons haemonchus_contortus.PRJNA205202.WBPS9.annotations.gff3 | awk '$3=="intron" {print "MCMASTER","intron",$5-$4}' OFS="\t" > MCMASTER.intronlength.txt
-gt gff3 -tidy -addintrons HCON_V4_WBP11plus_190114.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\t" > V4_190114.intronlength.txt
+
+gt gff3 -addintrons haemonchus_contortus.PRJEB506.WBPS8.annotations.gff3 | awk '$3=="intron" {print "V1","intron",$5-$4}' OFS="\\t" > V1.intronlength.txt
+\#gt gff3 -tidy -addintrons HCON_V4.renamed.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\\t" > V4.intronlength.txt
+gt gff3 -tidy -addintrons wormbase.20240.complete.gff3 | awk '$3=="intron" {print "CELEGANS","intron",$5-$4}' OFS="\\t" > celegans.intronlength.txt
+gt gff3 -addintrons haemonchus_contortus.PRJNA205202.WBPS9.annotations.gff3 | awk '$3=="intron" {print "MCMASTER","intron",$5-$4}' OFS="\\t" > MCMASTER.intronlength.txt
+gt gff3 -tidy -addintrons HCON_V4_WBP11plus_190114.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\\t" > V4_190114.intronlength.txt
 
 # collate data
+
 cat CELEGANS/CELEGANS.genelength.txt MCMASTER/MCMASTER.genelength.txt V1/V1.genelength.txt V4_190114/V4_190114.genelength.txt > genelength.txt
 cat CELEGANS/CELEGANS.mrnalength.txt MCMASTER/MCMASTER.mrnalength.txt V1/V1.mrnalength.txt V4_190114/V4_190114.mrnalength.txt > mrnalength.txt
 cat CELEGANS/CELEGANS.exonlength.txt MCMASTER/MCMASTER.exonlength.txt V1/V1.exonlength.txt V4_190114/V4_190114.exonlength.txt > exonlength.txt
 cat CELEGANS/CELEGANS.cdslength.txt MCMASTER/MCMASTER.cdslength.txt V1/V1.cdslength.txt V4_190114/V4_190114.cdslength.txt > cdslength.txt
 cat CELEGANS/celegans.intronlength.txt MCMASTER/MCMASTER.intronlength.txt V1/V1.intronlength.txt V4_190114/V4_190114.intronlength.txt > intronlength.txt
-```
 
-```R
-# Summary stats
+    ```R
+    # Summary stats
 
-library(ggplot2)
-library(patchwork)
+    library(ggplot2)
+    library(patchwork)
 
-gene<-read.table("genelength.txt",header=F)
-mRNA<-read.table("mrnalength.txt",header=F)
-exon<-read.table("exonlength.txt",header=F)
-intron<-read.table("intronlength.txt",header=F)
-
-
-gene_plot <- ggplot()+geom_density(aes(log10(gene$V3),col=gene$V1,fill=gene$V1),alpha = 0.2)+theme_bw()+theme(legend.position="bottom")+labs(title ="Gene length", x = "Length (log10[bp])", y = "Density")
-mRNA_plot <- ggplot()+geom_density(aes(log10(mRNA$V3),col=mRNA$V1,fill=mRNA$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="mRNA length", x = "Length (log10[bp])", y = "Density")
-exon_plot <- ggplot()+geom_density(aes(log10(exon$V3),col=exon$V1,fill=exon$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Exon length", x = "Length (log10[bp])", y = "Density")
-cds_plot <- ggplot()+geom_density(aes(log10(cds$V3),col=cds$V1,fill=cds$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="CDS length", x = "Length (log10[bp])", y = "Density")
-intron_plot <- ggplot()+geom_density(aes(log10(intron$V3),col=intron$V1,fill=intron$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Intron length", x = "Length (log10[bp])", y = "Density")
+    gene<-read.table("genelength.txt",header=F)
+    mRNA<-read.table("mrnalength.txt",header=F)
+    exon<-read.table("exonlength.txt",header=F)
+    intron<-read.table("intronlength.txt",header=F)
 
 
-
-gene_plot + mRNA_plot + exon_plot + intron_plot + plot_layout(ncol = 4)
-ggsave(filename="transcriptome_stats.pdf", width=35,height=10,units="cm")
-```
-
-
-```
-library(ggplot2)
-data<-read.table("summary_stats.txt",sep="\t",header=T)
+    gene_plot <- ggplot()+geom_density(aes(log10(gene$V3),col=gene$V1,fill=gene$V1),alpha = 0.2)+theme_bw()+theme(legend.position="bottom")+labs(title ="Gene length", x = "Length (log10[bp])", y = "Density")
+    mRNA_plot <- ggplot()+geom_density(aes(log10(mRNA$V3),col=mRNA$V1,fill=mRNA$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="mRNA length", x = "Length (log10[bp])", y = "Density")
+    exon_plot <- ggplot()+geom_density(aes(log10(exon$V3),col=exon$V1,fill=exon$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Exon length", x = "Length (log10[bp])", y = "Density")
+    cds_plot <- ggplot()+geom_density(aes(log10(cds$V3),col=cds$V1,fill=cds$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="CDS length", x = "Length (log10[bp])", y = "Density")
+    intron_plot <- ggplot()+geom_density(aes(log10(intron$V3),col=intron$V1,fill=intron$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Intron length", x = "Length (log10[bp])", y = "Density")
 
 
-ggplot()+
-     geom_point(aes(x=log10(data$count),y=log10(data$mean),col=data$class,shape=data$Species),size=3)+
-     theme_bw()+
-     labs(y="Mean length (log10[bp])",x="Feature count (log10[total])")
 
-ggsave("annotation_comparison_4species_scatter.pdf",useDingbats=F)
-ggsave("annotation_comparison_4species_scatter.png")
-```
+    gene_plot + mRNA_plot + exon_plot + intron_plot + plot_layout(ncol = 4)
+    ggsave(filename="transcriptome_stats.pdf", width=35,height=10,units="cm")
+
+    library(ggplot2)
+    data<-read.table("summary_stats.txt",sep="\t",header=T)
 
 
+    ggplot()+
+         geom_point(aes(x=log10(data$count),y=log10(data$mean),col=data$class,shape=data$Species),size=3)+
+         theme_bw()+
+         labs(y="Mean length (log10[bp])",x="Feature count (log10[total])")
+
+    ggsave("annotation_comparison_4species_scatter.pdf",useDingbats=F)
+    ggsave("annotation_comparison_4species_scatter.png")
 
 ## 03 - Gene model plotter <a name="gene_model_plotter"></a>
 
@@ -788,10 +748,7 @@ ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFOR
 
 # old V1 annotations
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EXONERATE_CHR/V1_2_V4/exonerate.V1_2_V4.gff OLD_ANNOTATIONS.gff
-
 ```
-
-
 
 ```R
 #install.packages("data.table")
@@ -915,23 +872,22 @@ ggplot()+
 }
 
 gene_model_plot('')
-
 ```
 
+* * *
 
-
-
----
 ## 04 - Orthology <a name="orthology"></a>
----
-### Working envoronment
-```shell
 
+* * *
+
+### Working envoronment
+
+```bash
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION
 ```
 
+```bash
 #### get data
-```shell
 wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS11/species/haemonchus_placei/PRJEB509/haemonchus_placei.PRJEB509.WBPS11.protein.fa.gz
 gunzip haemonchus_placei.PRJEB509.WBPS11.protein.fa.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS11/species/caenorhabditis_elegans/PRJNA13758/caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa.gz
@@ -944,9 +900,7 @@ gunzip haemonchus_contortus.PRJEB506.WBPS10.protein.fa.gz
 ln -fs ../TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3
 gffread HCON_V4_WBP11plus_190125.ips.gff3 -g HAEM_V4_final.chr.fa -y HCON_V4_WBP11plus_190125.ips.proteins.fa
 
-```
 
-```shell
 # curate data for input into orthofinder
 # get one coding sequence per gene - certainly Ce and HcV4 has multiple  isoforms, and therefore multiple coding sequneces per gene
 fastaq to_fasta -l0 caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa2
@@ -1085,43 +1039,28 @@ dev.off()
 png("one2one_orthogroups_plot.upsetr.png",height=5,width=10)
 upset(one2one_orthogroups)
 dev.off()
-
 ```
 
 ```shell
 scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25/KINFIN/kinfin_results/TAXON/*pdf ~/Documents/workbook/hcontortus_genome/04_analysis
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Other  <a name="other"></a>
+
 This section contains some analysis that I tried by didnt end up using for one reason or another. Likely becasue I focun a better way of doing it.
-- running Augustus post braker to incorportate the isoseq
-     - didnt work as gene models were too long with mis-formatted 5' and 3' ends
-- some filtering based on amino acid composition and distribution via PCA
-     - found that there were some models with long runs of biased amino acids and so was trying to correct for these. This did work, but did also remove some valid gene models that were naturally an edge case on distribution  
-- post annotation removeal of repeats
-- mapping of Iso-Seq data
-     - this was used for various things, including in Apollo
-- making a GO term database
-     - this also worked, but didnt use it in the paper in the end
-- manual curation in apollo
-     - also worked, but done mostly post annotation freeze
-- replacing gene names in GFF with species ID and incremental gene specific ID
+
+-   running Augustus post braker to incorportate the isoseq
+    -   didnt work as gene models were too long with mis-formatted 5' and 3' ends
+-   some filtering based on amino acid composition and distribution via PCA
+    -   found that there were some models with long runs of biased amino acids and so was trying to correct for these. This did work, but did also remove some valid gene models that were naturally an edge case on distribution  
+-   post annotation removeal of repeats
+-   mapping of Iso-Seq data
+    -   this was used for various things, including in Apollo
+-   making a GO term database
+    -   this also worked, but didnt use it in the paper in the end
+-   manual curation in apollo
+    -   also worked, but done mostly post annotation freeze
+-   replacing gene names in GFF with species ID and incremental gene specific ID
 
 ```bash
 #-----------------------------------------------------------------------------------------
@@ -1202,7 +1141,6 @@ echo -e "##gff-version 3" > HC_V4_augustus_merge.filtered.gff; grep "AUGUSTUS" H
 gffread HC_V4_augustus_merge.filtered.gff -g HAEM_V4_final.chr.fa -y HC_V4_augustus_merge.filtered.aa.fa
 ```
 
-
 ```bash
 #-----------------------------------------------------------------------------------------
 # Filtering post braker  AUGUSTUS output - MANUAL
@@ -1268,7 +1206,6 @@ ggplot()+geom_point(aes(filter$PC2,filter$PC3,alpha=0.2),size=0.5)+theme_bw()
 
 write.table(row.names(filter),file="freq_filtered_transcripts.list",quote=F,row.names=F,col.names=F)
 ```
-
 
 ```bash
 #--- filter transposon-like sequences
@@ -1408,14 +1345,11 @@ while read gene_id; do grep "ID=${gene_id}$" HC_V4_augustus_merge.filtered.gff; 
 
 echo "##gff-version 3" > HC_V4_augustus_merge.AAfiltered.gff; cat filtered.augustus.gff.tmp genes.filtered.gff.tmp | sort -k1,1 -k4,4n >> HC_V4_augustus_merge.AAfiltered.gff
 while read name; do samtools-1.3 faidx HC_V4_augustus_merge.filtered.aa.fa2 ${name} >> HC_V4_augustus_merge.AAfiltered.aa; done < freq_filtered_transcripts.list
-
 ```
-
 
 ## Post filtering of repeats
 
 ```bash
-
 #--- ALans approach to removing repeats
 # Alans instructions of Hmic
 
@@ -1454,7 +1388,6 @@ cat repeats_vs_cds.out |  awk '{if($4 >= 50){print$1}}' | sort > genes_to_remove
 
 python3  /lustre/scratch118/infgen/team133/alt/HMIC/braker2/braker/HMN_v3/gff3_parser.py HC_V4_augustus_merge.AAfiltered.gff genes_to_remove.txt
 ```
-
 
 ```bash
 #-----------------------------------------------------------------------------------------
@@ -1515,21 +1448,16 @@ bsub.py 1 03_collapse_isoforms collapse_isoforms_by_sam.py --input high_qv_conse
 bsub.py 10 04_fusion_isoforms fusion_finder.py --input high_qv_consensus_isoforms.fasta -s polished_high_qv.sorted.sam -o polished_high_qv.fusion --cluster_report_csv polished_high_qv_cluster_report.csv
 ```
 
+## Making GO term databases
 
+-   lifting C elegans GO terms to 1:1 orthologs
+-   lifting over many:1 or 1:many, providing all GO terms for the many are all the same
+-   extracting interpro GO terms from IPS annotation in gff
+-   sorting / filtering to get a unique set.
 
+### Get 1:1s
 
-### Making GO term databases
-- lifting C elegans GO terms to 1:1 orthologs
-- lifting over many:1 or 1:many, providing all GO terms for the many are all the same
-- extracting interpro GO terms from IPS annotation in gff
-- sorting / filtering to get a unique set.
-
-
-
-
-Get 1:1s
-```shell
-
+```bash
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/GO_ANALYSIS
 
 ln -sf /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25/Orthologues_Jan25/Orthologues/Orthologues_ce.proteins.unique/ce.proteins.unique__v__hc_V4.proteins.unique.csv
@@ -1582,68 +1510,63 @@ cat Hc_genes_Ce_GOterms.txt annotation_GO_per_gene_split.txt | sort | uniq > HCO
 #--- total genes with GO term: 9627
 ```
 
-
-
 # find GO terms for multi Ce: single Hc genes, for which all GO terms in the multi Ce are conserved.
-cat hc_V4.proteins.unique__v__ce.proteins.unique.csv | cut -f2 | awk '{print NF}' OFS="\t"  > hc.fields
-cat hc_V4.proteins.unique__v__ce.proteins.unique.csv | cut -f3 | awk '{print NF}' OFS="\t"   > ce.fields
 
-cat ce.proteins.unique__v__hc_V4.proteins.unique.csv | awk -F '[\t]'  '{print $2}' | sed -e 's/gene=//g' -e 's/,//g' > ce.genes
+cat hc_V4.proteins.unique**v**ce.proteins.unique.csv | cut -f2 | awk '{print NF}' OFS="\\t"  > hc.fields
+cat hc_V4.proteins.unique**v**ce.proteins.unique.csv | cut -f3 | awk '{print NF}' OFS="\\t"   > ce.fields
+
+cat ce.proteins.unique**v**hc_V4.proteins.unique.csv | awk -F '[\t]'  '{print $2}' | sed -e 's/gene=//g' -e 's/,//g' > ce.genes
 paste ce.fields hc.fields ce.genes  | awk '$1>1 && $2==1 {print $0}' > hc_1toMulti.txt
+
 # number of Hc genes: 616
 
-cat hc_V4.proteins.unique__v__ce.proteins.unique.csv | cut -f2 > hc.genes
+cat hc_V4.proteins.unique**v**ce.proteins.unique.csv | cut -f2 > hc.genes
 paste hc.fields ce.fields hc.genes ce.genes > hc.ce.data
 
-awk '$1==1 && $2>1 {print $0}' hc.ce.data | sed 's/-.*\t/\t/g' | cut -f3,4 | sort -k3 | uniq > hc.ce.data.filtered
+awk '$1==1 && $2>1 {print $0}' hc.ce.data | sed 's/-.\*\\t/\\t/g' | cut -f3,4 | sort -k3 | uniq > hc.ce.data.filtered
 
->hcgenes.cemultiGOs
-while read hgene cgene; do
-     echo -e "$hgene $cgene" | awk '{for(i=2; i<=NF; i++) {print $i}}' > ${hgene}.tmp
-     count=$(wc -l ${hgene}.tmp | cut -f1 -d " ")
-     grep -f ${hgene}.tmp WBP_Ce_GOterms_download.txt | cut -f 3 | sort | uniq -c | awk -v count="${count}" -v hgene="${hgene}" '{if($1>=count && $2!="") print hgene,$2}' OFS="\t" >> hcgenes.cemultiGOs;
-     done < hc.ce.data.filtered
+> hcgenes.cemultiGOs
+> while read hgene cgene; do
+>      echo -e "$hgene $cgene" | awk '{for(i=2; i&lt;=NF; i++) {print $i}}' > ${hgene}.tmp
+>      count=$(wc -l ${hgene}.tmp | cut -f1 -d " ")
+>      grep -f ${hgene}.tmp WBP_Ce_GOterms_download.txt | cut -f 3 | sort | uniq -c | awk -v count="${count}" -v hgene="${hgene}" '{if($1>=count && $2!="") print hgene,$2}' OFS="\\t" >> hcgenes.cemultiGOs;
+>      done &lt; hc.ce.data.filtered
 
-rm *tmp*
+rm _tmp_
 
 cat HCON_V4_GOterm.db hcgenes.cemultiGOs | sort | uniq > tmp; mv tmp HCON_V4_GOterm.db
 
 # multiCe genes : single Hc genes
-#--- additional GO terms: 3694
-#--- additional genes with GO term: 517
+
+\#--- additional GO terms: 3694
+\#--- additional genes with GO term: 517
+
+\#Total
+\#--- genes with GO terms: 9739
+\#--- GO terms: 62733
+
+    ## 03 - Manual Curation in Apollo <a name="manual_curation_apollo"></a>
+
+    The genome annotaiton has been maually curated in apollo.
+
+    Tracks used
+    - Genome annotaiton
+    - RNAseq per lifestage
+    - splice leaders (SL1 & SL2)
+    - Pacbio IsoSeq (CCS subreads and HQ isoforms)
 
 
 
-#Total
-#--- genes with GO terms: 9739
-#--- GO terms: 62733
-```
+    Once out of Apollo, some curation needs to be done to clean things up a little. The main problem is that Apollo uses a unique code ID per feature to keep track of informaiton and to make sure there are no clashes in IDs. While this is important in Apollo, it makes it confusing in downstream analyses that use the annotaiton. Decided to replace these so they are consistent throughout the whole annotaiton.
 
+    *NOTE* this approach below will have to be modified for subsequent apollo updates to ensure consistent naming of features. Eg, if a new isoform is added.
 
+    ### Working environment
+    ```shell
+    cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION
 
-
-## 03 - Manual Curation in Apollo <a name="manual_curation_apollo"></a>
-
-The genome annotaiton has been maually curated in apollo.
-
-Tracks used
-- Genome annotaiton
-- RNAseq per lifestage
-- splice leaders (SL1 & SL2)
-- Pacbio IsoSeq (CCS subreads and HQ isoforms)
-
-
-
-Once out of Apollo, some curation needs to be done to clean things up a little. The main problem is that Apollo uses a unique code ID per feature to keep track of informaiton and to make sure there are no clashes in IDs. While this is important in Apollo, it makes it confusing in downstream analyses that use the annotaiton. Decided to replace these so they are consistent throughout the whole annotaiton.
-
-*NOTE* this approach below will have to be modified for subsequent apollo updates to ensure consistent naming of features. Eg, if a new isoform is added.
-
-### Working environment
-```shell
-cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION
-
-```
 Get dumped GFF form local computer
+
 ```shell
 scp Desktop/hc_v4.gff3.xz sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
 ```
@@ -1675,9 +1598,7 @@ export PATH="/nfs/users/nfs_s/sd21/lustre118_link/software/anaconda2/bin:$PATH"
 awk '{print $1,$3}' OFS="\t" mRNA_IDs_NAMEs_transcriptIDs.txt > mRNA_IDs_NAMEs_transcriptIDs.2.txt
 
 fsed --pattern-format=tsv --output HCON_V4_WBP11plus_190125.renamed.gff3  mRNA_IDs_NAMEs_transcriptIDs.2.txt HCON_V4_WBP11plus_190125.gff3 &
-
 ```
-
 
 Fixing GFF to prepare for interproscan. Stripping out info from existing interproscan, as is is incorrectly formatted.
 
@@ -1690,6 +1611,7 @@ cat tmp.gff HAEM_V4_final.chr.fa > tmp.gff2; mv tmp.gff2 tmp.gff
 ```
 
 interproscan
+
 ```shell
 # generate a protein fasta from annotation and reference genome
 gffread -y PROTEINS.fa -g HAEM_V4_final.chr.fa HCON_V4_WBP11plus_190125.renamed.gff3
@@ -1703,15 +1625,11 @@ extract_interproscan_go_terms -i IPS.output.gff -e HCON_V4_WBP11plus_190125.rena
 
 # filter and rename
 grep ^'\#\#\|hc' tmp.gff.go.gff | grep -v "mtDNA" | grep -v "FASTA" | grep -v ">" > HCON_V4_WBP11plus_190125.ips.gff3
-
-
 ```
 
-
 ### Replacing gene names in GFF with Species ID and incremental gene specific ID
+
 ```bash
-
-
 gff=$1
 species_prefix=$2
 
@@ -1759,6 +1677,4 @@ done < mRNA_renames.list > ${gff%.gff*}.allrenamed.tmp
 #echo "##gff-version 3" > ${species_prefix}.renamed.gff3; cat ${gff%.gff*}.allrenamed.tmp | sort -k1,1 -k4,4n >> ${species_prefix}.renamed.gff3
 
 #rm *tmp*
-
-
 ```
