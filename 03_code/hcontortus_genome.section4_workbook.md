@@ -3,8 +3,14 @@
 
 1. [Kallisto](#kallisto)
 2. [Sleuth](#sleuth)
+     * Figure 4a
+     * Supplementary Data 3
 3. [Gene expression clustering](#clust)
+     * Figure 4b
+     * Supplementary Figure 7
+     * Supplementary Data 4
 4. [Motif enrichment in 5' UTR](#motif)
+     * Supplementary Data 5
 5. [Other](#other)
      * [Distribution of clustered gene expression profiles across the genome](#cluster_distribution)
      * [GO term analysis using revigo](#revigo)
