@@ -6,7 +6,7 @@
 
 
 ---
-## 05 - Splice Leader analyses <a name="sl_analysis"></a>
+## Splice Leader analyses <a name="sl_analysis"></a>
 
 ```shell
 
@@ -316,7 +316,8 @@ cat mRNA_SL1.list mRNA_SL2.list > mRNA_SLall.list
 ```
 
 
-# hybrid SL1/SL2 shared sites
+### hybrid SL1/SL2 shared sites
+```
 bedtools-2 intersect -s -a SL1.SL-only.bed -b SL2.SL-only.bed > SL1SL2_sharedsites.bed
 
 bedtools coverage -s -b transcript_start_windows.bed -a SL1SL2_sharedsites.bed | sort -k1,1 -k2,2n > SL1SL2_sharedsites_transcript_start_windows.SL.coverage
