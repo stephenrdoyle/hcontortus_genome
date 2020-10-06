@@ -3,21 +3,22 @@
 
 1. [Short-read RNAseq](#srRNAseq)
 2. [Long-read RNAseq](#lrRNAseq)
-3. [PASA](#pasa)
+3. [PASA round 1](#pasa1)
 4. [Exonerate](#exonerate)
 5. [EvidenceModeller](#evidencemodeller)
-6. [Annotation QC - Sensitivity and specificity](#qc_ss)
-7. [Transcriptome Summary Stats](#summarystats)
-8. [Gene model plotter](#gene_model_plotter)
-9. [Orthology](#orthology)
-10. [Other](#other)
+6. [PASA round 2](#pasa2)
+7. [Annotation QC - Sensitivity and specificity](#qc_ss)
+8. [Transcriptome Summary Stats](#summarystats)
+9. [Gene model plotter](#gene_model_plotter)
+10. [Orthology](#orthology)
+11. [Other](#other)
 
 
 
 ******
 ## Short-read RNAseq <a name="srRNAseq"></a>
 ```bash
-#
+# made a sample_name lanes file for mapping, eg.
 cat /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/lanes.list
 #> contents of "lanes.list"
 eggs1_236476_3881079	7059_6#1
@@ -52,41 +53,41 @@ gut2_236476_1589_3914316	7062_6#14
 gut3_236476_635J_3914317	7062_6#15
 
 
-mkdir STAR_MAP_ALL
-cd STAR_MAP_ALL
+# mkdir STAR_MAP_ALL
+# cd STAR_MAP_ALL
+#
+# ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
+#
+# mkdir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index
+#
+# #--- make reference index
+# bsub.py --threads 8 20 01_star_index \
+# ~sd21/lustre118_link/software/bin/star_2.5.2 \
+# --runMode genomeGenerate \
+# --runThreadN 8 \
+# --genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index \
+# --genomeFastaFiles /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
+#
+#
+# #--- map reads
+# for i in ` cd ../RAW/ && ls -1d */ | sed -e 's/\///g' `; do \
+# bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/STAR/bin/Linux_x86_64/STAR \
+# --runThreadN 8 \
+# --genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index \
+# --readFilesIn ../RAW/${i}/${i}_1.fastq.gz ../RAW/${i}/${i}_2.fastq.gz \
+# --readFilesCommand zcat \
+# --alignIntronMin 10 \
+# --outTmpDir starmap_${i}_tmp \
+# --outFileNamePrefix starmap_${i}_other_out \
+# --outSAMtype BAM SortedByCoordinate \
+# ; done
 
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
-
-mkdir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index
-
-#--- make reference index
-bsub.py --threads 8 20 01_star_index \
-~sd21/lustre118_link/software/bin/star_2.5.2 \
---runMode genomeGenerate \
---runThreadN 8 \
---genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index \
---genomeFastaFiles /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
-
-
-#--- map reads
-for i in ` cd ../RAW/ && ls -1d */ | sed -e 's/\///g' `; do \
-bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/STAR/bin/Linux_x86_64/STAR \
---runThreadN 8 \
---genomeDir /nfs/users/nfs_s/sd21/lustre118_link/REFERENCE_SEQUENCES/haemonchus_contortus/hc_v4_rnaseq_star_index \
---readFilesIn ../RAW/${i}/${i}_1.fastq.gz ../RAW/${i}/${i}_2.fastq.gz \
---readFilesCommand zcat \
---alignIntronMin 10 \
---outTmpDir starmap_${i}_tmp \
---outFileNamePrefix starmap_${i}_other_out \
---outSAMtype BAM SortedByCoordinate \
-; done
-
-
-# merge bams into a single bam for braker
-ls -1 *bam > bams.list
-bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
-
-cd ../
+#
+# # merge bams into a single bam for braker
+# ls -1 *bam > bams.list
+# bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
+#
+# cd ../
 
 
 #--- repeat for chromosome only
@@ -118,7 +119,6 @@ bsub.py 10 --threads 8 starmap_${i} /nfs/users/nfs_s/sd21/lustre118_link/softwar
 ; done
 
 
-
 # merge bams into a single bam for braker
 ls -1 *bam > bams.list
 bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
@@ -126,7 +126,7 @@ bsub.py 5 03_bammerge "samtools-1.3 merge -b bams.list starmap_merge.bam"
 cd ../
 
 
-# make intro hints from RNAseq - not this was not sued in the end
+# make intro hints from RNAseq - not this was not used in the end
 # bsub.py 10 01_bam2hints_RNAseq \
 # "/lustre/scratch118/infgen/archive/ss34/SCHISTO/augustus/augustus-3.2.2//bin/bam2hints --intronsonly --minintronlen=20 --source=E --in=starmap_merge.chr.bam --out=starmap_merge.chr.intron-hints.gff"
 #
@@ -142,12 +142,12 @@ cd ../
 ### Run Braker using RNAseq data
 ```bash
 
-mkdir BRAKER_ALL
+#mkdir BRAKER_ALL
 mkdir BRAKER_CHR
 
-cd BRAKER_ALL
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/STAR_MAP/starmap_merge.bam
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
+# cd BRAKER_ALL
+# ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/STAR_MAP/starmap_merge.bam
+# ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.all.fa
 
 # paper: http://www.ncbi.nlm.nih.gov/pubmed/26559507
 
@@ -162,18 +162,18 @@ export BAMTOOLS_PATH=/nfs/users/nfs_s/sd21/lustre118_link/software/bamtools/bin
 ### need to copy the gm_key to home directory for it to work. Only needs to be done once. Has a 400 day expiry
 #cp ~sd21/lustre118_link/software/gm_et_linux_64/gmes_petap/gm_key ~/.gm_key
 
-
-bsub.py --queue hugemem --threads 30 200 01_braker_all \
-/lustre/scratch118/infgen/team133/sd21/software/TRANSCRIPTOME/BRAKER_v2.0/braker.pl \
---genome=HAEM_V4_final.all.fa \
---bam=starmap_merge.all.bam \
---cores 30 \
---gff3 \
---species=Hc_V4_all \
---UTR=off \
---overwrite \
---workingdir=$PWD \
---useexisting
+#
+# bsub.py --queue hugemem --threads 30 200 01_braker_all \
+# /lustre/scratch118/infgen/team133/sd21/software/TRANSCRIPTOME/BRAKER_v2.0/braker.pl \
+# --genome=HAEM_V4_final.all.fa \
+# --bam=starmap_merge.all.bam \
+# --cores 30 \
+# --gff3 \
+# --species=Hc_V4_all \
+# --UTR=off \
+# --overwrite \
+# --workingdir=$PWD \
+# --useexisting
 
 
 cd ../BRAKER_CHR/
@@ -333,21 +333,53 @@ bsub.py --queue yesterday 1 03_pasa_evm_compare_update_round2 \
 ## Exonerate <a name="exonerate"></a>
 
 ```bash
+# working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME
+
 mkdir EXONERATE_CHR
 cd EXONERATE_CHR
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa
+
 mkdir V1_2_V4
 cd V1_2_V4
 
 wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS9/species/haemonchus_contortus/PRJEB506/haemonchus_contortus.PRJEB506.WBPS9.protein.fa.gz
 gunzip haemonchus_contortus.PRJEB506.WBPS9.protein.fa.gz
 
-
+# run job
 bsub.py --queue yesterday 10 01_exonserate \
 /nfs/users/nfs_s/sd21/bash_scripts/run_exonerate_splitter \
 ../HAEM_V4_final.chr.fa \
 haemonchus_contortus.PRJEB506.WBPS9.protein.fa
+
+
+
+
+# run_exonerate_splitter
+#!/usr/bin/env bash
+# exonerate splitter
+
+reference=$1
+query=$2
+sequences_per_chunk=10
+
+length=$((${sequences_per_chunk} * 2))
+
+fastaq to_fasta -l 0 ${reference} ref.fa
+fastaq to_fasta -l 0 ${query} query.fa
+
+split -da 4 -l ${length} query.fa
+
+n=0
+for i in ` ls -1 x???? ` ; do
+let "n+=1"
+echo -e "exonerate --model protein2genome --percent 50 ${i} ref.fa --showtargetgff > split_exonerate_${n}_${i}.out" > run_split_exonerate_${n}; done
+
+chmod a+x run_split_exonerate_*
+bsub -q normal -n1 -R'span[hosts=1] select[mem>2500] rusage[mem=2500]' -M2500 -J "split_exonerate[1-$n]" -e split_exonerate[1-$n].e -o split_exonerate[1-$n].o ./run_split_exonerate_\$LSB_JOBINDEX
+bsub -q normal -n1 -R'span[hosts=1] select[mem>100] rusage[mem=100]' -M100 -w split_exonerate -J "split_exonerate_FIN" "touch FINISHED"
+
+
 ```
 
 
@@ -433,8 +465,51 @@ bsub.py 5 05_evm_make_gff3 \
 find . -name "evm.out.gff3" | sort | while read -r line; do cat $line >> HAEM_V4.chr.evm_merge.gff; done
 
 ```
+[↥ **Back to top**](#top)
 
 
+
+
+
+******
+
+## PASA round 2 <a name="pasa2"></a>
+```bash
+# working dir:
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/PASA_CHR_R2
+
+# reformat gff to enable import back into pasa
+gt gff3 -sort -checkids yes -force -o HC_V4_augustus_merge.AAfiltered.gt.gff HC_V4_augustus_merge.AAfiltered.gff
+
+# step 1: load annotations
+bsub.py --queue yesterday 10 01_pasa_load_anntations_v2 "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi -c alignAssembly.config -g HAEM_V4_final.chr.fa -P HC_V4_augustus_merge.AAfiltered.gt.gff"
+
+
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/ISOSEQ
+cat RSII_polished_high_qv_consensus_isoforms.fasta RSII_polished_low_qv_consensus_isoforms.fasta sequel_polished_high_qv_consensus_isoforms.fasta sequel_polished_low_qv_consensus_isoforms.fasta > all_isoseq.fasta
+fastaq enumerate_names --suffix _hc_isoseq all_isoseq.fasta all_isoseq.renamed.fasta
+cd -
+ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/ISOSEQ/all_isoseq.renamed.fasta
+
+# step 2: compare - note used both HQ and LQ isoseq data in reload
+bsub.py --queue yesterday --threads 7 5 02_pasa_compare_v3 "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl -c annotCompare.config -A -g HAEM_V4_final.chr.fa -t all_isoseq.renamed.fasta --CPU 7"
+
+
+# step 3: load_pasaR1_annotations - see filename with new suffix 6815
+bsub.py --queue yesterday 10 04_load_pasaR1_annotations "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi -c alignAssembly.config -g HAEM_V4_final.chr.fa -P sd21_pasa_HcV4_2.gene_structures_post_PASA_updates.6815.gff3"
+```
+
+# step 4: pasa_compare_2_reloaded_annotations
+bsub.py --queue yesterday --threads 7 5 05_pasa_compare_2_reloaded_annotations "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl -c annotCompare.config -A -g HAEM_V4_final.chr.fa -t all_isoseq.renamed.fasta --CPU 7"
+
+
+# rename gene IDs
+~sd21/bash_scripts/run_replace_gene_ids sd21_pasa_HcV4_2.gene_structures_post_PASA_updates.31804.gff3 HCON_ &
+
+# reformat final GFF
+echo "##gff-version 3" > HCON_V4.renamed.gff3; cat sd21_pasa_HcV4_2.gene_structures_post_PASA_updates.31804.renamed.tmp | grep -v "#" | sed '/^$/d' | awk '{$2="WSI_SD21"; print}' OFS="\t" | sort -k1,1 -k4,4n >> HCON_V4.renamed.gff3
+
+```
 
 
 [↥ **Back to top**](#top)
@@ -553,6 +628,20 @@ Results suggest:
 ```
 
 [↥ **Back to top**](#top)
+
+
+
+
+
+## Annotation QC - BUSCO <a name="qc_busco"></a>
+```bash
+
+
+
+```
+
+
+
 
 
 
@@ -995,6 +1084,7 @@ This section contains some analysis that I tried by didnt end up using for one r
      - this also worked, but didnt use it in the paper in the end
 - manual curation in apollo
      - also worked, but done mostly post annotation freeze
+- replacing gene names in GFF with species ID and incremental gene specific ID
 
 ```bash
 #-----------------------------------------------------------------------------------------
@@ -1576,6 +1666,62 @@ extract_interproscan_go_terms -i IPS.output.gff -e HCON_V4_WBP11plus_190125.rena
 
 # filter and rename
 grep ^'\#\#\|hc' tmp.gff.go.gff | grep -v "mtDNA" | grep -v "FASTA" | grep -v ">" > HCON_V4_WBP11plus_190125.ips.gff3
+
+
+```
+
+
+### Replacing gene names in GFF with Species ID and incremental gene specific ID
+```bash
+
+
+gff=$1
+species_prefix=$2
+
+# TESTING
+# wd: /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/BRAKER_CHR/POST_BRAKER
+#gff=augustus.filtered.gff3
+#species_prefix=HCONnew
+
+# copy gff to a tmp file - just to avoid doing something silly like overwriting original
+cat ${gff} | grep -v "#" > ${gff}.tmp
+
+
+# STEP 1 - generate using IDs for each gene
+# - extract gene name from lines in gff matching gene|GENE
+# - remove surrounding characters
+# - sort by gene ID and remove duplicates
+# - print new gene id (species prefix with 8 digit ID that increases by 10 for each gene), and old gene id
+
+awk -F'[\t;]' '{if($3=="gene" || $3=="GENE") print $9}' ${gff}.tmp | sed -e 's/ID=//g' -e 's/\;//g' | sort -V | uniq | awk -v species_prefix="$species_prefix" '{fmt=species_prefix"%08d\t%s\n"; printf fmt,NR*10,$0}' > genes_renames.list
+
+# pasa dependent fix
+cat genes_renames.list | sed 's/gene/mRNA/g' >  mRNA_renames.list
+
+
+# STEP 2 - replace gene IDs
+# - read new / old gene IDs from above
+# - replace IDs, recognising differences in placement of gene, mRNA, and progeny
+# NOTE: match - equal sign at beginning, followed by one of [.;$] where $ is the end of the line, which is what AUGUSTSUS / BRAKER produce - this might have to be tweaked for other outputs
+# NOTE: eg.  =XXX[. ;]
+
+while read new_gene old_gene; do
+grep "ID=$old_gene[.;$]" ${gff}.tmp | sed -e "s/=${old_gene}[.]/=${new_gene}\./g" -e "s/=${old_gene}[;]/=${new_gene}\;/g" -e "s/=${old_gene}$/=${new_gene}/g" -e "s/Name=.*$/Name=${new_gene}/g";
+done < genes_renames.list > ${gff%.gff*}.genesrenamed.tmp
+
+
+while read new_mRNA old_mRNA; do
+grep "ID=$old_mRNA[.;$]" ${gff%.gff*}.genesrenamed.tmp | sed -e "s/=${old_mRNA}[.]/=${new_mRNA}\./g" -e "s/=${old_mRNA}[;]/=${new_mRNA}\;/g" -e "s/=${old_mRNA}$/=${new_mRNA}/g" -e "s/Name=.*$/Name=${new_gene}/g" ;
+done < mRNA_renames.list > ${gff%.gff*}.allrenamed.tmp
+
+
+
+
+# STEP 3 - clean up
+
+#echo "##gff-version 3" > ${species_prefix}.renamed.gff3; cat ${gff%.gff*}.allrenamed.tmp | sort -k1,1 -k4,4n >> ${species_prefix}.renamed.gff3
+
+#rm *tmp*
 
 
 ```
