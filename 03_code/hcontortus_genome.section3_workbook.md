@@ -59,7 +59,10 @@ SHL3_3_236476_2305_3914314	7062_6#12
 gut1_236476_1517_3914315	7062_6#13
 gut2_236476_1589_3914316	7062_6#14
 gut3_236476_635J_3914317	7062_6#15
+```
 
+### Map RNAseq data using STAR
+```bash
 
 # mkdir STAR_MAP_ALL
 # cd STAR_MAP_ALL
@@ -385,11 +388,7 @@ bsub -q normal -n1 -R'span[hosts=1] select[mem>100] rusage[mem=100]' -M100 -w sp
 ## EvidenceModeller <a name="evidencemodeller"></a>
 
 ```bash
-#-----------------------------------------------------------------------------------------
-# Evidence Modeller
-#-----------------------------------------------------------------------------------------
-# want to merge
-#--- pasa output, braker(filter), transposon filter
+# want to merge pasa output, braker(filter), manually curated data, exonerate protein liftovers
 
 mkdir /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EVM_CHR
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EVM_CHR
@@ -604,6 +603,8 @@ gffcompare -R -r HCON_V4_FINAL.gff3 -o V4_FINAL_vs_EVM HCON_V4_EVM.gff3
        Intron chain level:    84.1     |    84.1    |
          Transcript level:    86.7     |    86.6    |
               Locus level:    87.5     |    86.4    |
+
+
 ```
 
 Don't think it is worth including the V1 comparison, as these curated genes would have been incorporated into the final annotation. Not really a good comparison. V1 precision is low due to only a subset of genes being used.
@@ -614,11 +615,9 @@ Results suggest:
 -   increase in Sensitivity and Precision from PASA to EVM
 
 
-    [↥ **Back to top**](#top)
+[↥ **Back to top**](#top)
 
-
-
-
+* * *
 
 ## Annotation QC - BUSCO <a name="qc_busco"></a>
 ```bash
@@ -664,22 +663,23 @@ done
 #    88.4%[S:80.6%,D:7.8%],F:2.6%,M:9.0%,n:978
 ```
 
+[↥ **Back to top**](#top)
+
+* * *
 
 
 ***
 ## Transcriptome summary stats <a name="summarystats"></a>
 
 ```bash
-## Annotation quantitative quantitative data
+# Annotation quantitative quantitative data
 cd ~/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
 mkdir HCON_V4_WBP11plus_190125_ANALYSIS
 cd HCON_V4_WBP11plus_190125_ANALYSIS
 
 ln -sf ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3
 gag.py -f ../HAEM_V4_final.chr.fa -g HCON_V4_WBP11plus_190125.ips.gff3
-```
 
-#--------------------------------
 
 # Transcriptome Summary Stats summary stats
 
@@ -744,7 +744,9 @@ ggsave("annotation_comparison_4species_scatter.pdf",useDingbats=F)
 ggsave("annotation_comparison_4species_scatter.png")
 ```
 
+[↥ **Back to top**](#top)
 
+* * *
 
 
 ## 03 - Gene model plotter <a name="gene_model_plotter"></a>
@@ -774,6 +776,7 @@ ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/EXONERATE_CHR
 #  install.packages("BiocManager")
 #BiocManager::install("ggbio", version = "3.8")
 
+# load libraries
 library(data.table)
 library(ggplot2)
 library(dplyr)
@@ -890,11 +893,14 @@ ggplot()+
 }
 
 gene_model_plot('')
+
 ```
+
+[↥ **Back to top**](#top)
 
 * * *
 
-## 04 - Orthology <a name="orthology"></a>
+## Orthology <a name="orthology"></a>
 ```bash
 # working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION
@@ -1054,7 +1060,9 @@ upset(one2one_orthogroups)
 dev.off()
 ```
 
+[↥ **Back to top**](#top)
 
+* * *
 
 
 ## Other  <a name="other"></a>
