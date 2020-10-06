@@ -744,9 +744,8 @@ ggsave("annotation_comparison_4species_scatter.png")
 
 ## 03 - Gene model plotter <a name="gene_model_plotter"></a>
 
-Working environment and data
-
 ```shell
+# workind dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/GENE_MODEL_PLOTS
 
 #gff
@@ -891,17 +890,11 @@ gene_model_plot('')
 * * *
 
 ## 04 - Orthology <a name="orthology"></a>
-
-* * *
-
-### Working envoronment
-
 ```bash
+# working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION
-```
 
-```bash
-#### get data
+# get data
 wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS11/species/haemonchus_placei/PRJEB509/haemonchus_placei.PRJEB509.WBPS11.protein.fa.gz
 gunzip haemonchus_placei.PRJEB509.WBPS11.protein.fa.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS11/species/caenorhabditis_elegans/PRJNA13758/caenorhabditis_elegans.PRJNA13758.WBPS11.protein.fa.gz
@@ -972,9 +965,7 @@ bsub.py --queue long --threads 20 20 orthofinder_2.2.7 "python2.7 /nfs/users/nfs
 
 
 
-1:1 orthologs
-
-
+# 1:1 orthologs
 ce.proteins.unique      hc_McM.proteins.unique  hc_V1.proteins.unique   hc_V4.proteins.unique   hp.proteins.unique
 
 ce.proteins.unique      0.0     4424.0  4529.0  7361.0  6371.0
@@ -982,6 +973,7 @@ hc_McM.proteins.unique  4424.0  0.0     6559.0  7581.0  7861.0
 hc_V1.proteins.unique   4529.0  6559.0  0.0     9595.0  7991.0
 hc_V4.proteins.unique   7361.0  7581.0  9595.0  0.0     9970.0
 hp.proteins.unique      6371.0  7861.0  7991.0  9970.0  0.0
+
 
 #--- KINFIN
 
@@ -1033,9 +1025,11 @@ cat TAXON.cluster_summary.txt | awk '{print $1,$9,$10,$11,$12,$13}' OFS="\t" | h
 cat TAXON.cluster_summary.txt | awk '{print $1,$9,$10,$11,$12,$13}' OFS="\t" | awk 'NR>1{if ($2<=1 && $3 <=1 && $4 <= 1 && $5 <=1 && $6 <=1) print}' OFS="\t" >> 1to1_orthogroups.upsetr.data
 ```
 
+### make some UpSet plots - not didnt use these in the end 
 ```R
-R-3.5.0
+# load library
 library(UpSetR)
+
 all_orthogroups<-read.table("all_orthogroups.upsetr.data",header=T,comment.char="")
 pdf("all_orthogroups_plot.upsetr.pdf",height=5,width=10,useDingbats=FALSE)
 upset(all_orthogroups)
@@ -1055,9 +1049,8 @@ upset(one2one_orthogroups)
 dev.off()
 ```
 
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/SELECTION/PROTEIN_FASTAs/Results_Jan25/KINFIN/kinfin_results/TAXON/*pdf ~/Documents/workbook/hcontortus_genome/04_analysis
-```
+
+
 
 ## Other  <a name="other"></a>
 
