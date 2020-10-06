@@ -11,6 +11,7 @@
 7.  [Annotation QC - Sensitivity and specificity](#qc_ss)
 8.  [Transcriptome Summary Stats](#summarystats)
 9.  [Gene model plotter](#gene_model_plotter)
+     * [Figure]()
 10. [Orthology](#orthology)
 11. [Other](#other)
 
@@ -21,6 +22,7 @@
 ```bash
 # made a sample_name lanes file for mapping, eg.
 cat /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW/lanes.list
+
 #> contents of "lanes.list"
 eggs1_236476_3881079	7059_6#1
 eggs2_236476_3881080	7059_6#2
@@ -492,9 +494,12 @@ bsub.py --queue yesterday --threads 7 5 05_pasa_compare_2_reloaded_annotations "
 echo "##gff-version 3" > HCON_V4.renamed.gff3; cat sd21_pasa_HcV4_2.gene_structures_post_PASA_updates.31804.renamed.tmp | grep -v "#" | sed '/^$/d' | awk '{$2="WSI_SD21"; print}' OFS="\t" | sort -k1,1 -k4,4n >> HCON_V4.renamed.gff3
 ```
 
+- This annotation was subsequently submitted to WBP, and loaded into Apollo for manual improvement.
+- Since the annotation freeze for the genome paper, the annotation has been improved substantially. The most up-to-date annotation can be obtained from WBP and should be used.
+
 [↥ **Back to top**](#top)
 
-* * *
+***
 
 ## Annotation QC - Sensitivity and specificity <a name="qc_ss"></a>
 
@@ -610,51 +615,53 @@ Results suggest:
 
 
 
-    ## Annotation QC - BUSCO <a name="qc_busco"></a>
-    ```bash
-    # working dir:
-    cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_QC
+## Annotation QC - BUSCO <a name="qc_busco"></a>
+```bash
+# working dir:
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_QC
 
-    # make protein fasta from GFF
-    gffread HCON_V1.annotation.gff3 -g HCON_V1.fa -y HCON_V1_proteins.fa
-    gffread HCON_V4_BRAKER.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_BRAKER_proteins.fa
-    gffread HCON_V4_PASA.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_PASA_proteins.fa
-    gffread HCON_V4_EVM.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_EVM_proteins.fa
-    gffread HCON_V4_FINAL.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_proteins.fa
+# make protein fasta from GFF
+gffread HCON_V1.annotation.gff3 -g HCON_V1.fa -y HCON_V1_proteins.fa
+gffread HCON_V4_BRAKER.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_BRAKER_proteins.fa
+gffread HCON_V4_PASA.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_PASA_proteins.fa
+gffread HCON_V4_EVM.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_EVM_proteins.fa
+gffread HCON_V4_FINAL.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_proteins.fa
 
-    # run busco proteins
-    for reference in *proteins.fa; do
-    /nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/busco_v3/scripts/run_BUSCO.py \
-         --in ${reference} \
-         --out ${reference}_busco3.02.metazoa.proteins \
-         --mode proteins \
-         --lineage_path /nfs/users/nfs_s/sd21/databases/busco/metazoa_odb9 \
-         --species caenorhabditis \
-         --cpu 15 --tarzip --force --long --blast_single_core \
-         --tmp_path ${reference}.tmp;
-    done
+# run busco proteins
+for reference in *proteins.fa; do
+/nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/busco_v3/scripts/run_BUSCO.py \
+    --in ${reference} \
+    --out ${reference}_busco3.02.metazoa.proteins \
+    --mode proteins \
+    --lineage_path /nfs/users/nfs_s/sd21/databases/busco/metazoa_odb9 \
+    --species caenorhabditis \
+    --cpu 15 --tarzip --force --long --blast_single_core \
+    --tmp_path ${reference}.tmp;
+done
 
-    # output
-    #--- haemonchus_contortus.PRJNA205202.WBPS14.protein.fa
-    #    66.0%[S:58.2%,D:7.8%],F:12.1%,M:21.9%,n:978
+# output
+#--- haemonchus_contortus.PRJNA205202.WBPS14.protein.fa
+#    66.0%[S:58.2%,D:7.8%],F:12.1%,M:21.9%,n:978
 
-    #--- HCON_V1_proteins.fa
-    #	C:82.9%[S:54.6%,D:28.3%],F:4.0%,M:13.1%,n:978
+#--- HCON_V1_proteins.fa
+#	C:82.9%[S:54.6%,D:28.3%],F:4.0%,M:13.1%,n:978
 
-    #--- HCON_V4_BRAKER_proteins.fa
-    #    86.5%[S:78.8%,D:7.7%],F:3.8%,M:9.7%,n:978
+#--- HCON_V4_BRAKER_proteins.fa
+#    86.5%[S:78.8%,D:7.7%],F:3.8%,M:9.7%,n:978
 
-    #--- HCON_V4_PASA_proteins.fa
-    #    74.9%[S:64.6%,D:10.3%],F:6.0%,M:19.1%,n:978
+#--- HCON_V4_PASA_proteins.fa
+#    74.9%[S:64.6%,D:10.3%],F:6.0%,M:19.1%,n:978
 
-    #--- HCON_V4_EVM_proteins.fa
-    #    87.3%[S:80.3%,D:7.0%],F:3.2%,M:9.5%,n:978
+#--- HCON_V4_EVM_proteins.fa
+#    87.3%[S:80.3%,D:7.0%],F:3.2%,M:9.5%,n:978
 
-    #--- HCON_V4_proteins.fa
-    #    88.4%[S:80.6%,D:7.8%],F:2.6%,M:9.0%,n:978
+#--- HCON_V4_proteins.fa
+#    88.4%[S:80.6%,D:7.8%],F:2.6%,M:9.0%,n:978
+```
 
-* * *
 
+
+***
 ## Transcriptome summary stats <a name="summarystats"></a>
 
 ```bash
@@ -667,7 +674,7 @@ ln -sf ~sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_
 gag.py -f ../HAEM_V4_final.chr.fa -g HCON_V4_WBP11plus_190125.ips.gff3
 ```
 
-\#--------------------------------
+#--------------------------------
 
 # Transcriptome Summary Stats summary stats
 
@@ -680,7 +687,7 @@ for i in V4_190114; do awk -v name="$i" '$3=="gene" {print name,"gene",$5-$4}' O
 # get intron lengths
 
 gt gff3 -addintrons haemonchus_contortus.PRJEB506.WBPS8.annotations.gff3 | awk '$3=="intron" {print "V1","intron",$5-$4}' OFS="\\t" > V1.intronlength.txt
-\#gt gff3 -tidy -addintrons HCON_V4.renamed.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\\t" > V4.intronlength.txt
+#gt gff3 -tidy -addintrons HCON_V4.renamed.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\\t" > V4.intronlength.txt
 gt gff3 -tidy -addintrons wormbase.20240.complete.gff3 | awk '$3=="intron" {print "CELEGANS","intron",$5-$4}' OFS="\\t" > celegans.intronlength.txt
 gt gff3 -addintrons haemonchus_contortus.PRJNA205202.WBPS9.annotations.gff3 | awk '$3=="intron" {print "MCMASTER","intron",$5-$4}' OFS="\\t" > MCMASTER.intronlength.txt
 gt gff3 -tidy -addintrons HCON_V4_WBP11plus_190114.gff3 | awk '$3=="intron" {print "V4","intron",$5-$4}' OFS="\\t" > V4_190114.intronlength.txt
@@ -692,41 +699,48 @@ cat CELEGANS/CELEGANS.mrnalength.txt MCMASTER/MCMASTER.mrnalength.txt V1/V1.mrna
 cat CELEGANS/CELEGANS.exonlength.txt MCMASTER/MCMASTER.exonlength.txt V1/V1.exonlength.txt V4_190114/V4_190114.exonlength.txt > exonlength.txt
 cat CELEGANS/CELEGANS.cdslength.txt MCMASTER/MCMASTER.cdslength.txt V1/V1.cdslength.txt V4_190114/V4_190114.cdslength.txt > cdslength.txt
 cat CELEGANS/celegans.intronlength.txt MCMASTER/MCMASTER.intronlength.txt V1/V1.intronlength.txt V4_190114/V4_190114.intronlength.txt > intronlength.txt
+```
 
-    ```R
-    # Summary stats
+### Make some plots in R
+```R
+# load libraries
+library(ggplot2)
+library(patchwork)
 
-    library(ggplot2)
-    library(patchwork)
+# get data
+gene<-read.table("genelength.txt",header=F)
+mRNA<-read.table("mrnalength.txt",header=F)
+exon<-read.table("exonlength.txt",header=F)
+intron<-read.table("intronlength.txt",header=F)
 
-    gene<-read.table("genelength.txt",header=F)
-    mRNA<-read.table("mrnalength.txt",header=F)
-    exon<-read.table("exonlength.txt",header=F)
-    intron<-read.table("intronlength.txt",header=F)
+# make some individual plots
+gene_plot <- ggplot()+geom_density(aes(log10(gene$V3),col=gene$V1,fill=gene$V1),alpha = 0.2)+theme_bw()+theme(legend.position="bottom")+labs(title ="Gene length", x = "Length (log10[bp])", y = "Density")
+mRNA_plot <- ggplot()+geom_density(aes(log10(mRNA$V3),col=mRNA$V1,fill=mRNA$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="mRNA length", x = "Length (log10[bp])", y = "Density")
+exon_plot <- ggplot()+geom_density(aes(log10(exon$V3),col=exon$V1,fill=exon$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Exon length", x = "Length (log10[bp])", y = "Density")
+cds_plot <- ggplot()+geom_density(aes(log10(cds$V3),col=cds$V1,fill=cds$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="CDS length", x = "Length (log10[bp])", y = "Density")
+intron_plot <- ggplot()+geom_density(aes(log10(intron$V3),col=intron$V1,fill=intron$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Intron length", x = "Length (log10[bp])", y = "Density")
 
-
-    gene_plot <- ggplot()+geom_density(aes(log10(gene$V3),col=gene$V1,fill=gene$V1),alpha = 0.2)+theme_bw()+theme(legend.position="bottom")+labs(title ="Gene length", x = "Length (log10[bp])", y = "Density")
-    mRNA_plot <- ggplot()+geom_density(aes(log10(mRNA$V3),col=mRNA$V1,fill=mRNA$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="mRNA length", x = "Length (log10[bp])", y = "Density")
-    exon_plot <- ggplot()+geom_density(aes(log10(exon$V3),col=exon$V1,fill=exon$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Exon length", x = "Length (log10[bp])", y = "Density")
-    cds_plot <- ggplot()+geom_density(aes(log10(cds$V3),col=cds$V1,fill=cds$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="CDS length", x = "Length (log10[bp])", y = "Density")
-    intron_plot <- ggplot()+geom_density(aes(log10(intron$V3),col=intron$V1,fill=intron$V1),alpha = 0.2)+theme_bw()+ theme(legend.position="none")+labs(title ="Intron length", x = "Length (log10[bp])", y = "Density")
-
-
-
-    gene_plot + mRNA_plot + exon_plot + intron_plot + plot_layout(ncol = 4)
-    ggsave(filename="transcriptome_stats.pdf", width=35,height=10,units="cm")
-
-    library(ggplot2)
-    data<-read.table("summary_stats.txt",sep="\t",header=T)
+# bring subplots together - note these distributions did not get used in the paper
+gene_plot + mRNA_plot + exon_plot + intron_plot + plot_layout(ncol = 4)
+ggsave(filename="transcriptome_stats.pdf", width=35,height=10,units="cm")
 
 
-    ggplot()+
-         geom_point(aes(x=log10(data$count),y=log10(data$mean),col=data$class,shape=data$Species),size=3)+
-         theme_bw()+
-         labs(y="Mean length (log10[bp])",x="Feature count (log10[total])")
+# load new data
+data<-read.table("summary_stats.txt",sep="\t",header=T)
 
-    ggsave("annotation_comparison_4species_scatter.pdf",useDingbats=F)
-    ggsave("annotation_comparison_4species_scatter.png")
+# make a scatter plot
+ggplot()+
+    geom_point(aes(x=log10(data$count),y=log10(data$mean),col=data$class,shape=data$Species),size=3)+
+    theme_bw()+
+    labs(y="Mean length (log10[bp])",x="Feature count (log10[total])")
+
+# save it.
+ggsave("annotation_comparison_4species_scatter.pdf",useDingbats=F)
+ggsave("annotation_comparison_4species_scatter.png")
+```
+
+
+
 
 ## 03 - Gene model plotter <a name="gene_model_plotter"></a>
 
