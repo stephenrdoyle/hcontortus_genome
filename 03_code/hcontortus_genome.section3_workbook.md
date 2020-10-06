@@ -9,11 +9,16 @@
 5.  [EvidenceModeller](#evidencemodeller)
 6.  [PASA round 2](#pasa2)
 7.  [Annotation QC - Sensitivity and specificity](#qc_ss)
-8.  [Transcriptome Summary Stats](#summarystats)
-9.  [Gene model plotter](#gene_model_plotter)
-     * [Figure]()
-10. [Orthology](#orthology)
-11. [Other](#other)
+     * Supplementary Table 4
+8.  [Annotation QC - BUSCO](#qc_busco)
+     * Supplementary Table 4
+9.  [Transcriptome Summary Stats](#summarystats)
+     * Supplementary Table 5
+10.  [Gene model plotter](#gene_model_plotter)
+     * [Figure 3]()
+11. [Orthology](#orthology)
+     * [Supplementary Table 6](#tableS6)
+12. [Other](#other)
 
 * * *
 
@@ -1025,7 +1030,7 @@ cat TAXON.cluster_summary.txt | awk '{print $1,$9,$10,$11,$12,$13}' OFS="\t" | h
 cat TAXON.cluster_summary.txt | awk '{print $1,$9,$10,$11,$12,$13}' OFS="\t" | awk 'NR>1{if ($2<=1 && $3 <=1 && $4 <= 1 && $5 <=1 && $6 <=1) print}' OFS="\t" >> 1to1_orthogroups.upsetr.data
 ```
 
-### make some UpSet plots - not didnt use these in the end 
+### make some UpSet plots - not didnt use these in the end
 ```R
 # load library
 library(UpSetR)
