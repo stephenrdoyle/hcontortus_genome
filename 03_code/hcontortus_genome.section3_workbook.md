@@ -572,17 +572,17 @@ cp /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/PASA_CHR_R2/HCON
 ### Transcriptome comparisons
 ```shell
 # V1 vs curated V1 genes
-gffcompare -R -r ABC_LGic.2.gff -o V1cutated_vs_V1annotation Hc_rztk_1+2+8+9.augustus.gff3
+gffcompare -Q -r ABC_LGic.2.gff -o V1cutated_vs_V1annotation Hc_rztk_1+2+8+9.augustus.gff3
 
 # Result
 #-----------------| Sensitivity | Precision  |
-        Base level:    92.9     |     2.7    |
-        Exon level:    86.3     |     2.6    |
-      Intron level:    89.5     |     2.7    |
-Intron chain level:    33.3     |     0.7    |
-  Transcript level:    34.3     |     0.7    |
+        Base level:    88.2     |     91.3    |
+        Exon level:    82.4     |     83.8    |
+      Intron level:    86.2     |     86.2    |
+Intron chain level:    30.1     |     29.4    |
+  Transcript level:    30.2     |     30.3    |
 
-       Locus level:    34.8     |     0.8    |
+       Locus level:    30.6     |     35.1    |
 
 
 # V4 Final vs BRAKER
@@ -635,9 +635,46 @@ Results suggest:
 
 ## Annotation QC - BUSCO <a name="qc_busco"></a>
 ```bash
+# working dir:
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_QC
 
+# make protein fasta from GFF
+gffread HCON_V1.annotation.gff3 -g HCON_V1.fa -y HCON_V1_proteins.fa
+gffread HCON_V4_BRAKER.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_BRAKER_proteins.fa
+gffread HCON_V4_PASA.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_PASA_proteins.fa
+gffread HCON_V4_EVM.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_EVM_proteins.fa
+gffread HCON_V4_FINAL.gff3 -g ../../REF/HAEM_V4_final.chr.fa -y HCON_V4_proteins.fa
 
+# run busco proteins
+for reference in *proteins.fa; do
+/nfs/users/nfs_s/sd21/lustre118_link/software/ASSEMBLY_QC/busco_v3/scripts/run_BUSCO.py \
+     --in ${reference} \
+     --out ${reference}_busco3.02.metazoa.proteins \
+     --mode proteins \
+     --lineage_path /nfs/users/nfs_s/sd21/databases/busco/metazoa_odb9 \
+     --species caenorhabditis \
+     --cpu 15 --tarzip --force --long --blast_single_core \
+     --tmp_path ${reference}.tmp;
+done
 
+# output
+#--- haemonchus_contortus.PRJNA205202.WBPS14.protein.fa
+#    66.0%[S:58.2%,D:7.8%],F:12.1%,M:21.9%,n:978
+
+#--- HCON_V1_proteins.fa
+#	C:82.9%[S:54.6%,D:28.3%],F:4.0%,M:13.1%,n:978
+
+#--- HCON_V4_BRAKER_proteins.fa
+#    86.5%[S:78.8%,D:7.7%],F:3.8%,M:9.7%,n:978
+
+#--- HCON_V4_PASA_proteins.fa
+#    74.9%[S:64.6%,D:10.3%],F:6.0%,M:19.1%,n:978
+
+#--- HCON_V4_EVM_proteins.fa
+#    87.3%[S:80.3%,D:7.0%],F:3.2%,M:9.5%,n:978
+
+#--- HCON_V4_proteins.fa
+#    88.4%[S:80.6%,D:7.8%],F:2.6%,M:9.0%,n:978
 ```
 
 
