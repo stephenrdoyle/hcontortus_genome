@@ -497,7 +497,7 @@ bsub.py --queue yesterday --threads 7 5 02_pasa_compare_v3 "/nfs/users/nfs_s/sd2
 
 # step 3: load_pasaR1_annotations - see filename with new suffix 6815
 bsub.py --queue yesterday 10 04_load_pasaR1_annotations "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi -c alignAssembly.config -g HAEM_V4_final.chr.fa -P sd21_pasa_HcV4_2.gene_structures_post_PASA_updates.6815.gff3"
-```
+
 
 # step 4: pasa_compare_2_reloaded_annotations
 bsub.py --queue yesterday --threads 7 5 05_pasa_compare_2_reloaded_annotations "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl -c annotCompare.config -A -g HAEM_V4_final.chr.fa -t all_isoseq.renamed.fasta --CPU 7"
