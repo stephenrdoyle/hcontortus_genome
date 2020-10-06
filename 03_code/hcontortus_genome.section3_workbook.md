@@ -1509,7 +1509,7 @@ cat Hc_genes_Ce_GOterms.txt annotation_GO_per_gene_split.txt | sort | uniq > HCO
 # After liftover
 #--- total GO terms: 60001
 #--- total genes with GO term: 9627
-```
+
 
 # find GO terms for multi Ce: single Hc genes, for which all GO terms in the multi Ce are conserved.
 
@@ -1539,46 +1539,41 @@ cat HCON_V4_GOterm.db hcgenes.cemultiGOs | sort | uniq > tmp; mv tmp HCON_V4_GOt
 
 # multiCe genes : single Hc genes
 
-\#--- additional GO terms: 3694
-\#--- additional genes with GO term: 517
+#--- additional GO terms: 3694
+#--- additional genes with GO term: 517
 
-\#Total
-\#--- genes with GO terms: 9739
-\#--- GO terms: 62733
-
-    ## 03 - Manual Curation in Apollo <a name="manual_curation_apollo"></a>
-
-    The genome annotaiton has been maually curated in apollo.
-
-    Tracks used
-    - Genome annotaiton
-    - RNAseq per lifestage
-    - splice leaders (SL1 & SL2)
-    - Pacbio IsoSeq (CCS subreads and HQ isoforms)
-
-
-
-    Once out of Apollo, some curation needs to be done to clean things up a little. The main problem is that Apollo uses a unique code ID per feature to keep track of informaiton and to make sure there are no clashes in IDs. While this is important in Apollo, it makes it confusing in downstream analyses that use the annotaiton. Decided to replace these so they are consistent throughout the whole annotaiton.
-
-    *NOTE* this approach below will have to be modified for subsequent apollo updates to ensure consistent naming of features. Eg, if a new isoform is added.
-
-    ### Working environment
-    ```shell
-    cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION
-
-Get dumped GFF form local computer
-
-```shell
-scp Desktop/hc_v4.gff3.xz sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
+#--- genes with GO terms: 9739
+#--- GO terms: 62733
 ```
 
+
+
+## 03 - Manual Curation in Apollo <a name="manual_curation_apollo"></a>
+
+The genome annotaiton has been maually curated in apollo.
+
+Tracks used
+- Genome annotaiton
+- RNAseq per lifestage
+- splice leaders (SL1 & SL2)
+- Pacbio IsoSeq (CCS subreads and HQ isoforms)
+
+
+
+Once out of Apollo, some curation needs to be done to clean things up a little. The main problem is that Apollo uses a unique code ID per feature to keep track of informaiton and to make sure there are no clashes in IDs. While this is important in Apollo, it makes it confusing in downstream analyses that use the annotaiton. Decided to replace these so they are consistent throughout the whole annotaiton.
+
+*NOTE* this approach below will have to be modified for subsequent apollo updates to ensure consistent naming of features. Eg, if a new isoform is added.
+
+### Working environment
 ```shell
-#unzip it - it is in xz format
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION
+
+# Get dumped GFF form local computer
+scp Desktop/hc_v4.gff3.xz sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/
 unxz hc_v4.gff3.xz
 
 # make a copy to work on
 mv hc_v4.gff3 HCON_V4_WBP11plus_190125.gff3
-
 
 # get mRNAs IDs and NAMES
 awk '$3=="mRNA" {print $0}' OFS="\t"  HCON_V4_WBP11plus_190125.gff3 | sed -e 's/Note=Manually dissociate transcript from gene;//g' | cut -f3,5 -d ";" | sed -e 's/ID=//g' -e 's/;Name=/\t/g' > mRNA_IDs_NAMEs.txt
@@ -1601,7 +1596,7 @@ awk '{print $1,$3}' OFS="\t" mRNA_IDs_NAMEs_transcriptIDs.txt > mRNA_IDs_NAMEs_t
 fsed --pattern-format=tsv --output HCON_V4_WBP11plus_190125.renamed.gff3  mRNA_IDs_NAMEs_transcriptIDs.2.txt HCON_V4_WBP11plus_190125.gff3 &
 ```
 
-Fixing GFF to prepare for interproscan. Stripping out info from existing interproscan, as is is incorrectly formatted.
+### Fixing GFF to prepare for interproscan. Stripping out info from existing interproscan, as is is incorrectly formatted.
 
 ```shell
 sed -e 's/;info.*$//g' -e 's/method.*//g' -e '/^$/d' HCON_V4_WBP11plus_190125.renamed.gff3 > tmp.gff
@@ -1611,7 +1606,7 @@ ln -sf ../../REF/HAEM_V4_final.chr.fa
 cat tmp.gff HAEM_V4_final.chr.fa > tmp.gff2; mv tmp.gff2 tmp.gff
 ```
 
-interproscan
+### interproscan
 
 ```bash
 # generate a protein fasta from annotation and reference genome
