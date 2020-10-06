@@ -1,14 +1,23 @@
 # Haemonchus contortus genome paper
 ## Section 6: Distribution of global genetic diversity throughout the chromosomes
 
-1. [mtDNA analysis](#mtdna_analysis)
-2. [World map of sampling sites](#global_sampling_map)
-3. [Genome wide nucleotide diversity analysis](#nuc_div)
+1. [Mapping and variant calling](#mapping_SNPs)
+2. [mtDNA analysis](#mtdna_analysis)
+3. [World map of sampling sites](#global_sampling_map)
+4. [Genome wide nucleotide diversity analysis](#nuc_div)
+5. [Fst outliers](#fst_outliers)
+6. [Coverage variants between autosomes and X](#coverage_variance)
+7. [Other](#other)
+     * V4 genetic map
+     * run SNPeff on population diversity VCFs to calculate KnKs
 
-# Get Raw data
+# Mapping and variant calling <a name="mapping_SNPs"></a>
+### get raw sequencing data
 ```shell
+# working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW
 
+# get some data
 for i in 16693_1#1 16693_2#1 16720_1#1 16720_2#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
 for i in 16693_1#2 16693_2#2 16720_1#2 16720_2#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
 for i in 16693_1#3 16693_2#3 16720_1#3 16720_2#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
@@ -85,7 +94,7 @@ for i in 15045_1#15  15045_2#15  16552_1#15  16552_2#15; do pathfind -t lane -i 
 ```
 
 
-# mapping
+### mapping
 ```shell
 #--- run_bwamem_splitter automatically submits jobs to LSF, so no need to bsub it. Will slowly work though the list when running screen
 #--- samples_lanes.list was curated in excel (See: "Genome_paper_population_diversity_samples.xls"), but is a tab delimited text file containing sample name
@@ -106,19 +115,137 @@ done < /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/sampl
 chmod a+x run_mapping
 screen
 ./run_mapping &
+```
+
+where "run_bwamem_splitter" is:
+
+```bash
+#!/usr/bin/env bash
+########################################################################################
+# run_bwamem_splitter.sh
+#
+# sd21@sanger.ac.uk
+# July 2018
+# Updated 20200214 - necessary updates to work on farm5, update samtools to 1.6
+########################################################################################
+
+sample_name=$1
+reference=$2
+read1=$3
+read2=$4
+
+ID="U$(date +%s)"
+
+if [ "$#" -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+	echo ""
+    echo "Usage: ~sd21/bash_scripts/run_bwa_splitter <SAMPLE_PREFIX> <REFERENCE> <R1.fastq> <R2.fastq>"
+    echo ""
+    exit 0
+fi
+
+if [ -d "${sample_name}_bwasplitter_out" ]; then
+	echo -e "\nThere is already a run started with this sample name. Rename and start again\n"
+    exit 0
+fi
+
+
+mkdir ${sample_name}_bwasplitter_out
+cd ${sample_name}_bwasplitter_out
+mkdir logfiles
+
+# prepare reference and split data
+echo -e "# prepare reference and split the raw data
+sample_name=$"{1}"
+reference=$"{2}"
+read1=$"{3}"
+read2=$"{4}"
+ln -sf $"{reference}" ref.fa
+bwa index -b 100000000 ref.fa
+
+if [[ $read1 =~ \.gz$ ]]
+then ln -sf $"{read1}" R1.fq.gz; zcat R1.fq.gz | split -d -a 3 -l 4000000 - R1_tmp_
+else ln -sf $"{read1}" R1.fq; split -d -a 3 -l 4000000 R1.fq R1_tmp_
+fi
+
+if [[ $read2 =~ \.gz$ ]]
+then ln -sf $"{read2}" R2.fq.gz; zcat R2.fq.gz | split -d -a 3 -l 4000000 - R2_tmp_
+else ln -sf $"{read2}" R2.fq; split -d -a 3 -l 4000000 R2.fq R2_tmp_
+fi
+
+
+#split -d -a 3 -l 4000000 R1.fq R1_tmp_
+#split -d -a 3 -l 4000000 R2.fq R2_tmp_
+touch step1_FINISHED" > step1_bwasplitter
+chmod a+x step1_bwasplitter
+
+
+# prepare split mapping and set off mapping
+echo -e "# prepare the split mapping run files
+sample_name=$"{1}"
+n=0
+for i in \` ls -1 R1_* \` ; do
+let \"n+=1\"
+echo -e \"bwa mem -t 4 -R '@RG\\\\\\\\\\\tRG:$"{sample_name}"\\\\\\\\\\\tID:$"{sample_name}"\\\\\\\\\\\tSM:$"{sample_name}"' -Y -M ref.fa $"{i}" $"{i/R1/R2}" | samtools view --threads 4 -b - | samtools sort --threads 4 -o $"{i/R1/bwamem}".tmp.sort.bam - \"  > step2.2_bwamem_tmp_$"{n}"; done; chmod a+x step2.2_bwamem_tmp_*
+touch step2_FINISHED" > step2.1_bwasplitter
+
+chmod a+x step2.1_bwasplitter
 
 
 
-GB_IRE_002_20601_8_5_bwasplitter_out
-PK_PAK_011_15045_1_11_bwasplitter_out
-PK_PAK_011_15045_2_11_bwasplitter_out
-PK_PAK_011_16552_1_11_bwasplitter_out
+# merge mapping, mark duplicates, generate stats, and finalise
+
+echo -e "# merge mapping, mark duplicates, generate stats, and finalise
+sample_name=$"{1}"
+ls -1 *.tmp.sort.bam > bam.fofn
+samtools merge --threads 4 -cpf -b bam.fofn tmp.merged.sorted.bam
+#rm *.tmp.sort.bam
+java -Xmx20g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/picard-tools-2.5.0/picard.jar MarkDuplicates INPUT=tmp.merged.sorted.bam OUTPUT=merged.sorted.marked.bam METRICS_FILE=tmp.merged.sorted.marked.metrics TMP_DIR=$PWD/tmp
+samtools flagstat merged.sorted.marked.bam > $"{sample_name}".merged.sorted.marked.flagstat
+#samtools-1.3 stats merged.sorted.marked.bam | grep ^SN | cut -f 2- > $"{sample_name}".merged.sorted.marked.stats
+bamtools stats -in merged.sorted.marked.bam > $"{sample_name}".merged.sorted.marked.bamstats
+samtools view --threads 4 -F 12 -b merged.sorted.marked.bam -o $"{sample_name}".merged.sorted.marked.bam
+samtools view --threads 4 -f 12 merged.sorted.marked.bam -o $"{sample_name}".unmapped.bam
+samtools index -b $"{sample_name}".merged.sorted.marked.bam
+rm R[12]_*
+rm -r *tmp*
+mv *.[eo] logfiles/
+touch step3_FINISHED
+touch bam_splitter_COMPLETE" > step3_bwasplitter
+chmod a+x step3_bwasplitter
+
+
+
+#----- RELEASE THE KRAKEN!
+
+# run - reference and paired read setup
+bsub -q normal -R'span[hosts=1] select[mem>10000] rusage[mem=10000]' -n1 -M10000 -J step1_bwasplitter_${ID} -e step1_bwasplitter.e -o step1_bwasplitter.o ./step1_bwasplitter ${sample_name} ${reference} ${read1} ${read2}
+
+
+# run - prepare mapping scripts
+bsub -q normal -w "done(step1_bwasplitter_${ID})" -R'span[hosts=1] select[mem>2500] rusage[mem=2500]' -n1 -M2500 -J step2.1_bwasplitter_${ID} -e step2.1_bwasplitter.e -o step2.1_bwasplitter.o ./step2.1_bwasplitter ${sample_name}
+
+while [ ! -f step1_FINISHED ]
+do
+  sleep 2
+done
+
+jobs=$( ls -1 R1_tmp_* | wc -l )
+
+
+# run - mapping in array
+bsub -q normal -w "done(step2.1_bwasplitter_${ID})"  -R'span[hosts=1] select[mem>10000] rusage[mem=10000]' -n6 -M10000 -J step2.2_bwasplitter_${ID}_[1-$jobs] -e step2.2_bwasplitter[1-$jobs].e -o step2.2_bwasplitter[1-$jobs].o ./step2.2_bwamem_tmp_\$LSB_JOBINDEX
+
+
+# run - merge mapping data into a single bam, mark duplicates, and clean up
+bsub -q normal -w "done(step2.2_bwasplitter_${ID}_[1-$jobs])"  -R'span[hosts=1] select[mem>20000] rusage[mem=20000]' -n6 -M20000 -J step3_bwasplitter_${ID} -e logfiles/step3_bwasplitter.e -o logfiles/step3_bwasplitter.o ./step3_bwasplitter ${sample_name}
+
+```
 
 
 
 
-
-# merge bams
+### merge bams
+```
 cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING
 
 echo "while read name lane; do ls -1 $"{name}"_*_out/$"{name}"*merged.sorted.marked.bam > $"{name}".bamlist ; \
@@ -133,10 +260,11 @@ bsub.py --queue yesterday 5 merge_bams ./run_merge
 mkdir BAM_STATS
 mv *out/*stat* BAM_STATS/
 rm -r *out
+```
 
 
-
-# getting reads from guillumes global data
+### getting reads from guillumes global data
+```bash
 cd /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223
 
 cat /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223/*.list > /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/samples.bamlist
@@ -175,8 +303,8 @@ done < /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_
 
 chmod a+x run_mapping
 ./run_mapping
-
-
+```
+```bash
 # looks like some samples failed to map properly, which I think is due to hitting a memory limit. To check and print the suspect dirs, will check to see if
 the flagstat file is made
 # in this case, 870 samples were ok, 170 failed
@@ -206,219 +334,15 @@ rm -r *out
 
 
 
-```shell
-cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW
-
-for i in 16693_1#1 16693_2#1 16720_1#1 16720_2#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#2 16693_2#2 16720_1#2 16720_2#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#3 16693_2#3 16720_1#3 16720_2#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#4 16693_2#4 16720_1#4 16720_2#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#5 16693_2#5 16720_1#5 16720_2#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#6 16693_2#6 16720_1#6 16720_2#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#7  16693_2#7  16720_1#7  16720_2#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#8  16693_2#8  16720_1#8  16720_2#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#9  16693_2#9  16720_1#9  16720_2#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#10  16693_2#10  16720_1#10  16720_2#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#11  16693_2#11  16720_1#11  16720_2#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#12  16693_2#12  16720_1#12  16720_2#12; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#13  16693_2#13  16720_1#13  16720_2#13; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#14  16693_2#14  16720_1#14  16720_2#14; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#15  16693_2#15  16720_1#15  16720_2#15; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#16  16693_2#16  16720_1#16  16720_2#16; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#17  16693_2#17  16720_1#17  16720_2#17; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#18  16693_2#18  16720_1#18  16720_2#18; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#19  16693_2#19  16720_1#19  16720_2#19; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#20  16693_2#20  16720_1#20  16720_2#20; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#21  16693_2#21  16720_1#21  16720_2#21; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#22  16693_2#22  16720_1#22  16720_2#22; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#23  16693_2#23  16720_1#23  16720_2#23; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 16693_1#24  16693_2#24  16720_1#24  16720_2#24; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 21766_7#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 20601_8#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 20601_8#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 20601_8#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 20601_8#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 20601_8#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#34  15150_2#34  16553_1#34  16553_2#34; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#35  15150_2#35  16553_1#35  16553_2#35; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#36  15150_2#36  16553_1#36  16553_2#36; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#19  15150_2#19  16553_1#19  16553_2#19; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#20  15150_2#20  16553_1#20  16553_2#20; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#21  15150_2#21  16553_1#21  16553_2#21; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#22  15150_2#22  16553_1#22  16553_2#22; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#23  15150_2#23  16553_1#23  16553_2#23; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#24  15150_2#24  16553_1#24  16553_2#24; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#25  15150_2#25  16553_1#25  16553_2#25; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#26  15150_2#26  16553_1#26  16553_2#26; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#27  15150_2#27  16553_1#27  16553_2#27; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#28  15150_2#28  16553_1#28  16553_2#28; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#29  15150_2#29  16553_1#29  16553_2#29; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#30  15150_2#30  16553_1#30  16553_2#30; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#31  15150_2#31  16553_1#31  16553_2#31; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#32  15150_2#32  16553_1#32  16553_2#32; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15150_1#33  15150_2#33  16553_1#33  16553_2#33; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#1  15045_2#1  16552_1#1  16552_2#1; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#2  15045_2#2  16552_1#2  16552_2#2; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#3  15045_2#3  16552_1#3  16552_2#3; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#4  15045_2#4  16552_1#4  16552_2#4; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#5  15045_2#5  16552_1#5  16552_2#5; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#6  15045_2#6  16552_1#6  16552_2#6; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#7  15045_2#7  16552_1#7  16552_2#7; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#8  15045_2#8  16552_1#8  16552_2#8; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#9  15045_2#9  16552_1#9  16552_2#9; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#10  15045_2#10  16552_1#10  16552_2#10; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#11  15045_2#11  16552_1#11  16552_2#11; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#12  15045_2#12  16552_1#12  16552_2#12; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#13  15045_2#13  16552_1#13  16552_2#13; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#14  15045_2#14  16552_1#14  16552_2#14; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-for i in 15045_1#15  15045_2#15  16552_1#15  16552_2#15; do pathfind -t lane -i $i --symlink ./ --rename --filetype fastq ; done
-
-
-
-# mapping
-#--- run_bwamem_splitter automatically submits jobs to LSF, so no need to bsub it. Will slowly work though the list when running screen
-#--- samples_lanes.list was curated in excel (See: "Genome_paper_population_diversity_samples.xls"), but is a tab delimited text file containing sample name and sequencing lane ID for all samples to be mapped
-# CH_SWI_001	16693_1#13
-# CH_SWI_001	16693_2#13
-# CH_SWI_001	16720_1#13
-# CH_SWI_001	16720_2#13
-# CH_SWI_002	16693_1#14
-
-cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING
-
-echo "while read name lane; do \
-~sd21/bash_scripts/run_bwamem_splitter $"{name}"_$"{lane}" /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
-/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW/$"{lane}"_1.fastq.gz \
-/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/RAW/$"{lane}"_2.fastq.gz; \
-done < /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/samples_lanes.list" > run_mapping
-chmod a+x run_mapping
-screen
-./run_mapping &
-
-
-
-GB_IRE_002_20601_8_5_bwasplitter_out
-PK_PAK_011_15045_1_11_bwasplitter_out
-PK_PAK_011_15045_2_11_bwasplitter_out
-PK_PAK_011_16552_1_11_bwasplitter_out
-
-
-
-
-
-# merge bams
-cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING
-
-echo "while read name lane; do ls -1 $"{name}"_*_out/$"{name}"*merged.sorted.marked.bam > $"{name}".bamlist ; \
-samtools-1.3 merge -c -b $"{name}".bamlist $"{name}".merge.bam; done < ../samples_lanes.list" > run_merge
-
-chmod a+x run_merge
-
-bsub.py --queue yesterday 5 merge_bams ./run_merge
-
-# index bams
-echo -e "for i in *bam; do samtools index -@ 7 -b $"{i}"; done" > run_index_bams
-chmod a+x run_index_bams
-bsub.py --queue yesterday 1 --threads 7 index_bams ./run_index_bams
-
-
-# cleanup
-mkdir BAM_STATS
-mv *out/*stat* BAM_STATS/
-rm -r *out
-
-
-
-# getting reads from guillumes global data
-cd /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223
-
-cat /nfs/users/nfs_g/gs12/link_lustre/ANGSD_223/*.list > /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/samples.bamlist
-
-cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/
-
-while read list; do name=$( echo ${list} | cut -f 2 -d "." ); samtools view -ub --threads 4 ${list} | samtools sort -n - | samtools fastq -1 ${name}.R1.fastq.gz -2 ${name}.R2.fastq.gz - ; done < samples.bamlist  &
-
-
-
-# extracting name and lane IDs from Guillaumes BAM files
-while read file; do
-name=$( echo ${file} | cut -f 2 -d "." )
-lane=$( samtools view -H $file | grep map_splitter | cut -f3 | awk -F " " '{print $NF}' | awk -F "/" '{print $NF}' | sed -e 's/_2.fastq.gz//g' )
-echo -e "$name\t$lane" >> sample_lanes.list;
-done < samples.bamlist
-
-
-cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW
-while read sample lane; do pathfind -t lane -i $lane --symlink ./ --rename --filetype fastq ; done < ../sample_lanes.list
-
-
-cd ..
-
-sort sample_lanes.list | uniq -c | awk '{print $2,$3}' OFS="\t" | sed -e "s/\#/_/g" > sample_lanes.list2
-
-mkdir MAPPING
-cd MAPPING
-
-echo "while read name lane; do \
-~sd21/bash_scripts/run_bwamem_splitter $"{name}"_$"{lane}" /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/HAEM_V4_final.chr.fa \
-/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW/$"{lane}"_1.fastq.gz \
-/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/RAW/$"{lane}"_2.fastq.gz; \
-done < /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/sample_lanes.list2" > run_mapping
-
-chmod a+x run_mapping
-./run_mapping
-
-
-# looks like some samples failed to map properly, which I think is due to hitting a memory limit. To check and print the suspect dirs, will check to see if the flagstat file is made
-# in this case, 870 samples were ok, 170 failed
-
-for i in *out; do if [ ! -f ${i}/*flag* ]; then echo ${i} ; fi; done | wc -l
-
-#--- once happy those samples are no good, remove them with a modification to the above script, and then restart mapping
-
-for i in *out; do if [ ! -f ${i}/*flag* ]; then rm -r ${i} ; fi; done
-
-# merge bams
-cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/GS_ORIGINAL/MAPPING
-
-echo "while read name lane; do ls -1 $"{name}"_*_out/$"{name}"*merged.sorted.marked.bam > $"{name}".bamlist ; \
-samtools merge --threads 7 -c -b $"{name}".bamlist $"{name}".merge.bam; done < ../sample_lanes.list2" > run_merge
-
-chmod a+x run_merge
-
-bsub.py --queue yesterday 1 --threads 7 merge_bams ./run_merge
-
-# index bams
-echo -e "for i in *bam; do samtools index -@ 7 -b $"{i}"; done" > run_index_bams
-chmod a+x run_index_bams
-bsub.py --queue yesterday 1 --threads 7 index_bams ./run_index_bams
-
-# cleanup
-mkdir BAM_STATS
-mv *out/*stat* BAM_STATS/
-rm -r *out
-rm *bamlist
-
-
-
-
+### fix readgroups
+```bash
 echo -e "for i in *.bam; do gatk-4.0.3.0 AddOrReplaceReadGroups --INPUT=$"{i}" --OUTPUT=$"{i%.bam}d.bam" --RGID=$"{i%.merge.bam}" --RGLB=$"{i%.merge.bam}" --RGPL=HS --RGPU=WSI --RGSM=$"{i%.merge.bam}"; done" > run_fix_bam_header
 chmod a+x run_fix_bam_header
 bsub.py --queue yesterday 1 --threads 7 fix_bam_header ./run_fix_bam_header
+```
 
-gatk-4.0.3.0 HaplotypeCaller --input ZAI_ZAI_OA_015.merge2.bam --output ZAI_ZAI_OA_015.merge.vcf --reference ../../HAEM_V4_final.chr.fa
-
-
+### genotyping
+```bash
 # create bam list using full path to bams - this allos bams to be anywhere
 #ls $PWD/*bam > bam.list   
 BAM_LIST=/lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY/MAPPING/MERGED_BAMS/bam.list   # new samples
@@ -474,13 +398,13 @@ while read BAM; do \
 
 	sleep 1
 done < ${BAM_LIST}
+```
 
 
 
 
 
-
-
+```bash
 #echo "gatk-4.0.3.0 GatherVcfsCloud \\" > run_gather_${SAMPLE}_gvcf
 #echo -e "--input ${SAMPLE}_GATK_HC_GVCF/${n}.${SAMPLE}.${SEQUENCE}.g.vcf.tmp \\" >> run_gather_${SAMPLE}_gvcf
 #
@@ -558,11 +482,7 @@ bsub -q yesterday -R'span[hosts=1] select[mem>20000] rusage[mem=20000]' -n 6 -M2
 
 ## MtDNA analysis
 ```shell
-
-###########################################################################################
-# MTDNA ANALYSIS
-
-
+# working dir:
 cd /lustre/scratch118/infgen/team133/sd21/hc/GENOME/POPULATION_DIVERSITY
 cat samples_lanes.list GS_ORIGINAL/sample_lanes.list2 | cut -f1 | sort | uniq > MAPPING/GATK_HC_MERGED/MTDNA_ANALYSIS/samples.list
 
@@ -618,15 +538,7 @@ java -jar GenomeAnalysisTK.jar \
 -o filtered_snps.vc
 
 
-
-
-
-
 export PATH="/nfs/users/nfs_s/sd21/lustre118_link/software/anaconda2/bin:$PATH"
-
-
-
-
 
 # SNP filtering using BCFTOOLS,
 # generates a mask file of positions with low depth (<10) and MQ (<30) score, whcih it will convert to Ns when the consensus is made
@@ -641,33 +553,22 @@ bcftools-1.9 consensus  --sample $SAMPLE -i 'TYPE="snp" & FORMAT/GT[0]="1/1" & M
 sed -e "s/hcontortus_chr_mtDNA_arrow_pilon/$SAMPLE/g" $SAMPLE.pseudomtDNA.fa | sed -e 's/_OA_/_/g' -e 's/_CH_/_/g' -e 's/_//g' > $SAMPLE.pseudomtDNA.fa.tmp; mv $SAMPLE.pseudomtDNA.fa.tmp $SAMPLE.pseudomtDNA.fa;
 done < samples.list
 
-
-
-
-
 cat *pseudomtDNA.fa hplacei_mtDNA_genome_AP017687.1.fa tcircumcincta_mtDNA_genome_AP017699.1.fa > all_pseudoref.outgroups.fa
-
-
-
 
 ```
 
 
 
 
-# PCA of mtDNA genotypes
-
-
+### PCA of mtDNA genotypes
+```bash
 #--- filter
-```shell
-
-
 bcftools-1.9 view -e 'FORMAT/DP[0]<10 | MQ[*]<30' 7.hcontortus_chr_mtDNA_arrow_pilon.cohort.vcf.gz | bcftools-1.9 view -i 'TYPE="snp" & AF>0.01' -O z -o allsamples.mtDNA.filtered.vcf.gz
 
 awk -F '[_]' '{print $0,$1,$2}' OFS="\t" samples.list > samples.pops.list
 ```
 ```R
-R-3.5.0
+# load libraries
 library(gdsfmt)
 library(SNPRelate)
 library(ggplot2)
@@ -695,10 +596,8 @@ tab <- data.frame(sample.id = pca$sample.id,
 plot(tab$EV2, tab$EV1, xlab="eigenvector 2", ylab="eigenvector 1",pch=20,cex=2,col=pops$V2)
 ```
 
-
-
 ```R
-R-3.5.0
+# load libraries
 library(vcfR)
 library(poppr)
 library(ape)
@@ -717,17 +616,12 @@ ploidy(gl.rubi) <- 1
 
 pop(gl.rubi) <- metadata$country
 
-
-
 # distance matrix from genlight object
 #x.dist <- poppr::bitwise.dist(gl.rubi)
-
-
 
 # make a tree
 #tree <- aboot(gl.rubi, tree = "upgma", distance = bitwise.dist, sample = 100, showtree = F, cutoff = 50, quiet = T)
 #write.tree(tree, file="MyNewickTreefile.nwk")
-
 
 #cols <- brewer.pal(n = nPop(gl.rubi), name = "Dark2")
 #plot.phylo(tree, cex = 0.3, font = 2, adj = 0)
@@ -737,13 +631,7 @@ pop(gl.rubi) <- metadata$country
 #axis(side = 1)
 #title(xlab = "Genetic distance (proportion of loci that are different)")
 
-
-
-
-
 # pca
-
-
 rubi.pca <- glPca(gl.rubi, nf = 10)
 var_frac <- rubi.pca$eig/sum(rubi.pca$eig)*100
 rubi.pca.scores <- as.data.frame(rubi.pca$scores)
@@ -759,13 +647,10 @@ title(xlab="Eigenvalues", line = 1)
 
 
 #--- plot PCA
-
-
 #p12 <- ggplot(rubi.pca.scores, aes(x=PC1, y=PC2, colour=pop, label=pop)) + geom_point(size=2)+ theme_bw() + geom_text_repel(data = subset(rubi.pca.scores, pop == "ZAI" ))
 #p34 <- ggplot(rubi.pca.scores, aes(x=PC3, y=PC4, colour=pop, label=pop)) + geom_point(size=2)+ theme_bw() + geom_text_repel(data = subset(rubi.pca.scores, pop == "ZAI" ))
 #p56 <- ggplot(rubi.pca.scores, aes(x=PC5, y=PC6, colour=pop, label=pop)) + geom_point(size=2)+ theme_bw() + geom_text_repel(data = subset(rubi.pca.scores, pop == "ZAI" ))
 #p12 + p34 + p56
-
 
 country_colours_shapes1 <- c("#31A197","#E15956","#EF724B","#D35E5C","#606EB8","#6570B0","#34AFE7","#6973A8","#3C9C93","#6E75A0","#C56462","#B76968","#A64EB4","#727898","#A96F6E","#9B7474","#3FA8D8","#8D7A7A")
 country_colours_shapes2 <-c("16","16","16","16","17","16","16","17","16","16","16","16","17","16","16","16","17","16")
@@ -797,16 +682,6 @@ ggsave("global_diversity_mtDNA_SNPs.png",height=6,width=7.5)
 
 ```
 
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/VARIANTS/MTNDA/global_diversity_mtDNA_SNPs.* ~/Documents/workbook/hcontortus_genome/04_analysis
-```
-
-![Global diversity - mtDNA](04_analysis/global_diversity_mtDNA_SNPs.png)
-Fig - Global genetic diversity based on mtDNA variation
-
-
-
-
 ```R
 # check subpopulaitons within each country - simply change the pop code in the geom_text_repel section
 
@@ -827,28 +702,15 @@ final_PCA <- ggplot()+
 
 
 
-
-
-
-
-
-
-
-
-
-### 02 - World map of sampling sites <a name="global_sampling_map"></a>
+## World map of sampling sites <a name="global_sampling_map"></a>
 Make a map of H.contortus sampling sites from global population set
-
-Working environment
+```bash
+# Working dir
 ```shell
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY
 ```
-
-
-
 ```R
-R-3.5.0
-
+# load libraries
 library(ggplot2)
 library(ggmap)
 library(maps)
@@ -875,24 +737,11 @@ map("world", col="grey85",fill=TRUE, border=TRUE, xlim=c(-25,25), ylim=c(35,65))
 #map.axes()
 points(metadata$lon, metadata$lat, cex=1.5, pch=c(16,17)[as.numeric(metadata$dataset)],col=metadata$country_code)
 dev.off()
-
-
-```
-
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/global_sampling_map*  ~/Documents/workbook/hcontortus_genome/04_analysis
-
-global_sampling_map*
-
 ```
 
 
 
-
-
-### 03 - Genome wide nucleotide diversity analysis <a name="nuc_div"></a>
-
-Working environment
+## Genome wide nucleotide diversity analysis <a name="nuc_div"></a>
 ```shell
 # working dir
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/VARIANTS/VCFTOOLS
@@ -901,11 +750,9 @@ cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/VARIANTS/
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190118.ips.gff3 ANNOTATION.gff
 
 ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa REF.fa
-```
 
 
-```shell
-# calculate fst for all populaitons in 100 kbp windows
+# calculate fst for all populations in 100 kbp windows
 vcftools-0.1.14 --gzvcf ../1.hcontortus_chrX_Celeg_TT_arrow_pilon.cohort.vcf.gz --fst-window-size 100000 --weir-fst-pop ZAI.population.list --weir-fst-pop AUS.population.list --weir-fst-pop GB.population.list --weir-fst-pop CAP.population.list --weir-fst-pop FRG.population.list --weir-fst-pop ITA.population.list --weir-fst-pop PK.population.list --weir-fst-pop US.population.list --weir-fst-pop BEN.population.list --weir-fst-pop CH.population.list --weir-fst-pop MOR.population.list --weir-fst-pop POR.population.list --weir-fst-pop STO.population.list --weir-fst-pop STA.population.list --weir-fst-pop BRA.population.list --weir-fst-pop FRA.population.list --weir-fst-pop IND.population.list --weir-fst-pop NAM.population.list --out chrX_fst_100k_allpop
 
 vcftools-0.1.14 --gzvcf ../2.hcontortus_chr2_Celeg_TT_arrow_pilon.cohort.vcf.gz --fst-window-size 100000 --weir-fst-pop ZAI.population.list --weir-fst-pop AUS.population.list --weir-fst-pop GB.population.list --weir-fst-pop CAP.population.list --weir-fst-pop FRG.population.list --weir-fst-pop ITA.population.list --weir-fst-pop PK.population.list --weir-fst-pop US.population.list --weir-fst-pop BEN.population.list --weir-fst-pop CH.population.list --weir-fst-pop MOR.population.list --weir-fst-pop POR.population.list --weir-fst-pop STO.population.list --weir-fst-pop STA.population.list --weir-fst-pop BRA.population.list --weir-fst-pop FRA.population.list --weir-fst-pop IND.population.list --weir-fst-pop NAM.population.list --out chr2_fst_100k_allpop
@@ -982,12 +829,16 @@ bedtools-2 makewindows -g  HAEM_V4_final.chr.genome -w 100000 > HAEM_V4_final.ch
 awk '$3=="gene" {print $1,$4,$5,$9}' OFS="\t" ANNOTATION.gff >HCON_V4.gene.bed
 
 bedtools-2 coverage -a HAEM_V4_final.chr.500k.bed -b HCON_V4.gene.bed -counts > HCON_V4.gene.counts
+```
 
-R-3.5.0
+```R-3.5.0
+# load libraries
 library(ggplot2)
+
+# load data
 a<-read.table("HCON_V4.gene.counts",header=F)
 ggplot(a,aes(a$V2,a$V4))+geom_point(aes(col=a$V1))+facet_grid(a$V1~.)+geom_smooth(span=0.1)
-
+```
 
 
 # Alan wrote a script to make a bed file of gaps in the genome
@@ -996,7 +847,6 @@ python3 ~alt/python/bin/fasta_gaps_to_bed.py REF.fa > HAEM_V4_final.chr.Ns.bed
 
 
 ```R
-R-3.5.0
 library(ggplot2)
 library(patchwork)
 
@@ -1244,24 +1094,13 @@ ggsave("global_diversity_genomewide_chromosome_plots.pdf", height=15, width=15, 
 ggsave("global_diversity_genomewide_chromosome_plots.png", height=15, width=15)
 ```
 
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/VARIANTS/VCFTOOLS/global_diversity_genomewide_chromosome_plots.*  ~/Documents/workbook/hcontortus_genome/04_analysis
-
-```
-
-# Fst outlier analysis
-
-
-
-
-
-
+### Fst outlier analysis <a name="fst_outliers"></a>
+```R
 #- plot top 1% of windows for each chromosome
 library(ggplot2)
 library(dplyr)
 
 a <- read.table("10k_allpop.windowed.weir.fst",header=F)
-
 
 pcent <- 0.01
 
@@ -1287,21 +1126,17 @@ chrX_fstoutlier <- a %>% filter(V1=="hcontortus_chrX_Celeg_TT_arrow_pilon") %>% 
 fstoutlier <- dplyr::bind_rows(chr1_fstoutlier,chr2_fstoutlier,chr3_fstoutlier,chr4_fstoutlier,chr5_fstoutlier,chrX_fstoutlier)
 
 write.table(fstoutlier,"fstoutlier_10k_top1pc.txt",quote=FALSE, row.names = FALSE, col.names = FALSE, sep="\t")
+```
 
-
+### list of genes overlapping Fst outlier windows
+```shell
 cut -f1,2,3 fstoutlier_10k_top1pc.txt > fstoutlier_10k_top1pc.bed
 
 bedtools intersect -b fstoutlier_10k_top1pc.bed -a ANNOTATION.gff | grep "mRNA" | cut -f9 | cut -c 4-16 | sort | uniq
+```
 
 
-
-
-
-
-
-
-
-# nucleotide diversity summary stats
+### nucleotide diversity summary stats
 ```
 cat *.shared.pi.windowed.pi | grep "hcontortus" | sed 's/chr[12345]/chr/g' | datamash -g1 median 5 q1 5 q3 5
 hcontortus_chr_Celeg_TT_arrow_pilon	0.00419839	0.00354622	0.00486901
@@ -1348,7 +1183,7 @@ cut -f1 caenorhabditis_elegans.PRJNA13758.WBPS11.annotations.gff3 | grep -v "#" 
 ```
 
 ```R
-R-3.5.0
+# load libraries
 library(ggplot2)
 library(patchwork)
 
@@ -1431,8 +1266,80 @@ plot_layout(ncol=1)
 ```
 
 
+## coverage variance between samples, with particular focus on X chromosome coverage <a name="coverage_variance"></a>
+```bash
+# working dir
+cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/GENOME_COVERAGE
+
+# extract coverage data for chr1 and chrX
+for i in *100000_window.cov; do data=$( cat $i | grep "chr[1|X]" | datamash median 5 -g 1 q1 5 q3 5 | awk 'BEGIN { ORS = " " } { print }' OFS="\t" ) ; country=$( echo $i | cut -c -3 ); echo ${i%.merged.100000_window.cov} ${country} ${data} ; done > genome_coverage.data
+```
 
 
+
+```R-3.5.0
+#load libraries
+library(ggplot2)
+library(patchwork)
+
+data<-read.table("genome_coverage.data",header=F)
+
+# coverage plot comparing chr1 and chrX
+coverage_plot <- ggplot(data,aes(V4,V8))+
+     geom_pointrange(aes(ymin=V9, ymax=V10),alpha=0.2)+
+     geom_errorbarh(aes(xmax = V6, xmin = V5, height = 0),alpha=.2)+
+     scale_y_log10(limits = c(0.001,100))+
+     scale_x_log10(limits = c(0.001,100))+
+     geom_point(data=subset(data,(V10-V9)<(V6-V5)),aes(V4,V8),colour="orange",alpha=0.2)+
+     geom_point(data=subset(data,(V10-V9)>(V6-V5)),aes(V4,V8),colour="blue",alpha=0.2)+
+     labs(x="Log10(median) coverage of 100,000 bp window of Chr 1",y="Log10(median) coverage of 100,000 bp window of Chr X")+
+     theme_bw()
+
+variance_plot <- ggplot(data,aes(x=reorder(V2,(V10-V9)/(V6-V5),FUN = median),y=(V10-V9)/(V6-V5)))+
+     geom_boxplot()+
+     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
+     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
+     labs(x="Country",y="Coverage variance between chr X and chr1")+
+     theme_bw()
+
+
+coverage_plot + variance_plot + plot_layout(ncol=2)
+ggsave("X-to_autosome_coverage_ratio.pdf", useDingbats=F)
+
+
+
+
+
+
+a_plot <-ggplot(data,aes(x=reorder(V2,(V6-V5),FUN = median),y=(V6-V5)))+
+     geom_boxplot()+
+     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
+     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
+     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX / chr1)")+
+     theme_bw()
+
+
+b_plot <-ggplot(data,aes(x=reorder(V2,(V10-V9),FUN = median),y=(V10-V9)))+
+	     geom_boxplot()+
+	     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
+	     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
+	     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX[Q3 - Q1] / chr1[Q3 - Q1])")+
+	     theme_bw()
+a_plot + b_plot + plot_layout(ncol=2)
+```
+
+
+
+
+
+
+
+
+
+## Other
+- V4 genetic map
+     - didnt complete this in the end
+- run SNPeff on population diversity VCFs to calculate KnKs
 
 ## Genetic Map V4
 ```shell
@@ -1644,84 +1551,11 @@ rm *.cohort.g.vcf.gz
 rm *.cohort.g.vcf.gz.tbi
 rm *run_merge_gvcfs*
 mv *.[oe] LOGFILES
+```
 
 
-
-
-
-
-
-
-
-
-
-#--------------------------------------------------------------------------------
-# coverage variance berween samples, with particular focus on X chromosome coverage
-
-cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/POPULATION_DIVERSITY/GENOME_COVERAGE
-
-# extract coverage data for chr1 and chrX
-for i in *100000_window.cov; do data=$( cat $i | grep "chr[1|X]" | datamash median 5 -g 1 q1 5 q3 5 | awk 'BEGIN { ORS = " " } { print }' OFS="\t" ) ; country=$( echo $i | cut -c -3 ); echo ${i%.merged.100000_window.cov} ${country} ${data} ; done > genome_coverage.data
-
-
-
-
-R-3.5.0
-library(ggplot2)
-library(patchwork)
-
-data<-read.table("genome_coverage.data",header=F)
-
-# coverage plot comparing chr1 and chrX
-coverage_plot <- ggplot(data,aes(V4,V8))+
-     geom_pointrange(aes(ymin=V9, ymax=V10),alpha=0.2)+
-     geom_errorbarh(aes(xmax = V6, xmin = V5, height = 0),alpha=.2)+
-     scale_y_log10(limits = c(0.001,100))+
-     scale_x_log10(limits = c(0.001,100))+
-     geom_point(data=subset(data,(V10-V9)<(V6-V5)),aes(V4,V8),colour="orange",alpha=0.2)+
-     geom_point(data=subset(data,(V10-V9)>(V6-V5)),aes(V4,V8),colour="blue",alpha=0.2)+
-     labs(x="Log10(median) coverage of 100,000 bp window of Chr 1",y="Log10(median) coverage of 100,000 bp window of Chr X")+
-     theme_bw()
-
-variance_plot <- ggplot(data,aes(x=reorder(V2,(V10-V9)/(V6-V5),FUN = median),y=(V10-V9)/(V6-V5)))+
-     geom_boxplot()+
-     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
-     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
-     labs(x="Country",y="Coverage variance between chr X and chr1")+
-     theme_bw()
-
-
-coverage_plot + variance_plot + plot_layout(ncol=2)
-ggsave("X-to_autosome_coverage_ratio.pdf", useDingbats=F)
-
-
-
-
-
-
-a_plot <-ggplot(data,aes(x=reorder(V2,(V6-V5),FUN = median),y=(V6-V5)))+
-     geom_boxplot()+
-     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
-     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
-     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX / chr1)")+
-     theme_bw()
-
-
-b_plot <-ggplot(data,aes(x=reorder(V2,(V10-V9),FUN = median),y=(V10-V9)))+
-	     geom_boxplot()+
-	     geom_jitter(data=subset(data,(V10-V9)<(V6-V5)),colour="orange",alpha=0.2)+
-	     geom_jitter(data=subset(data,(V10-V9)>(V6-V5)),colour="blue",alpha=0.2)+
-	     labs(x="Country",y="Coverage variance between chr X and chr1 \n Coverage ratio = (chrX[Q3 - Q1] / chr1[Q3 - Q1])")+
-	     theme_bw()
-a_plot + b_plot + plot_layout(ncol=2)
-
-
-
-
-
-
-#----- SNPeff
-
+## run SNPeff on population diversity VCFs to calculate KnKs
+```
 # setup for HCON_V4
 
 cd /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff
@@ -1753,10 +1587,8 @@ java -jar snpEff.jar build -v HCON_V4
 
 
 
-# run SNPeff on population diversity VCFs to calcukated KnKs
 
-
-
+# run snpeff
 bsub.py 20 vcf_maf_chr1 "vcftools-0.1.14 --gzvcf 1.hcontortus_chr1_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr1_maf0.01"
 bsub.py 20 vcf_maf_chr2 "vcftools-0.1.14 --gzvcf 2.hcontortus_chr2_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr2_maf0.01"
 bsub.py 20 vcf_maf_chr3 "vcftools-0.1.14 --gzvcf 3.hcontortus_chr3_Celeg_TT_arrow_pilon.cohort.vcf.gz --maf 0.01 --recode --out chr3_maf0.01"
@@ -1772,9 +1604,7 @@ bsub.py --done vcf_maf_chr5 20 snpeff_chr5 "java -Xmx4g -jar /nfs/users/nfs_s/sd
 bsub.py --done vcf_maf_chr6 20 snpeff_chrX "java -Xmx4g -jar /nfs/users/nfs_s/sd21/lustre118_link/software/COMPARATIVE_GENOMICS/snpEff/snpEff.jar -no-downstream -no-intergenic -no-intron -no-upstream -no-utr HCON_V4 chrX_maf0.01.recode.vcf \> chrX.maf0.01.snpeff.vcf.gz"
 
 
-
-
-
+# extract synonymous and nonsynonymous variants
 grep '^#\|missense_variant\|synonymous_variant' chr1.maf0.01.snpeff.vcf.gz chr2.maf0.01.snpeff.vcf.gz chr3.maf0.01.snpeff.vcf.gz chr4.maf0.01.snpeff.vcf.gz chr5.maf0.01.snpeff.vcf.gz chrX.maf0.01.snpeff.vcf.gz hcon.snpeff.vcf.gz > mis_syn.txt
 
 
@@ -1782,3 +1612,4 @@ cat HCON_V4_WBP11plus_190125.ips.gff3 | grep "gene" | cut -f9 | cut -f2 -d ";" |
 echo -e "NAME\tka_count\tka_freq\tks_count\tks_freq\tka_ks" > kaks_out
 
 while read GENE; do bsub.py --queue small 0.1 kaks_snps "./run_kaks_from_vcf_pergene snpeff.vcf.kaks mis_syn.txt ${GENE}" ; done < gene_list
+```
