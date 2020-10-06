@@ -215,7 +215,7 @@ bsub.py --queue long --threads 30 30 01_braker_chr \
 
 ```bash
 # Step 1: run ccs
-# --- rawdata
+# rawdata
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/ISOSEQ_ISOFORMS/RAW
 
 ls -1 *.subreads.bam > bams.list
@@ -229,26 +229,27 @@ bsub.py --queue long --threads 10 3 01_ccs_pool "ccs merged_subreads.bam merged_
 
 
 # Step 2. run lima
-bsub.py --threads 7 1 02_lima_pool "lima merged_subreads.ccs.bam primers.fa merged_subreads.demux.bam --isoseq --no-pbi --num-threads 7";
+bsub.py --threads 7 1 02_lima_pool "lima merged_subreads.ccs.bam primers.fa merged_subreads.demux.bam --isoseq --no-pbi --num-threads 7"
 
 
 # Step 3. run isoseq3 cluster
 for i in *.demux.primer_5p--primer_3p.bam; do
-     bsub.py --threads 7 2 03_isoseq3_cluster "isoseq3 cluster ${i} ${i%.demux.primer_5p--primer_3p.bam}.isoseq3_unpolished.bam --verbose --num-threads 7";
+     bsub.py --threads 7 2 03_isoseq3_cluster "isoseq3 cluster ${i} ${i%.demux.primer_5p--primer_3p.bam}.isoseq3_unpolished.bam --verbose --num-threads 7" ;
 done
 
 
 # Step4. run isoseq3 polish
 for i in *isoseq3_unpolished.bam; do
-     bsub.py --threads 7 10 04_isoseq3_polish "isoseq3 polish ${i} ${i%.isoseq3_unpolished.bam}*subreads.bam ${i%.isoseq3_unpolished.bam}.isoseq3_polished.bam --verbose --num-threads 7";
+     bsub.py --threads 7 10 04_isoseq3_polish "isoseq3 polish ${i} ${i%.isoseq3_unpolished.bam}*subreads.bam ${i%.isoseq3_unpolished.bam}.isoseq3_polished.bam --verbose --num-threads 7" ;
 done
 
 
 # Step 5 . summarise data
 for i in *.isoseq3_polished.bam; do
-     isoseq3 summarize $i $(i}.summary.csv; done
-```
+     isoseq3 summarize $i $(i}.summary.csv;
+done
 
+```
 [↥ **Back to top**](#top)
 
 * * *
@@ -280,6 +281,7 @@ grep ">" all_HQ_isoseq.renamed.fasta | sed 's/>//g' > all_HQ_isoseq.renamed.name
 cp ../../V3/TRANSCRIPTOME/PASA/FINAL_V3/alignAssembly.config .
 cp ../../V3/TRANSCRIPTOME/PASA/FINAL_V3/annotCompare.config .
 
+
 bsub.py --queue yesterday --threads 7 20 01_pasa_isoseq_HcV4_chr \
      "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
      -c alignAssembly.config \
@@ -290,42 +292,8 @@ bsub.py --queue yesterday --threads 7 20 01_pasa_isoseq_HcV4_chr \
      --ALIGNERS blat,gmap --CPU 7"
 
 
-bsub.py --queue yesterday 1 02_pasa_add_evm_annotations \
-     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
-     -c alignAssembly.config \
-     -g HAEM_V4_final.chr.fa \
-     -P augustus.filtered.gff3"
 
 
-
-bsub.py --queue yesterday 1 03_pasa_evm_compare_update \
-     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
-     -c annotCompare.config \
-     -A -L \
-     --annots_gff3 augustus.filtered.gff3 \
-     --ALT_SPLICE \
-     -g HAEM_V4_final.chr.fa \
-     -t all_HQ_isoseq.renamed.fasta \
-     -f all_HQ_isoseq.renamed.names"
-
-
-
-bsub.py --queue yesterday 1 02_pasa_add_evm_annotations_round2 \
-     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Load_Current_Gene_Annotations.dbi \
-     -c alignAssembly.config \
-     -g HAEM_V4_final.chr.fa \
-     -P sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3"
-
-
-bsub.py --queue yesterday 1 03_pasa_evm_compare_update_round2 \
-     "/nfs/users/nfs_s/sd21/lustre118_link/software/TRANSCRIPTOME/PASApipeline-pasa-v2.2.0/scripts/Launch_PASA_pipeline.pl \
-     -c annotCompare.config \
-     -A -L \
-     --annots_gff3 sd21_pasa_HcV4.gene_structures_post_PASA_updates.39527.gff3 \
-     --ALT_SPLICE \
-     -g HAEM_V4_final.chr.fa \
-     -t all_HQ_isoseq.renamed.fasta \
-     -f all_HQ_isoseq.renamed.names"
 ```
 
 [↥ **Back to top**](#top)
@@ -422,8 +390,6 @@ bsub.py 5 01_evm \
      --segmentSize 100000 \
      --overlapSize 10000 \
      --partition_listing partitions_list.out"
-
-
 
 
 bsub.py 5 02_evm_write_commands \
@@ -1270,6 +1236,8 @@ grep "mRNA" filtered.augustus.gff.tmp | cut -f2 -d ';' | sed 's/Parent=//g' | so
 while read gene_id; do grep "ID=${gene_id};" HAEM_V4.chr.evm_merge.gff >> genes.filtered.gff.tmp; done < gene_list.tmp
 echo "##gff-version 3" > HC_V4_augustus_merge.AAfiltered.gff; cat filtered.augustus.gff.tmp genes.filtered.gff.tmp | sort -k1,1 -k4,4n >> HC_V4_augustus_merge.AAfiltered.gff
 
+
+
 #-----------------------------------------------------------------------------------------
 # Filtering post braker  AUGUSTUS output - MANUAL
 #-----------------------------------------------------------------------------------------
@@ -1400,9 +1368,15 @@ gffread -g ../HAEM_V4_final.chr.fa -x HC_V4_augustus_merge.AAfiltered.CDS.fa HC_
 makeblastdb -in consensi.fa.classified_SDfiltered.fa -parse_seqids -dbtype nucl
 
 # run blast
-bsub.py --queue yesterday 10 01_blastn_repeats "/software/pubseq/bin/ncbi_blast+/blastn -outfmt 6 -db consensi.fa.classified_SDfiltered.fa  -query HC_V4_augustus_merge.AAfiltered.CDS.fa \> HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out"
+bsub.py --queue yesterday 10 01_blastn_repeats \
+     "/software/pubseq/bin/ncbi_blast+/blastn \
+     -outfmt 6 \
+     -db consensi.fa.classified_SDfiltered.fa \
+     -query HC_V4_augustus_merge.AAfiltered.CDS.fa \> HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out"
 
-python3 ~alt/python/bin/blast_parser_for_filtering_retrotrans_by_length_of_cds.py HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out HC_V4_augustus_merge.AAfiltered.CDS.fa > repeats_vs_cds.out
+python3 ~alt/python/bin/blast_parser_for_filtering_retrotrans_by_length_of_cds.py \
+     HC_V4_augustus_merge.AAfiltered.CDS.repeat_pos.out \
+     HC_V4_augustus_merge.AAfiltered.CDS.fa > repeats_vs_cds.out
 
 cat repeats_vs_cds.out |  awk '{if($4 >= 50){print$1}}' | sort > genes_to_remove.txt
 
@@ -1632,7 +1606,7 @@ cat tmp.gff HAEM_V4_final.chr.fa > tmp.gff2; mv tmp.gff2 tmp.gff
 
 interproscan
 
-```shell
+```bash
 # generate a protein fasta from annotation and reference genome
 gffread -y PROTEINS.fa -g HAEM_V4_final.chr.fa HCON_V4_WBP11plus_190125.renamed.gff3
 sed -e 's/\.//g' PROTEINS.fa > tmp; mv tmp PROTEINS.fa
