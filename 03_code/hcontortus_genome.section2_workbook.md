@@ -12,6 +12,10 @@
 4.  [Repeat analyses](#repeats)
     -   [Supplementary Figure 5](#figureS5)
 
+
+
+
+
 ## Genome graph of chromosomes and haplotypes <a name="genomegraph"></a>
 
 -   Note: some non commandline tools were used to create the figures

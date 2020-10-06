@@ -1,35 +1,32 @@
 # Haemonchus contortus genome paper
 ## Section 4: Transcriptional dynamics throughout development and between sexes
 
-1. []()
+1. [Kallisto](#kallisto)
+2. [Sleuth](#sleuth)
+3. [Gene expression clustering](#clust)
+4. [Motif enrichment in 5' UTR](#motif)
+5. [Other](#other)
+     * [Distribution of clustered gene expression profiles across the genome](#cluster_distribution)
+     * [GO term analysis using revigo](#revigo)
+     * [normalised gene expression per chromosome per lifestage](#normalised)
 
 
----
-## 04 - Kallisto <a name="kallisto"></a>
----
 
+* * *
+## Kallisto <a name="kallisto"></a>
 
-Date 190116
-
-Using Kallisto to quantify transcripts, and use in the gene expression clustering analyses.
-
-
-### Working environment
 ```shell
+# working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME
 mkdir KALLISTO
 cd KALLISTO
-```
 
+# Get the GFF to work on
 
-### Get the GFF to work on
-```shell
 ln -fs /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/REF/HAEM_V4_final.chr.fa REF.fa
 ln -fs /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff3
-```
 
-### get some raw data
-```shell
+# get some raw data
 cd ~/lustre118_link/hc/GENOME/TRANSCRIPTOME/RAW
 
 kinit # log into iRODs
@@ -61,38 +58,35 @@ kallisto index --index HCON_V4.TRANSCRIPTS.ixd TRANSCRIPTS.fa
 # run kallisto
 for i in ` cd ../RAW/ ; ls -1 *_1.fastq.gz | sed -e "s/_1.fastq.gz//g" `; do \
 kallisto quant \
---bias \
---index HCON_V4.TRANSCRIPTS.ixd \
---output-dir kallisto_${i}_out \
---bootstrap-samples 100 \
---threads 7 \
---fusion \
-../RAW/${i}_1.fastq.gz ../RAW/${i}_2.fastq.gz; done
+     --bias \
+     --index HCON_V4.TRANSCRIPTS.ixd \
+     --output-dir kallisto_${i}_out \
+     --bootstrap-samples 100 \
+     --threads 7 \
+     --fusion \
+     ../RAW/${i}_1.fastq.gz ../RAW/${i}_2.fastq.gz;
+done
 
 mkdir KALLISTO_MAPPED_SAMPLES
 mv kallisto_* KALLISTO_MAPPED_SAMPLES/
 
 ```
 
-To run sleuth, a metadata file is needed with all samples IDs, conditions, and paths.
+[↥ **Back to top**](#top)
+
+* * *
 
 
-
-
-
-### Load R and environment
-
+### run sleuth in R <a name="sleuth"></a>
 ```R
 
 R-3.5.0
-#load(file = "hcontortus_genome.workbook.Rdata")
+# load libraries
 library("sleuth")
 library(ggplot2)
 library(patchwork)
-```
 
 ### Run Sleuth
-```R
 hc_metadata <- read.table("sample_name_path.list", header = TRUE, stringsAsFactors=FALSE)
 hc_so <- sleuth_prep(hc_metadata, extra_bootstrap_summary = TRUE)
 hc_so <- sleuth_fit(hc_so, ~name, 'full')
@@ -102,10 +96,8 @@ hc_so <- sleuth_lrt(hc_so, 'reduced', 'full')
 sleuth_table <- sleuth_results(hc_so, 'reduced:full', 'lrt', show_all = FALSE)
 sleuth_significant <- dplyr::filter(sleuth_table, qval <= 0.05)
 head(sleuth_significant, 20)
-```
 
-Generate some plots for QC
-```R
+# generate some plots for QC
 pcaplot_allsamples	<-	plot_pca(hc_so, color_by = 'name')
 heatmap_allsamples   <-    plot_sample_heatmap(hc_so)
 
@@ -137,16 +129,7 @@ heatmap_L3   <-    plot_sample_heatmap(hc_so_L3)
 kallistoQC_L3_plots <- (pcaplot_L3 | pc_varianceplot_L3) / heatmap_L3 + plot_layout(ncol = 1)
 ggsave("kallistoQC_L3_plots.pdf",width = 28, height = 28, units = "cm")
 ggsave("kallistoQC_L3_plots.png",width = 28, height = 28, units = "cm")
-
 ```
-- Copy to local dir - run this from local machine
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_L3_plots.* ~/Documents/workbook/hcontortus_genome/04_analysis
-```
-
-![Kallisto QC - L3 plots](04_analysis/kallistoQC_L3_plots.png)
-Fig - Kalliso QC - L3 QC plots (i) PCA (ii) Loading plot of each PC, (iii) Heatmap
-
 
 Because the the L3 samples have been mixed, need to regenerate the metadata file to reflect the switch of L3 IDs. The new IDs are as follows:
 - SHL3
@@ -162,8 +145,7 @@ Made a new file called "sample_name_path_L3fixed.list" with correct IDs, paths
 
 
 ```R
-R-3.5.0
-#load(file = "hcontortus_genome.workbook.Rdata")
+# load libraries
 library("sleuth")
 library(ggplot2)
 library(patchwork)
@@ -184,13 +166,6 @@ kallistoQC_allsamples2_plots <- pcaplot_allsamples2 + heatmap_allsamples2 + plot
 ggsave("kallistoQC_allsamples2_plots.pdf",width = 28, height = 10, units = "cm")
 ggsave("kallistoQC_allsamples2_plots.png",width = 28, height = 10, units = "cm")
 ```
-- Copy to local dir - run this from local machine
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/kallistoQC_allsamples2_plots.* ~/Documents/workbook/hcontortus_genome/04_analysis
-```
-
-![Kallisto QC - All samples with L3 fixed](04_analysis/kallistoQC_allsamples2_plots.png)
-Fig - Kalliso QC - All samples with L3 IDs fixed
 
 
 ### Run pairwise comparisons
@@ -222,7 +197,7 @@ sleuth_significant_EGGvL1_wt_down <- dplyr::filter(sleuth_table_EGGvL1_wt, qval 
 write.table(sleuth_significant_EGGvL1_wt_down,file="sleuth_table_EGGvL1_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
-
+#--------------------------------------------------------------------
 # L1 vs SHL3
 hc_so_L1vSHL3_meta	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L1" | hc_metadata_L3fixed$name=="SHL3"),]
 hc_so_L1vSHL3 <- sleuth_prep(hc_so_L1vSHL3_meta, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -246,12 +221,7 @@ write.table(sleuth_significant_L1vSHL3_wt_up,file="sleuth_table_L1vSHL3_up.txt",
 sleuth_significant_L1vSHL3_wt_down <- dplyr::filter(sleuth_table_L1vSHL3_wt, qval <= 0.01,b<=-2)
 write.table(sleuth_significant_L1vSHL3_wt_down,file="sleuth_table_L1vSHL3_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
-
-
-
-
-
-
+#--------------------------------------------------------------------
 # SHL3 vs EXL3
 hc_so_SHL3vEXL3	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="SHL3" | hc_metadata_L3fixed$name=="EXL3"),]
 hc_so_SHL3vEXL3 <- sleuth_prep(hc_so_SHL3vEXL3, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -274,10 +244,7 @@ write.table(sleuth_significant_SHL3vEXL3_wt_up,file="sleuth_table_SHL3vEXL3_up.t
 sleuth_significant_SHL3vEXL3_wt_down <- dplyr::filter(sleuth_table_SHL3vEXL3_wt, qval <= 0.01,b<=-2)
 write.table(sleuth_significant_SHL3vEXL3_wt_down,file="sleuth_table_SHL3vEXL3_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
-
-
-
-
+#--------------------------------------------------------------------
 # EXL3 vs L4
 hc_so_EXL3vL4	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EXL3" | hc_metadata_L3fixed$name=="L4"),]
 hc_so_EXL3vL4 <- sleuth_prep(hc_so_EXL3vL4, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -301,11 +268,7 @@ write.table(sleuth_significant_EXL3vL4_wt_up,file="sleuth_table_EXL3vL4_up.txt",
 sleuth_significant_EXL3vL4_wt_down <- dplyr::filter(sleuth_table_EXL3vL4_wt, qval <= 0.01,b<=-2)
 write.table(sleuth_significant_EXL3vL4_wt_down,file="sleuth_table_EXL3vL4_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
-
-
-
-
-
+#--------------------------------------------------------------------
 # L4 vs Adult Male
 hc_so_L4vADULTM	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L4" | hc_metadata_L3fixed$name=="ADULT_M"),]
 hc_so_L4vADULTM <- sleuth_prep(hc_so_L4vADULTM, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -332,8 +295,7 @@ write.table(sleuth_significant_L4vADULTM_wt_down,file="sleuth_table_L4vADULTM_do
 
 
 
-
-
+#--------------------------------------------------------------------
 # L4 vs Adult Female
 hc_so_L4vADULTF	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="L4" | hc_metadata_L3fixed$name=="ADULT_F"),]
 hc_so_L4vADULTF <- sleuth_prep(hc_so_L4vADULTF, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -359,11 +321,7 @@ write.table(sleuth_significant_L4vADULTF_wt_down,file="sleuth_table_L4vADULTF_do
 
 
 
-
-
-
-
-
+#--------------------------------------------------------------------
 # Adult Male vs Adult Female
 hc_so_ADULTMvADULTF	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="ADULT_M" | hc_metadata_L3fixed$name=="ADULT_F"),]
 hc_so_ADULTMvADULTF <- sleuth_prep(hc_so_ADULTMvADULTF, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -416,9 +374,7 @@ write.table(sleuth_significant_ADULTFvADULTM_wt_down,file="sleuth_table_ADULTFvA
 
 
 
-
-
-
+#--------------------------------------------------------------------
 # Adult Female vs Gut
 hc_so_ADULTFvGUT	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="ADULT_F" | hc_metadata_L3fixed$name=="GUT"),]
 hc_so_ADULTFvGUT <- sleuth_prep(hc_so_ADULTFvGUT, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -447,7 +403,7 @@ write.table(sleuth_significant_GUTvADULTF_wt_down,file="sleuth_table_GUTvADULTF_
 
 
 
-
+#--------------------------------------------------------------------
 # Adult Female vs Egg
 hc_so_ADULTFvEGG	<-	hc_metadata_L3fixed[(hc_metadata_L3fixed$name=="EGG" | hc_metadata_L3fixed$name=="ADULT_F"),]
 hc_so_ADULTFvEGG <- sleuth_prep(hc_so_ADULTFvEGG, extra_bootstrap_summary = TRUE,num_cores=1)
@@ -473,20 +429,18 @@ sleuth_significant_EGGvADULTF_wt_down <- dplyr::filter(sleuth_table_EGGvADULTF_w
 write.table(sleuth_significant_EGGvADULTF_wt_down,file="sleuth_table_EGGvADULTF_down.txt",sep="\t",quote=FALSE, row.names=FALSE)
 
 
-
-save.image(file = "hc_genome_kallisto.RData")
 ```
 
 
 
-# make a heatmap of top 1000 variable genes across all life stages
+### make a heatmap of top 1000 variable genes across all life stages
 
 ```shell
+# working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES
-```
+
 
 ### generate the tpm data
-```shell
 # extract TPMs per sample
 for i in ` ls -1d *out `; do echo $i > ${i}.tpm ; cat ${i}/abundance.tsv | cut -f5 | sed '1d' >> ${i}.tpm; done
 
@@ -541,11 +495,12 @@ Curate the data, including:
 
 
 ```R
-R-3.5.0
+# load libraries
 library(gplots)
 library(tibble)
 library(RColorBrewer)
 
+# load data
 data<-read.table("kallisto_allsamples.tpm.table",header=T,row.names=1)
 
 # set a TPM cutoff,
@@ -588,28 +543,22 @@ dev.off()
 
 ```
 
-- Copy to local dir - run this from local machine
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/top1000variablegenes_allstages_minTPM1.* ~/Documents/workbook/hcontortus_genome/04_analysis
-```
+[↥ **Back to top**](#top)
 
-![Kallisto - top 1000 most variable genes across lifestages](04_analysis/top1000variablegenes_allstages_minTPM1.png)
-Fig - Kalliso  top 1000 most variable genes across lifestages
+* * *
 
-
-
-
-### Run clustering analysis of gene expression across the life stages
+## Run clustering analysis of gene expression across the life stages <a name="clust"></a>
 
 Need to generate a replicates file that tells CLUST what samples to group.
 
 ### collate data for clust
 ```shell
+# working dir:
 mkdir clust_data
 cp kallisto_allsamples.tpm.table clust_data/
-```
 
-Run clust
+
+#Run clust
 - requires a replicates dataset - see "replicates.txt"
 
 kallisto_allsamples.tpm.table   EGG     kallisto_7059_6_1_out   kallisto_7059_6_2_out   kallisto_7059_6_3_out
@@ -622,26 +571,16 @@ kallisto_allsamples.tpm.table   ADULT_M kallisto_7062_6_1_out   kallisto_7062_6_
 kallisto_allsamples.tpm.table   GUT     kallisto_7062_6_13_out  kallisto_7062_6_14_out  kallisto_7062_6_15_out
 
 
-```shell
 # run clust
 clust $PWD/clust_data -r replicates.txt
-```
+
 Clust produces a cluster profile PDF containing all Clusters. However, it is not that nice, and so will make better ones using ggplot. Need to convert PDF to PNG to post however.
 
-```shell
+
 # pdf to png conversion
 cd Results
 convert Clusters_profiles.pdf -quality 200  Clusters_profiles.png
 ```
-
-- Copy to local dir - run this from local machine
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_*/Clusters_profiles*.png ~/Documents/workbook/hcontortus_genome/04_analysis/
-```
-
-![Clust - cluster profiles ](04_analysis/Clusters_profiles-0.png)
-![Clust - cluster profiles ](04_analysis/Clusters_profiles-1.png)
-Fig - Clust - correlated gene expression across lifestages
 
 Results
 - The largest cluster expression profiles split Egg/L1/L3 and L4/Adults
@@ -652,15 +591,16 @@ Results
 
 
 
-Make nice clust plots using ggplot2
+### Make nice clust plots using ggplot2
 ```shell
+# working dir:
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_26_Jan_19
 
 # make gene lists for each cluster set
 for i in {1..19}; do cut -f "${i}" Clusters_Objects.tsv | sed '2d' | cut -f1 -d " " | sed '/^$/d' > cluster_${i}.list; done
 ```
 ```R
-R-3.5.0
+# load libraries
 library(dplyr)
 library(reshape2)
 library(ggplot2)
@@ -689,316 +629,14 @@ ggplot()+geom_line(aes(df_melted$variable,df_melted$value,group = df_melted$Gene
 
 ```
 
-Import into Illustrator to make a nice figure.
 
-- Copy to local dir - run this from local machine
-```shell
-scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_*/cluster*.pdf ~/Documents/workbook/hcontortus_genome/04_analysis
-```
+[↥ **Back to top**](#top)
 
-### Distribution of clustered gene expression profiles across the genome
-
-Want to explore whether genome locate has any impact on the coexpression of genes.
-
-# get genome coordinates of genes in clusters
-```shell
-ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff
-
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_1.list > cluster_1.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_2.list > cluster_2.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_3.list > cluster_3.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_4.list > cluster_4.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_5.list > cluster_5.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_6.list > cluster_6.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_7.list > cluster_7.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_8.list > cluster_8.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_9.list > cluster_9.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_10.list > cluster_10.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_11.list > cluster_11.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_12.list > cluster_12.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_13.list > cluster_13.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_14.list > cluster_14.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_15.list > cluster_15.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_16.list > cluster_16.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_17.list > cluster_17.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_18.list > cluster_18.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_19.list > cluster_19.coords
-while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_20.list > cluster_20.coords
-```
-
-
-# stat testing the clusters
-```shell
-ln -s ../../../../REF/HAEM_V4_final.chr.fa
-samtools faidx HAEM_V4_final.chr.fa
-cut -f1,2 HAEM_V4_final.chr.fa.fai > HAEM_V4_final.chr.genome
-
-# make bed files - note per cluster bed files are already made, ie. cluster_20.coords
-bedtools-2 makewindows -g  HAEM_V4_final.chr.genome -w 500000 > HAEM_V4_final.chr.500k.bed
-awk '$3=="mRNA" {print $1,$4,$5,$9}' OFS="\t" ANNOTATION.gff >HCON_V4.mRNA.bed
-
-
-bedtools-2 coverage -a HAEM_V4_final.chr.500k.bed -b HCON_V4.mRNA.bed -counts > HCON_V4.mRNA.counts
-
-for i in *.coords; do bedtools-2 coverage -a HAEM_V4_final.chr.500k.bed -b <( sort -k1,1 -k2,2n ${i}) -counts > ${i%.coords}.counts; done
-```
+* * *
 
 
 
-
-Make the plots
-```R
-# load libraries
-library(ggplot2)
-library(patchwork)
-library(viridis)
-
-cluster_1 <- read.table("cluster_1.coords",header=F)
-cluster_2 <- read.table("cluster_2.coords",header=F)
-cluster_3 <- read.table("cluster_3.coords",header=F)
-cluster_4 <- read.table("cluster_4.coords",header=F)
-cluster_5 <- read.table("cluster_5.coords",header=F)
-cluster_6 <- read.table("cluster_6.coords",header=F)
-cluster_7 <- read.table("cluster_7.coords",header=F)
-cluster_8 <- read.table("cluster_8.coords",header=F)
-cluster_9 <- read.table("cluster_9.coords",header=F)
-cluster_10 <- read.table("cluster_10.coords",header=F)
-cluster_11 <- read.table("cluster_11.coords",header=F)
-cluster_12 <- read.table("cluster_12.coords",header=F)
-cluster_13 <- read.table("cluster_13.coords",header=F)
-cluster_14 <- read.table("cluster_14.coords",header=F)
-cluster_15 <- read.table("cluster_15.coords",header=F)
-cluster_16 <- read.table("cluster_16.coords",header=F)
-cluster_17 <- read.table("cluster_17.coords",header=F)
-cluster_18 <- read.table("cluster_18.coords",header=F)
-cluster_19 <- read.table("cluster_19.coords",header=F)
-cluster_20 <- read.table("cluster_20.coords",header=F)
-
-cluster_1$cluster <- 1
-cluster_2$cluster <- 2
-cluster_3$cluster <- 3
-cluster_4$cluster <- 4
-cluster_5$cluster <- 5
-cluster_6$cluster <- 6
-cluster_7$cluster <- 7
-cluster_8$cluster <- 8
-cluster_9$cluster <- 9
-cluster_10$cluster <- 10
-cluster_11$cluster <- 11
-cluster_12$cluster <- 12
-cluster_13$cluster <- 13
-cluster_14$cluster <- 14
-cluster_15$cluster <- 15
-cluster_16$cluster <- 16
-cluster_17$cluster <- 17
-cluster_18$cluster <- 18
-cluster_19$cluster <- 19
-cluster_20$cluster <- 20
-
-
-clusters <- rbind(cluster_1,cluster_2,cluster_3,cluster_4,cluster_5,cluster_6,cluster_7,cluster_8,cluster_9,cluster_10,cluster_11,cluster_12,cluster_13,cluster_14,cluster_15,cluster_16,cluster_17,cluster_18,cluster_19)
-
-#ggplot(clusters,aes(clusters$V2,clusters$cluster))+ geom_jitter(alpha=0.1,size=0.5)+facet_grid(.~clusters$V1)+theme_bw()+ scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
-
-
-all<-read.table("HCON_V4.mRNA.counts",header=F)
-c1<-read.table("cluster_1.counts",header=F)
-c2<-read.table("cluster_2.counts",header=F)
-c3<-read.table("cluster_3.counts",header=F)
-c4<-read.table("cluster_4.counts",header=F)
-c5<-read.table("cluster_5.counts",header=F)
-c6<-read.table("cluster_6.counts",header=F)
-c7<-read.table("cluster_7.counts",header=F)
-c8<-read.table("cluster_8.counts",header=F)
-c9<-read.table("cluster_9.counts",header=F)
-c10<-read.table("cluster_10.counts",header=F)
-c11<-read.table("cluster_11.counts",header=F)
-c12<-read.table("cluster_12.counts",header=F)
-c13<-read.table("cluster_13.counts",header=F)
-c14<-read.table("cluster_14.counts",header=F)
-c15<-read.table("cluster_15.counts",header=F)
-c16<-read.table("cluster_16.counts",header=F)
-c17<-read.table("cluster_17.counts",header=F)
-c18<-read.table("cluster_18.counts",header=F)
-c19<-read.table("cluster_19.counts",header=F)
-#c20<-read.table("cluster_20.counts",header=F)
-
-
-# calculate the expected number of clustered transcripts per window with the null hypothesis that they are equally distributed throughout the genome.
-c1_stat<-all
-c1_stat$observed<-c1$V4
-c1_stat$expected<-all$V4*(sum(c1$V4)/21007)
-c1_stat$chqsq<-(c1$V4 - all$V4*(sum(c1$V4)/21007))^2/(all$V4*sum(c1$V4)/21007)
-c1_stat$pvalue <- pchisq(c1_stat$chqsq,df=1,lower.tail=FALSE)
-c1_stat$cluster <- 1
-
-c2_stat<-all
-c2_stat$observed<-c2$V4
-c2_stat$expected<-all$V4*(sum(c2$V4)/21007)
-c2_stat$chqsq<-(c2$V4 - all$V4*(sum(c2$V4)/21007))^2/(all$V4*sum(c2$V4)/21007)
-c2_stat$pvalue <- pchisq(c2_stat$chqsq,df=1,lower.tail=FALSE)
-c2_stat$cluster <- 2
-
-c3_stat<-all
-c3_stat$observed<-c3$V4
-c3_stat$expected<-all$V4*(sum(c3$V4)/21007)
-c3_stat$chqsq<-(c3$V4 - all$V4*(sum(c3$V4)/21007))^2/(all$V4*sum(c3$V4)/21007)
-c3_stat$pvalue <- pchisq(c3_stat$chqsq,df=1,lower.tail=FALSE)
-c3_stat$cluster <- 3
-
-c4_stat<-all
-c4_stat$observed<-c4$V4
-c4_stat$expected<-all$V4*(sum(c4$V4)/21007)
-c4_stat$chqsq<-(c4$V4 - all$V4*(sum(c4$V4)/21007))^2/(all$V4*sum(c4$V4)/21007)
-c4_stat$pvalue <- pchisq(c4_stat$chqsq,df=1,lower.tail=FALSE)
-c4_stat$cluster <- 4
-
-c5_stat<-all
-c5_stat$observed<-c5$V4
-c5_stat$expected<-all$V4*(sum(c5$V4)/21007)
-c5_stat$chqsq<-(c5$V4 - all$V4*(sum(c5$V4)/21007))^2/(all$V4*sum(c5$V4)/21007)
-c5_stat$pvalue <- pchisq(c5_stat$chqsq,df=1,lower.tail=FALSE)
-c5_stat$cluster <- 5
-
-c6_stat<-all
-c6_stat$observed<-c6$V4
-c6_stat$expected<-all$V4*(sum(c6$V4)/21007)
-c6_stat$chqsq<-(c6$V4 - all$V4*(sum(c6$V4)/21007))^2/(all$V4*sum(c6$V4)/21007)
-c6_stat$pvalue <- pchisq(c6_stat$chqsq,df=1,lower.tail=FALSE)
-c6_stat$cluster <- 6
-
-c7_stat<-all
-c7_stat$observed<-c7$V4
-c7_stat$expected<-all$V4*(sum(c7$V4)/21007)
-c7_stat$chqsq<-(c7$V4 - all$V4*(sum(c7$V4)/21007))^2/(all$V4*sum(c7$V4)/21007)
-c7_stat$pvalue <- pchisq(c7_stat$chqsq,df=1,lower.tail=FALSE)
-c7_stat$cluster <- 7
-
-c8_stat<-all
-c8_stat$observed<-c8$V4
-c8_stat$expected<-all$V4*(sum(c8$V4)/21007)
-c8_stat$chqsq<-(c8$V4 - all$V4*(sum(c8$V4)/21007))^2/(all$V4*sum(c8$V4)/21007)
-c8_stat$pvalue <- pchisq(c8_stat$chqsq,df=1,lower.tail=FALSE)
-c8_stat$cluster <- 8
-
-c9_stat<-all
-c9_stat$observed<-c9$V4
-c9_stat$expected<-all$V4*(sum(c9$V4)/21007)
-c9_stat$chqsq<-(c9$V4 - all$V4*(sum(c9$V4)/21007))^2/(all$V4*sum(c9$V4)/21007)
-c9_stat$pvalue <- pchisq(c9_stat$chqsq,df=1,lower.tail=FALSE)
-c9_stat$cluster <- 9
-
-c10_stat<-all
-c10_stat$observed<-c10$V4
-c10_stat$expected<-all$V4*(sum(c10$V4)/21007)
-c10_stat$chqsq<-(c10$V4 - all$V4*(sum(c10$V4)/21007))^2/(all$V4*sum(c10$V4)/21007)
-c10_stat$pvalue <- pchisq(c10_stat$chqsq,df=1,lower.tail=FALSE)
-c10_stat$cluster <- 10
-
-c11_stat<-all
-c11_stat$observed<-c11$V4
-c11_stat$expected<-all$V4*(sum(c11$V4)/21007)
-c11_stat$chqsq<-(c11$V4 - all$V4*(sum(c11$V4)/21007))^2/(all$V4*sum(c11$V4)/21007)
-c11_stat$pvalue <- pchisq(c11_stat$chqsq,df=1,lower.tail=FALSE)
-c11_stat$cluster <- 11
-
-c12_stat<-all
-c12_stat$observed<-c12$V4
-c12_stat$expected<-all$V4*(sum(c12$V4)/21007)
-c12_stat$chqsq<-(c12$V4 - all$V4*(sum(c12$V4)/21007))^2/(all$V4*sum(c12$V4)/21007)
-c12_stat$pvalue <- pchisq(c12_stat$chqsq,df=1,lower.tail=FALSE)
-c12_stat$cluster <- 12
-
-c13_stat<-all
-c13_stat$observed<-c13$V4
-c13_stat$expected<-all$V4*(sum(c13$V4)/21007)
-c13_stat$chqsq<-(c13$V4 - all$V4*(sum(c13$V4)/21007))^2/(all$V4*sum(c13$V4)/21007)
-c13_stat$pvalue <- pchisq(c13_stat$chqsq,df=1,lower.tail=FALSE)
-c13_stat$cluster <- 13
-
-c14_stat<-all
-c14_stat$observed<-c14$V4
-c14_stat$expected<-all$V4*(sum(c14$V4)/21007)
-c14_stat$chqsq<-(c14$V4 - all$V4*(sum(c14$V4)/21007))^2/(all$V4*sum(c14$V4)/21007)
-c14_stat$pvalue <- pchisq(c14_stat$chqsq,df=1,lower.tail=FALSE)
-c14_stat$cluster <- 14
-
-c15_stat<-all
-c15_stat$observed<-c15$V4
-c15_stat$expected<-all$V4*(sum(c15$V4)/21007)
-c15_stat$chqsq<-(c15$V4 - all$V4*(sum(c15$V4)/21007))^2/(all$V4*sum(c15$V4)/21007)
-c15_stat$pvalue <- pchisq(c15_stat$chqsq,df=1,lower.tail=FALSE)
-c15_stat$cluster <- 15
-
-c16_stat<-all
-c16_stat$observed<-c16$V4
-c16_stat$expected<-all$V4*(sum(c16$V4)/21007)
-c16_stat$chqsq<-(c16$V4 - all$V4*(sum(c16$V4)/21007))^2/(all$V4*sum(c16$V4)/21007)
-c16_stat$pvalue <- pchisq(c16_stat$chqsq,df=1,lower.tail=FALSE)
-c16_stat$cluster <- 16
-
-
-c17_stat<-all
-c17_stat$observed<-c17$V4
-c17_stat$expected<-all$V4*(sum(c17$V4)/21007)
-c17_stat$chqsq<-(c17$V4 - all$V4*(sum(c17$V4)/21007))^2/(all$V4*sum(c17$V4)/21007)
-c17_stat$pvalue <- pchisq(c17_stat$chqsq,df=1,lower.tail=FALSE)
-c17_stat$cluster <- 17
-
-c18_stat<-all
-c18_stat$observed<-c18$V4
-c18_stat$expected<-all$V4*(sum(c18$V4)/21007)
-c18_stat$chqsq<-(c18$V4 - all$V4*(sum(c18$V4)/21007))^2/(all$V4*sum(c18$V4)/21007)
-c18_stat$pvalue <- pchisq(c18_stat$chqsq,df=1,lower.tail=FALSE)
-c18_stat$cluster <- 18
-
-c19_stat<-all
-c19_stat$observed<-c19$V4
-c19_stat$expected<-all$V4*(sum(c19$V4)/21007)
-c19_stat$chqsq<-(c19$V4 - all$V4*(sum(c19$V4)/21007))^2/(all$V4*sum(c19$V4)/21007)
-c19_stat$pvalue <- pchisq(c19_stat$chqsq,df=1,lower.tail=FALSE)
-c19_stat$cluster <- 19
-
-#c20_stat<-all
-#c20_stat$observed<-c20$V4
-#c20_stat$expected<-all$V4*(sum(c20$V4)/21007)
-#c20_stat$chqsq<-(c20$V4 - all$V4*(sum(c20$V4)/21007))^2/(all$V4*sum(c20$V4)/21007)
-#c20_stat$pvalue <- pchisq(c20_stat$chqsq,df=1,lower.tail=FALSE)
-#c20_stat$cluster <- 20
-
-cluster_stats <- rbind(c1_stat,c2_stat,c3_stat,c4_stat,c5_stat,c6_stat,c7_stat,c8_stat,c9_stat,c10_stat,c11_stat,c12_stat,c13_stat,c14_stat,c15_stat,c16_stat,c17_stat,c18_stat,c19_stat)
-cluster_stats <- cluster_stats[cluster_stats$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
-cluster_stats[is.na(cluster_stats)] <- 1
-cluster_stats$neglogP <- -log10(cluster_stats$pvalue)
-
-
-# make the final plots
-plot_clusts<-ggplot(clusters,aes(clusters$V2,clusters$cluster))+
-		geom_jitter(alpha=0.1,size=0.5)+facet_grid(.~clusters$V1)+
-		theme_bw()+
-		scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
-
-plot_stats<-ggplot(cluster_stats)+
-		geom_rect(aes(xmin=cluster_stats$V2,ymin=cluster_stats$cluster-0.5,xmax=cluster_stats$V3,ymax=cluster_stats$cluster+0.5,fill=-log10(cluster_stats$pvalue)))+
-		facet_grid(.~cluster_stats$V1)+
-		theme_bw()+
-		scale_fill_viridis(direction=-1)+
-		scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
-
-# bring plots together
-plot_clusts + plot_stats + plot_layout(ncol=2)
-
-# save it
-ggsave("clust_profiles_across_genome.pdf",width = 28, height = 10, units = "cm")
-ggsave("clust_profiles_across_genome.png",width = 28, height = 10, units = "cm")
-
-```
-
-
-
-
-
-### Motif enrichment in 5' utr
+## Motif enrichment in 5' UTRs <a name="motif"></a>
 ```bash
 # run dreme on each cluster from clust
 dreme -o cluster_10_DREMEOUT -p cluster_10.single_transcript.5UTR.100bp.fa -n mrna.5UTR.100bp.fasta -eps && fimo -o cluster_10_DREMEOUT/FIMO cluster_10_DREMEOUT/dreme.txt cluster_10.single_transcript.5UTR.100bp.fa
@@ -1027,20 +665,320 @@ for i in *.single_transcript.list ; do for j in $( cut -c-13 ${i} | sort | uniq 
 ```
 
 
+[↥ **Back to top**](#top)
+
+* * *
 
 
 
 
-
-## Other
+## Other <a name="other"></a>
+- Distribution of clustered gene expression profiles across the genome
 - GO term analyses using revigo
      - nice plots. Didnt go in the paper as used gProfiler in the end, but will use again
 - normalised gene expression per lifestage
      - didnt end up using this, though pretty neat
 
 
+### Distribution of clustered gene expression profiles across the genome <a name="cluster_distribution"></a>
 
-### GO term analysis of cluster_stats
+     Want to explore whether genome locate has any impact on the coexpression of genes.
+
+
+     ```shell
+     # get genome coordinates of genes in clusters
+     ln -s /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/TRANSCRIPTOME_CURATION/HCON_V4_WBP11plus_190125.ips.gff3 ANNOTATION.gff
+
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_1.list > cluster_1.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_2.list > cluster_2.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_3.list > cluster_3.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_4.list > cluster_4.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_5.list > cluster_5.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_6.list > cluster_6.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_7.list > cluster_7.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_8.list > cluster_8.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_9.list > cluster_9.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_10.list > cluster_10.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_11.list > cluster_11.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_12.list > cluster_12.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_13.list > cluster_13.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_14.list > cluster_14.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_15.list > cluster_15.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_16.list > cluster_16.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_17.list > cluster_17.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_18.list > cluster_18.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_19.list > cluster_19.coords
+     while read NAME; do grep "ID=${NAME};" ANNOTATION.gff | awk '{if($3=="mRNA") print $1,$4,$5,$7,$9}' OFS="\t" ; done < cluster_20.list > cluster_20.coords
+
+
+     # stat testing the clusters
+     ln -s ../../../../REF/HAEM_V4_final.chr.fa
+     samtools faidx HAEM_V4_final.chr.fa
+     cut -f1,2 HAEM_V4_final.chr.fa.fai > HAEM_V4_final.chr.genome
+
+     # make bed files - note per cluster bed files are already made, ie. cluster_20.coords
+     bedtools-2 makewindows -g  HAEM_V4_final.chr.genome -w 500000 > HAEM_V4_final.chr.500k.bed
+     awk '$3=="mRNA" {print $1,$4,$5,$9}' OFS="\t" ANNOTATION.gff >HCON_V4.mRNA.bed
+
+
+     bedtools-2 coverage -a HAEM_V4_final.chr.500k.bed -b HCON_V4.mRNA.bed -counts > HCON_V4.mRNA.counts
+
+     for i in *.coords; do bedtools-2 coverage -a HAEM_V4_final.chr.500k.bed -b <( sort -k1,1 -k2,2n ${i}) -counts > ${i%.coords}.counts; done
+     ```
+
+
+
+
+     ### Make the plots
+     ```R
+     # load libraries
+     library(ggplot2)
+     library(patchwork)
+     library(viridis)
+
+     cluster_1 <- read.table("cluster_1.coords",header=F)
+     cluster_2 <- read.table("cluster_2.coords",header=F)
+     cluster_3 <- read.table("cluster_3.coords",header=F)
+     cluster_4 <- read.table("cluster_4.coords",header=F)
+     cluster_5 <- read.table("cluster_5.coords",header=F)
+     cluster_6 <- read.table("cluster_6.coords",header=F)
+     cluster_7 <- read.table("cluster_7.coords",header=F)
+     cluster_8 <- read.table("cluster_8.coords",header=F)
+     cluster_9 <- read.table("cluster_9.coords",header=F)
+     cluster_10 <- read.table("cluster_10.coords",header=F)
+     cluster_11 <- read.table("cluster_11.coords",header=F)
+     cluster_12 <- read.table("cluster_12.coords",header=F)
+     cluster_13 <- read.table("cluster_13.coords",header=F)
+     cluster_14 <- read.table("cluster_14.coords",header=F)
+     cluster_15 <- read.table("cluster_15.coords",header=F)
+     cluster_16 <- read.table("cluster_16.coords",header=F)
+     cluster_17 <- read.table("cluster_17.coords",header=F)
+     cluster_18 <- read.table("cluster_18.coords",header=F)
+     cluster_19 <- read.table("cluster_19.coords",header=F)
+     cluster_20 <- read.table("cluster_20.coords",header=F)
+
+     cluster_1$cluster <- 1
+     cluster_2$cluster <- 2
+     cluster_3$cluster <- 3
+     cluster_4$cluster <- 4
+     cluster_5$cluster <- 5
+     cluster_6$cluster <- 6
+     cluster_7$cluster <- 7
+     cluster_8$cluster <- 8
+     cluster_9$cluster <- 9
+     cluster_10$cluster <- 10
+     cluster_11$cluster <- 11
+     cluster_12$cluster <- 12
+     cluster_13$cluster <- 13
+     cluster_14$cluster <- 14
+     cluster_15$cluster <- 15
+     cluster_16$cluster <- 16
+     cluster_17$cluster <- 17
+     cluster_18$cluster <- 18
+     cluster_19$cluster <- 19
+     cluster_20$cluster <- 20
+
+
+     clusters <- rbind(cluster_1,cluster_2,cluster_3,cluster_4,cluster_5,cluster_6,cluster_7,cluster_8,cluster_9,cluster_10,cluster_11,cluster_12,cluster_13,cluster_14,cluster_15,cluster_16,cluster_17,cluster_18,cluster_19)
+
+     #ggplot(clusters,aes(clusters$V2,clusters$cluster))+ geom_jitter(alpha=0.1,size=0.5)+facet_grid(.~clusters$V1)+theme_bw()+ scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
+
+
+     all<-read.table("HCON_V4.mRNA.counts",header=F)
+     c1<-read.table("cluster_1.counts",header=F)
+     c2<-read.table("cluster_2.counts",header=F)
+     c3<-read.table("cluster_3.counts",header=F)
+     c4<-read.table("cluster_4.counts",header=F)
+     c5<-read.table("cluster_5.counts",header=F)
+     c6<-read.table("cluster_6.counts",header=F)
+     c7<-read.table("cluster_7.counts",header=F)
+     c8<-read.table("cluster_8.counts",header=F)
+     c9<-read.table("cluster_9.counts",header=F)
+     c10<-read.table("cluster_10.counts",header=F)
+     c11<-read.table("cluster_11.counts",header=F)
+     c12<-read.table("cluster_12.counts",header=F)
+     c13<-read.table("cluster_13.counts",header=F)
+     c14<-read.table("cluster_14.counts",header=F)
+     c15<-read.table("cluster_15.counts",header=F)
+     c16<-read.table("cluster_16.counts",header=F)
+     c17<-read.table("cluster_17.counts",header=F)
+     c18<-read.table("cluster_18.counts",header=F)
+     c19<-read.table("cluster_19.counts",header=F)
+     #c20<-read.table("cluster_20.counts",header=F)
+
+
+     # calculate the expected number of clustered transcripts per window with the null hypothesis that they are equally distributed throughout the genome.
+     c1_stat<-all
+     c1_stat$observed<-c1$V4
+     c1_stat$expected<-all$V4*(sum(c1$V4)/21007)
+     c1_stat$chqsq<-(c1$V4 - all$V4*(sum(c1$V4)/21007))^2/(all$V4*sum(c1$V4)/21007)
+     c1_stat$pvalue <- pchisq(c1_stat$chqsq,df=1,lower.tail=FALSE)
+     c1_stat$cluster <- 1
+
+     c2_stat<-all
+     c2_stat$observed<-c2$V4
+     c2_stat$expected<-all$V4*(sum(c2$V4)/21007)
+     c2_stat$chqsq<-(c2$V4 - all$V4*(sum(c2$V4)/21007))^2/(all$V4*sum(c2$V4)/21007)
+     c2_stat$pvalue <- pchisq(c2_stat$chqsq,df=1,lower.tail=FALSE)
+     c2_stat$cluster <- 2
+
+     c3_stat<-all
+     c3_stat$observed<-c3$V4
+     c3_stat$expected<-all$V4*(sum(c3$V4)/21007)
+     c3_stat$chqsq<-(c3$V4 - all$V4*(sum(c3$V4)/21007))^2/(all$V4*sum(c3$V4)/21007)
+     c3_stat$pvalue <- pchisq(c3_stat$chqsq,df=1,lower.tail=FALSE)
+     c3_stat$cluster <- 3
+
+     c4_stat<-all
+     c4_stat$observed<-c4$V4
+     c4_stat$expected<-all$V4*(sum(c4$V4)/21007)
+     c4_stat$chqsq<-(c4$V4 - all$V4*(sum(c4$V4)/21007))^2/(all$V4*sum(c4$V4)/21007)
+     c4_stat$pvalue <- pchisq(c4_stat$chqsq,df=1,lower.tail=FALSE)
+     c4_stat$cluster <- 4
+
+     c5_stat<-all
+     c5_stat$observed<-c5$V4
+     c5_stat$expected<-all$V4*(sum(c5$V4)/21007)
+     c5_stat$chqsq<-(c5$V4 - all$V4*(sum(c5$V4)/21007))^2/(all$V4*sum(c5$V4)/21007)
+     c5_stat$pvalue <- pchisq(c5_stat$chqsq,df=1,lower.tail=FALSE)
+     c5_stat$cluster <- 5
+
+     c6_stat<-all
+     c6_stat$observed<-c6$V4
+     c6_stat$expected<-all$V4*(sum(c6$V4)/21007)
+     c6_stat$chqsq<-(c6$V4 - all$V4*(sum(c6$V4)/21007))^2/(all$V4*sum(c6$V4)/21007)
+     c6_stat$pvalue <- pchisq(c6_stat$chqsq,df=1,lower.tail=FALSE)
+     c6_stat$cluster <- 6
+
+     c7_stat<-all
+     c7_stat$observed<-c7$V4
+     c7_stat$expected<-all$V4*(sum(c7$V4)/21007)
+     c7_stat$chqsq<-(c7$V4 - all$V4*(sum(c7$V4)/21007))^2/(all$V4*sum(c7$V4)/21007)
+     c7_stat$pvalue <- pchisq(c7_stat$chqsq,df=1,lower.tail=FALSE)
+     c7_stat$cluster <- 7
+
+     c8_stat<-all
+     c8_stat$observed<-c8$V4
+     c8_stat$expected<-all$V4*(sum(c8$V4)/21007)
+     c8_stat$chqsq<-(c8$V4 - all$V4*(sum(c8$V4)/21007))^2/(all$V4*sum(c8$V4)/21007)
+     c8_stat$pvalue <- pchisq(c8_stat$chqsq,df=1,lower.tail=FALSE)
+     c8_stat$cluster <- 8
+
+     c9_stat<-all
+     c9_stat$observed<-c9$V4
+     c9_stat$expected<-all$V4*(sum(c9$V4)/21007)
+     c9_stat$chqsq<-(c9$V4 - all$V4*(sum(c9$V4)/21007))^2/(all$V4*sum(c9$V4)/21007)
+     c9_stat$pvalue <- pchisq(c9_stat$chqsq,df=1,lower.tail=FALSE)
+     c9_stat$cluster <- 9
+
+     c10_stat<-all
+     c10_stat$observed<-c10$V4
+     c10_stat$expected<-all$V4*(sum(c10$V4)/21007)
+     c10_stat$chqsq<-(c10$V4 - all$V4*(sum(c10$V4)/21007))^2/(all$V4*sum(c10$V4)/21007)
+     c10_stat$pvalue <- pchisq(c10_stat$chqsq,df=1,lower.tail=FALSE)
+     c10_stat$cluster <- 10
+
+     c11_stat<-all
+     c11_stat$observed<-c11$V4
+     c11_stat$expected<-all$V4*(sum(c11$V4)/21007)
+     c11_stat$chqsq<-(c11$V4 - all$V4*(sum(c11$V4)/21007))^2/(all$V4*sum(c11$V4)/21007)
+     c11_stat$pvalue <- pchisq(c11_stat$chqsq,df=1,lower.tail=FALSE)
+     c11_stat$cluster <- 11
+
+     c12_stat<-all
+     c12_stat$observed<-c12$V4
+     c12_stat$expected<-all$V4*(sum(c12$V4)/21007)
+     c12_stat$chqsq<-(c12$V4 - all$V4*(sum(c12$V4)/21007))^2/(all$V4*sum(c12$V4)/21007)
+     c12_stat$pvalue <- pchisq(c12_stat$chqsq,df=1,lower.tail=FALSE)
+     c12_stat$cluster <- 12
+
+     c13_stat<-all
+     c13_stat$observed<-c13$V4
+     c13_stat$expected<-all$V4*(sum(c13$V4)/21007)
+     c13_stat$chqsq<-(c13$V4 - all$V4*(sum(c13$V4)/21007))^2/(all$V4*sum(c13$V4)/21007)
+     c13_stat$pvalue <- pchisq(c13_stat$chqsq,df=1,lower.tail=FALSE)
+     c13_stat$cluster <- 13
+
+     c14_stat<-all
+     c14_stat$observed<-c14$V4
+     c14_stat$expected<-all$V4*(sum(c14$V4)/21007)
+     c14_stat$chqsq<-(c14$V4 - all$V4*(sum(c14$V4)/21007))^2/(all$V4*sum(c14$V4)/21007)
+     c14_stat$pvalue <- pchisq(c14_stat$chqsq,df=1,lower.tail=FALSE)
+     c14_stat$cluster <- 14
+
+     c15_stat<-all
+     c15_stat$observed<-c15$V4
+     c15_stat$expected<-all$V4*(sum(c15$V4)/21007)
+     c15_stat$chqsq<-(c15$V4 - all$V4*(sum(c15$V4)/21007))^2/(all$V4*sum(c15$V4)/21007)
+     c15_stat$pvalue <- pchisq(c15_stat$chqsq,df=1,lower.tail=FALSE)
+     c15_stat$cluster <- 15
+
+     c16_stat<-all
+     c16_stat$observed<-c16$V4
+     c16_stat$expected<-all$V4*(sum(c16$V4)/21007)
+     c16_stat$chqsq<-(c16$V4 - all$V4*(sum(c16$V4)/21007))^2/(all$V4*sum(c16$V4)/21007)
+     c16_stat$pvalue <- pchisq(c16_stat$chqsq,df=1,lower.tail=FALSE)
+     c16_stat$cluster <- 16
+
+
+     c17_stat<-all
+     c17_stat$observed<-c17$V4
+     c17_stat$expected<-all$V4*(sum(c17$V4)/21007)
+     c17_stat$chqsq<-(c17$V4 - all$V4*(sum(c17$V4)/21007))^2/(all$V4*sum(c17$V4)/21007)
+     c17_stat$pvalue <- pchisq(c17_stat$chqsq,df=1,lower.tail=FALSE)
+     c17_stat$cluster <- 17
+
+     c18_stat<-all
+     c18_stat$observed<-c18$V4
+     c18_stat$expected<-all$V4*(sum(c18$V4)/21007)
+     c18_stat$chqsq<-(c18$V4 - all$V4*(sum(c18$V4)/21007))^2/(all$V4*sum(c18$V4)/21007)
+     c18_stat$pvalue <- pchisq(c18_stat$chqsq,df=1,lower.tail=FALSE)
+     c18_stat$cluster <- 18
+
+     c19_stat<-all
+     c19_stat$observed<-c19$V4
+     c19_stat$expected<-all$V4*(sum(c19$V4)/21007)
+     c19_stat$chqsq<-(c19$V4 - all$V4*(sum(c19$V4)/21007))^2/(all$V4*sum(c19$V4)/21007)
+     c19_stat$pvalue <- pchisq(c19_stat$chqsq,df=1,lower.tail=FALSE)
+     c19_stat$cluster <- 19
+
+     #c20_stat<-all
+     #c20_stat$observed<-c20$V4
+     #c20_stat$expected<-all$V4*(sum(c20$V4)/21007)
+     #c20_stat$chqsq<-(c20$V4 - all$V4*(sum(c20$V4)/21007))^2/(all$V4*sum(c20$V4)/21007)
+     #c20_stat$pvalue <- pchisq(c20_stat$chqsq,df=1,lower.tail=FALSE)
+     #c20_stat$cluster <- 20
+
+     cluster_stats <- rbind(c1_stat,c2_stat,c3_stat,c4_stat,c5_stat,c6_stat,c7_stat,c8_stat,c9_stat,c10_stat,c11_stat,c12_stat,c13_stat,c14_stat,c15_stat,c16_stat,c17_stat,c18_stat,c19_stat)
+     cluster_stats <- cluster_stats[cluster_stats$V1!="hcontortus_chr_mtDNA_arrow_pilon",]
+     cluster_stats[is.na(cluster_stats)] <- 1
+     cluster_stats$neglogP <- -log10(cluster_stats$pvalue)
+
+
+     # make the final plots
+     plot_clusts<-ggplot(clusters,aes(clusters$V2,clusters$cluster))+
+     		geom_jitter(alpha=0.1,size=0.5)+facet_grid(.~clusters$V1)+
+     		theme_bw()+
+     		scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
+
+     plot_stats<-ggplot(cluster_stats)+
+     		geom_rect(aes(xmin=cluster_stats$V2,ymin=cluster_stats$cluster-0.5,xmax=cluster_stats$V3,ymax=cluster_stats$cluster+0.5,fill=-log10(cluster_stats$pvalue)))+
+     		facet_grid(.~cluster_stats$V1)+
+     		theme_bw()+
+     		scale_fill_viridis(direction=-1)+
+     		scale_y_continuous(breaks=seq(1,20,1),trans = 'reverse')
+
+     # bring plots together
+     plot_clusts + plot_stats + plot_layout(ncol=2)
+
+     # save it
+     ggsave("clust_profiles_across_genome.pdf",width = 28, height = 10, units = "cm")
+     ggsave("clust_profiles_across_genome.png",width = 28, height = 10, units = "cm")
+
+     ```
+
+
+### GO term analysis of cluster_stats <a name="revigo"></a>
 ```R
 
 library(topReviGO)
@@ -1181,7 +1119,7 @@ scp sd21@pcs5.internal.sanger.ac.uk:/nfs/users/nfs_s/sd21/lustre118_link/hc/GENO
 
 
 
-# normalised gene expression per chromosome per lifestage
+# normalised gene expression per chromosome per lifestage <a name="normalised"></a>
 ```bash
 
 cd /nfs/users/nfs_s/sd21/lustre118_link/hc/GENOME/TRANSCRIPTOME/KALLISTO/KALLISTO_MAPPED_SAMPLES/Results_28_Oct_18_1/Processed_Data
@@ -1205,11 +1143,9 @@ grep "hcontortus_chr4_Celeg_TT_arrow_pilon" coords.tmp.txt > chr4.coords.tmp.txt
 grep "hcontortus_chr5_Celeg_TT_arrow_pilon" coords.tmp.txt > chr5.coords.tmp.txt
 grep "hcontortus_chrX_Celeg_TT_arrow_pilon" coords.tmp.txt > chrX.coords.tmp.txt
 
+```
 
-
-
-
-R-3.5.0
+```R
 library(ggplot2)
 library(patchwork)
 

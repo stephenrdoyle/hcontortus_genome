@@ -19,6 +19,13 @@
 11. [Orthology](#orthology)
      * [Supplementary Table 6](#tableS6)
 12. [Other](#other)
+     * running Augustus post braker to incorportate the isoseq
+     * filtering based on amino acid composition and distribution via PCA
+     * post annotation removal of repeats
+     * mapping of Iso-Seq data
+     * making a GO term database
+     *  manual curation in apollo
+     * replacing gene names in GFF with species ID and incremental gene specific ID
 
 * * *
 
