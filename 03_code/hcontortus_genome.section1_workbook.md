@@ -19,7 +19,6 @@
 
 
 
-<a name="figure1b"></a>
 ******
 ## Genome assembly <a name="genome"></a>
 From the paper:
@@ -36,7 +35,7 @@ The increase in contiguity and resolution of shorter repetitive regions using Pa
 [↥ **Back to top**](#top)
 ******
 ## Completion of the X chromosome <a name="xchromosome"></a>
-The V3 version of the genome consisted of assembled autosomes,  however,  the X chromosome was still in pieces that to date were not resolved,  althoguh we had a good idea of what pieces were left in the assembly that belonged in the X chromosome based on male vs female coverage.
+The V3 version of the genome consisted of assembled autosomes,  however,  the X chromosome was still in pieces that to date were not resolved,  although we had a good idea of what pieces were left in the assembly that belonged in the X chromosome based on male vs female coverage.
 
 >hcontortus_6_chrX_Celeg_Ta  
 >hcontortus_7_chrX_Celeg_Tb  
